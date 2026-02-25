@@ -8,7 +8,10 @@ interface ArtworkCardProps {
 }
 
 export function ArtworkCard({ artwork }: ArtworkCardProps) {
-  const imageUrl = urlFor(artwork.image).width(600).auto("format").url();
+  const primaryImage = artwork.images?.[0];
+  const imageUrl = primaryImage
+    ? urlFor(primaryImage.asset).width(600).auto("format").url()
+    : undefined;
 
   return (
     <Card
@@ -20,7 +23,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
     >
       <Image
         src={imageUrl}
-        alt={artwork.image.alt ?? artwork.title}
+        alt={primaryImage?.alt ?? artwork.title}
         style={{ aspectRatio: "3 / 4", objectFit: "cover" }}
       />
       <Stack gap={4} p="sm">

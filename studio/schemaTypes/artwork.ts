@@ -21,30 +21,38 @@ export const artwork = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: "image",
-      title: "Image",
-      type: "image",
-      options: { hotspot: true },
-      validation: (rule) => rule.required(),
-      fields: [
-        defineField({
-          name: "alt",
-          title: "Alt Text",
-          type: "string",
-        }),
+      name: "images",
+      title: "Images",
+      type: "array",
+      of: [
+        {
+          type: "image",
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: "alt",
+              title: "Alt Text",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+          ],
+        },
       ],
+      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "description",
       title: "Description",
-      type: "text",
-      rows: 4,
+      type: "array",
+      of: [{ type: "block" }],
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "medium",
       title: "Medium",
       type: "string",
       description: 'e.g. "Oil on canvas", "Watercolor", "Digital"',
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "dimensions",
@@ -64,6 +72,30 @@ export const artwork = defineType({
       type: "array",
       of: [{ type: "string" }],
       options: { layout: "tags" },
+    }),
+    defineField({
+      name: "forSale",
+      title: "For Sale",
+      type: "boolean",
+      initialValue: false,
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "purchaseUrl",
+      title: "Purchase URL",
+      type: "url",
+    }),
+    defineField({
+      name: "price",
+      title: "Price",
+      type: "number",
+      validation: (rule) => rule.positive(),
+    }),
+    defineField({
+      name: "featured",
+      title: "Featured",
+      type: "boolean",
+      initialValue: false,
     }),
     defineField({
       name: "sortOrder",
@@ -88,7 +120,7 @@ export const artwork = defineType({
     select: {
       title: "title",
       subtitle: "medium",
-      media: "image",
+      media: "images.0",
     },
   },
 });

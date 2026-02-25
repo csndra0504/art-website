@@ -5,26 +5,31 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   _id,
   title,
   slug,
-  image,
+  images,
   medium,
   year,
+  featured,
 }`;
 
 const ARTWORK_DETAIL_PROJECTION = `{
   _id,
   title,
   slug,
-  image,
+  images,
   description,
   medium,
   dimensions,
   year,
   tags,
+  featured,
+  forSale,
+  purchaseUrl,
+  price,
 }`;
 
 export async function getArtworks(): Promise<ArtworkSummary[]> {
   return client.fetch(
-    `*[_type == "artwork"] | order(sortOrder asc, _createdAt desc) ${ARTWORK_SUMMARY_PROJECTION}`
+    `*[_type == "artwork"] | order(featured desc, sortOrder asc, _createdAt desc) ${ARTWORK_SUMMARY_PROJECTION}`
   );
 }
 

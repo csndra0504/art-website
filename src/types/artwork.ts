@@ -1,16 +1,26 @@
 import type { SanityImageSource } from "@sanity/image-url";
 
+export interface ArtworkImage {
+  _key: string;
+  asset: SanityImageSource;
+  alt: string;
+}
+
 export interface ArtworkSummary {
   _id: string;
   title: string;
   slug: { current: string };
-  image: SanityImageSource & { alt?: string };
-  medium?: string;
+  images: ArtworkImage[];
+  medium: string;
   year?: number;
+  featured?: boolean;
 }
 
 export interface Artwork extends ArtworkSummary {
-  description?: string;
+  description: unknown[];
   dimensions?: string;
   tags?: string[];
+  forSale: boolean;
+  purchaseUrl?: string;
+  price?: number;
 }

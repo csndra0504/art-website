@@ -8,6 +8,7 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   images,
   medium,
   year,
+  tags,
   featured,
 }`;
 

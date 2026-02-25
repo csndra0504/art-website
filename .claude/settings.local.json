@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__keepdoing__pm_create_tasks",
+      "mcp__keepdoing__pm_list_epics",
+      "mcp__keepdoing__pm_sprint_tasks"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "keepdoing"
+  ]
+}

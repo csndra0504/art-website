@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "keepdoing": {
+      "type": "http",
+      "url": "https://famous-guanaco-853.convex.site/mcp",
+      "headers": {
+        "x-keepdoing-default-project": "cass-consulting/art-website"
+      }
+    }
+  }
+}

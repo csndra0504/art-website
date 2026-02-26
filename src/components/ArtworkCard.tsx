@@ -19,6 +19,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
       to={`/artwork/${artwork.slug.current}`}
       padding={0}
       radius={0}
+      shadow="sm"
       style={{ textDecoration: "none", color: "inherit" }}
     >
       <Image

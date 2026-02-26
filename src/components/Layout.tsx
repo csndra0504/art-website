@@ -1,4 +1,4 @@
-import { Anchor, AppShell, Burger, Group, Stack, Title } from "@mantine/core";
+import { Anchor, AppShell, Burger, Container, Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
 
@@ -23,28 +23,30 @@ export function Layout() {
       <AppShell.Header
         style={{ backgroundColor: "#FAFAF8", borderBottom: "1px solid #e8e8e0" }}
       >
-        <Group h="100%" px="md" justify="space-between">
-          <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-            <Title order={3}>Cass Art</Title>
-          </Link>
+        <Container size="lg" h="100%">
+          <Group h="100%" justify="space-between">
+            <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+              <Title order={3}>Cassandra Wilcox Art</Title>
+            </Link>
 
-          <Group gap="lg" visibleFrom="sm">
-            {NAV_LINKS.map((link) => (
-              <Anchor
-                key={link.to}
-                component={Link}
-                to={link.to}
-                size="sm"
-                c="dark"
-                underline="never"
-              >
-                {link.label}
-              </Anchor>
-            ))}
+            <Group gap="lg" visibleFrom="sm">
+              {NAV_LINKS.map((link) => (
+                <Anchor
+                  key={link.to}
+                  component={Link}
+                  to={link.to}
+                  size="sm"
+                  c="dark"
+                  underline="never"
+                >
+                  {link.label}
+                </Anchor>
+              ))}
+            </Group>
+
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           </Group>
-
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        </Group>
+        </Container>
       </AppShell.Header>
 
       <AppShell.Navbar py="md" px="md">

@@ -16,7 +16,7 @@ export function Home() {
   const [artworks, setArtworks] = useState<ArtworkSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     getArtworks()
@@ -33,8 +33,20 @@ export function Home() {
     return Array.from(tagSet).sort();
   }, [artworks]);
 
-  const filtered = activeTag
-    ? artworks.filter((a) => a.tags?.includes(activeTag))
+  const toggleTag = (tag: string) => {
+    setActiveTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) {
+        next.delete(tag);
+      } else {
+        next.add(tag);
+      }
+      return next;
+    });
+  };
+
+  const filtered = activeTags.size > 0
+    ? artworks.filter((a) => [...activeTags].every((t) => a.tags?.includes(t)))
     : artworks;
 
   if (loading) {
@@ -66,24 +78,24 @@ export function Home() {
       {allTags.length > 0 && (
         <Group gap="xs" mb="lg">
           <Badge
-            variant={activeTag === null ? "filled" : "outline"}
+            variant={activeTags.size === 0 ? "filled" : "outline"}
             color="dark"
             radius={0}
             size="md"
             style={{ cursor: "pointer" }}
-            onClick={() => setActiveTag(null)}
+            onClick={() => setActiveTags(new Set())}
           >
             All
           </Badge>
           {allTags.map((tag) => (
             <Badge
               key={tag}
-              variant={activeTag === tag ? "filled" : "outline"}
+              variant={activeTags.has(tag) ? "filled" : "outline"}
               color="dark"
               radius={0}
               size="md"
               style={{ cursor: "pointer" }}
-              onClick={() => setActiveTag(tag === activeTag ? null : tag)}
+              onClick={() => toggleTag(tag)}
             >
               {tag}
             </Badge>

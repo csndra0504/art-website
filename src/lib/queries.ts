@@ -10,6 +10,7 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   year,
   tags,
   featured,
+  sortOrder,
 }`;
 
 const ARTWORK_DETAIL_PROJECTION = `{
@@ -30,7 +31,7 @@ const ARTWORK_DETAIL_PROJECTION = `{
 
 export async function getArtworks(): Promise<ArtworkSummary[]> {
   return client.fetch(
-    `*[_type == "artwork"] | order(featured desc, sortOrder asc, _createdAt desc) ${ARTWORK_SUMMARY_PROJECTION}`
+    `*[_type == "artwork"] | order(coalesce(featured, false) desc, coalesce(sortOrder, 9999) asc, _createdAt desc) ${ARTWORK_SUMMARY_PROJECTION}`
   );
 }
 

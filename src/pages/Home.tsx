@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Anchor,
   Badge,
   Container,
+  Divider,
   Group,
   SimpleGrid,
+  Stack,
   Text,
+  Title,
   Loader,
   Center,
 } from "@mantine/core";
@@ -74,7 +78,45 @@ export function Home() {
   }
 
   return (
-    <Container size="lg" py="xl">
+    <Container size="lg">
+      <Stack align="center" py={60} mb="xl">
+        <Title order={1} ta="center" fw={700} style={{ letterSpacing: "-0.02em" }}>
+          Art That Celebrates What Makes Cities Distinct
+        </Title>
+        <Title order={2} ta="center" fw={400} c="dimmed" size="lg">
+          Cassandra Wilcox, Pittsburgh-based Sketch Artist
+        </Title>
+        <Text ta="center" size="sm" style={{ lineHeight: 1.7, maxWidth: 640 }}>
+          Cassandra Wilcox is an artist drawn to the things that make a place
+          feel like itself (e.g. the Heinz ketchup bottle on the diner table,
+          the can of IC Light, a Kennywood dog, the storefront that's been there
+          for decades). Her work is place-first. Pittsburgh is home base, but
+          wherever she is, she looks for the artifacts and landmarks that locals
+          recognize in their bones and visitors carry home in their hearts. She
+          sells original prints and takes custom commissions through her website
+          at{" "}
+          <Anchor href="https://cassandrawilcoxart.com" target="_blank" c="dark">
+            cassandrawilcoxart.com
+          </Anchor>{" "}
+          and Etsy shop at{" "}
+          <Anchor href="https://casswilcoxart.etsy.com" target="_blank" c="dark">
+            casswilcoxart.etsy.com
+          </Anchor>
+          , and shows her work at local markets around Pittsburgh. You can
+          follow her on Instagram at{" "}
+          <Anchor
+            href="https://instagram.com/cassie_or_cassandra"
+            target="_blank"
+            c="dark"
+          >
+            @cassie_or_cassandra
+          </Anchor>
+          .
+        </Text>
+      </Stack>
+
+      <Divider mb="xl" />
+
       {allTags.length > 0 && (
         <Group gap="xs" mb="lg">
           <Badge

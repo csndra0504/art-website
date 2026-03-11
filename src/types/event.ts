@@ -1,4 +1,5 @@
-import type { PortableTextBlock, SanityImageSource } from "@portabletext/react";
+import type { SanityImageSource } from "@sanity/image-url";
+import type { PortableTextBlock } from "@portabletext/react";
 
 export interface EventPhoto {
   _key: string;

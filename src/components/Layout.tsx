@@ -2,7 +2,10 @@ import { Anchor, AppShell, Burger, Container, Group, Stack, Title } from "@manti
 import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
 
-const NAV_LINKS = [{ label: "Home", to: "/" }];
+const NAV_LINKS = [
+  { label: "Home", to: "/" },
+  { label: "Events", to: "/events" },
+];
 
 export function Layout() {
   const [opened, { toggle, close }] = useDisclosure();

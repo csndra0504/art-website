@@ -1,5 +1,6 @@
 import { client } from "./sanity";
 import type { Artwork, ArtworkSummary } from "../types/artwork";
+import type { Event } from "../types/event";
 
 const ARTWORK_SUMMARY_PROJECTION = `{
   _id,
@@ -41,5 +42,18 @@ export async function getArtworkBySlug(
   return client.fetch(
     `*[_type == "artwork" && slug.current == $slug][0] ${ARTWORK_DETAIL_PROJECTION}`,
     { slug }
+  );
+}
+
+export async function getEvents(): Promise<Event[]> {
+  return client.fetch(
+    `*[_type == "event"] | order(date desc) {
+      _id,
+      title,
+      date,
+      description,
+      photos,
+      link,
+    }`
   );
 }

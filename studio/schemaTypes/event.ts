@@ -1,4 +1,4 @@
-import { defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType } from "sanity";
 
 export const event = defineType({
   name: "event",
@@ -28,7 +28,7 @@ export const event = defineType({
       title: "Photos",
       type: "array",
       of: [
-        {
+        defineArrayMember({
           type: "image",
           options: { hotspot: true },
           fields: [
@@ -38,7 +38,7 @@ export const event = defineType({
               type: "string",
             }),
           ],
-        },
+        }),
       ],
     }),
     defineField({

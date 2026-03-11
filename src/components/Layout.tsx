@@ -5,6 +5,7 @@ import { Link, Outlet } from "react-router-dom";
 const NAV_LINKS = [
   { label: "Home", to: "/" },
   { label: "Events", to: "/events" },
+  { label: "Commissions", to: "/commissions" },
 ];
 
 export function Layout() {

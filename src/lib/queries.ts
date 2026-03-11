@@ -1,6 +1,7 @@
 import { client } from "./sanity";
 import type { Artwork, ArtworkSummary } from "../types/artwork";
 import type { Event } from "../types/event";
+import type { CommissionsPage } from "../types/commission";
 
 const ARTWORK_SUMMARY_PROJECTION = `{
   _id,
@@ -54,6 +55,20 @@ export async function getEvents(): Promise<Event[]> {
       description,
       photos,
       link,
+    }`
+  );
+}
+
+export async function getCommissionsPage(): Promise<CommissionsPage | null> {
+  return client.fetch(
+    `*[_type == "commissionsPage"][0] {
+      _id,
+      featuredImage,
+      intro,
+      pricingTiers,
+      framingNote,
+      largerFormatNote,
+      contactEmail,
     }`
   );
 }

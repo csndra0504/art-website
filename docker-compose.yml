@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_SANITY_PROJECT_ID: ${VITE_SANITY_PROJECT_ID}
+        VITE_SANITY_DATASET: ${VITE_SANITY_DATASET:-production}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

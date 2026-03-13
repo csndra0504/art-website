@@ -1,4 +1,13 @@
-import { Anchor, AppShell, Burger, Container, Group, Stack, Title } from "@mantine/core";
+import {
+  Anchor,
+  AppShell,
+  Burger,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
 
@@ -74,6 +83,43 @@ export function Layout() {
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
+
+      <AppShell.Footer
+        p="md"
+        style={{
+          position: "relative",
+          backgroundColor: "#FAFAF8",
+          borderTop: "1px solid #e8e8e0",
+        }}
+      >
+        <Container size="lg">
+          <Group justify="space-between" align="center" wrap="wrap">
+            <Text size="sm" c="dimmed">
+              &copy; {new Date().getFullYear()} Cassandra Wilcox Art
+            </Text>
+            <Group gap="md">
+              <Anchor
+                href="https://instagram.com/casswilcoxart"
+                target="_blank"
+                size="sm"
+                c="dark"
+                underline="never"
+              >
+                Instagram
+              </Anchor>
+              <Anchor
+                href="https://www.etsy.com/shop/CassWilcoxArt"
+                target="_blank"
+                size="sm"
+                c="dark"
+                underline="never"
+              >
+                Etsy
+              </Anchor>
+            </Group>
+          </Group>
+        </Container>
+      </AppShell.Footer>
     </AppShell>
   );
 }

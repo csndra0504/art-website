@@ -1,132 +1,213 @@
-import { useEffect, useState } from "react";
 import {
-  Badge,
-  Card,
-  Center,
+  Anchor,
+  Blockquote,
   Container,
   Divider,
   Group,
   Image,
   List,
-  Loader,
-  SimpleGrid,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { PortableText } from "@portabletext/react";
-import { getCommissionsPage } from "../lib/queries";
-import { urlFor } from "../lib/sanity";
-import type { CommissionsPage } from "../types/commission";
 
 const CONTACT_EMAIL = "csndra0504@gmail.com";
+const INSTAGRAM_URL = "https://instagram.com/casswilcoxart";
 
 export function Commissions() {
-  const [page, setPage] = useState<CommissionsPage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getCommissionsPage()
-      .then(setPage)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <Center h={300}>
-        <Loader color="gray" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center h={300}>
-        <Text c="red">{error}</Text>
-      </Center>
-    );
-  }
-
   return (
     <Container size="md" py="xl">
       <Stack gap="xl">
-        {/* Hero: title + intro left, image right */}
+        {/* Hero */}
         <Group align="flex-start" gap="xl" wrap="wrap">
-          <Stack gap="xs" style={{ flex: 1, minWidth: 220 }}>
-            <Title order={1}>Commissions</Title>
-            {page?.intro && (
-              <Text component="div">
-                <PortableText value={page.intro} />
-              </Text>
-            )}
+          <Stack gap="md" style={{ flex: 1, minWidth: 280 }}>
+            <Stack gap="xs">
+              <Title order={1}>Custom Commissions</Title>
+              <Title order={2} size="h3" fw={400} fs="italic">
+                A Place That Means Something to You, Drawn by Hand
+              </Title>
+            </Stack>
+
+            <Text>
+              Every building tells a story. Maybe it's the bar where you had
+              your first date, the house your grandparents built, or the
+              restaurant where your whole family gathers on Sundays. I turn
+              those places into one-of-a-kind, hand-drawn artwork you can keep
+              forever.
+            </Text>
+
+            <Text>
+              I work in fine line ink and alcohol markers — the same style you
+              see in my Pittsburgh series — but for <em>your</em> place,{" "}
+              <em>your</em> story.
+            </Text>
           </Stack>
 
-          {page?.featuredImage && (
-            <Image
-              src={urlFor(page.featuredImage.asset).width(500).url()}
-              alt={page.featuredImage.alt ?? "Commission example"}
-              radius="sm"
-              style={{ width: "auto", maxWidth: 340, flexShrink: 0 }}
-            />
-          )}
+          <Image
+            src="/images/bryant_house_8x10.jpg"
+            alt="Example commission — hand-drawn ink and marker illustration of a brick building"
+            radius="sm"
+            style={{
+              width: "auto",
+              maxWidth: 340,
+              flexShrink: 0,
+              boxShadow: "var(--mantine-shadow-sm)",
+            }}
+          />
         </Group>
-
-        {/* Pricing */}
-        {page?.pricingTiers && page.pricingTiers.length > 0 && (
-          <Stack gap="sm">
-            <Title order={3}>Pricing</Title>
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-              {page.pricingTiers.map((tier) => (
-                <Card key={tier._key} withBorder radius="sm" p="md">
-                  <Group justify="space-between" mb={4}>
-                    <Text fw={600}>{tier.label}</Text>
-                    <Badge color="dark" variant="light" size="lg">
-                      {tier.price}
-                    </Badge>
-                  </Group>
-                  {tier.description && (
-                    <Text size="sm" c="dimmed">
-                      {tier.description}
-                    </Text>
-                  )}
-                </Card>
-              ))}
-            </SimpleGrid>
-
-            {(page.framingNote || page.largerFormatNote) && (
-              <Stack gap={4} mt="xs">
-                {page.framingNote && (
-                  <Text size="sm" c="dimmed">
-                    🖼 {page.framingNote}
-                  </Text>
-                )}
-                {page.largerFormatNote && (
-                  <Text size="sm" c="dimmed">
-                    📐 {page.largerFormatNote}
-                  </Text>
-                )}
-              </Stack>
-            )}
-          </Stack>
-        )}
 
         <Divider />
 
-        {/* How to request */}
+        {/* What You Get */}
         <Stack gap="sm">
-          <Title order={3}>Request a Commission</Title>
-          <Text>Send me an email with the following details:</Text>
-          <List spacing="xs">
-            <List.Item>Whether you'd like an <strong>on-location</strong> session or a painting <strong>from a photo</strong></List.Item>
-            <List.Item>If on-location, the <strong>address</strong> of the location</List.Item>
-            <List.Item>Your preferred <strong>size or format</strong> (e.g. A4, 4×6 — happy to discuss larger)</List.Item>
-            <List.Item>Whether you're interested in <strong>framing</strong> (available at an additional cost)</List.Item>
-            <List.Item>A <strong>description</strong> of what you'd like painted — subject, mood, any references</List.Item>
+          <Title order={2}>What You Get</Title>
+          <List spacing="sm">
+            <List.Item>
+              <strong>An original, hand-drawn piece</strong> — not a print, not
+              digital. The actual artwork, drawn by my hand, on paper.
+            </List.Item>
+            <List.Item>
+              <strong>A high-resolution digital file</strong> of the finished
+              piece, so you can print copies for family, use it in holiday cards,
+              or just keep a backup.
+            </List.Item>
+            <List.Item>
+              <strong>
+                My full attention to the details that make your place yours
+              </strong>{" "}
+              — the crooked mailbox, the neon sign, the way the light hits the
+              front porch.
+            </List.Item>
           </List>
+        </Stack>
+
+        <Divider />
+
+        {/* Pricing */}
+        <Stack gap="sm">
+          <Title order={2}>Pricing</Title>
           <Text>
-            Send your email to <strong>{CONTACT_EMAIL}</strong>
+            <strong>$400</strong> for a custom commission.
+          </Text>
+          <Text>
+            This includes the original artwork and a digital file. Framing is
+            available at an additional cost — just ask and I'll walk you through
+            options.
+          </Text>
+          <Blockquote>
+            I offer a discount for any public place (bar, restaurant, shop)
+            where I'm allowed to also sell prints of the finished piece. If you
+            own a business and want your spot drawn, let's talk — it might cost
+            you less than you think.
+          </Blockquote>
+        </Stack>
+
+        <Divider />
+
+        {/* How It Works */}
+        <Stack gap="md">
+          <Title order={2}>How It Works</Title>
+
+          <Stack gap="xs">
+            <Title order={3}>1. Reach Out</Title>
+            <Text>
+              Send me a DM on Instagram (
+              <Anchor href={INSTAGRAM_URL} target="_blank">
+                @casswilcoxart
+              </Anchor>
+              ) or email me at <strong>{CONTACT_EMAIL}</strong>. Tell me:
+            </Text>
+            <List spacing="xs">
+              <List.Item>What place you'd like drawn</List.Item>
+              <List.Item>
+                Whether you'd prefer I work from a photo or visit on-location
+                (Pittsburgh area)
+              </List.Item>
+              <List.Item>
+                Any details that matter to you — a specific angle, season, time
+                of day, or vibe
+              </List.Item>
+              <List.Item>
+                Your ideal size (I'll help you figure this out if you're not
+                sure)
+              </List.Item>
+            </List>
+          </Stack>
+
+          <Stack gap="xs">
+            <Title order={3}>2. I'll Send You a Proposal</Title>
+            <Text>
+              Within a few days, I'll reply with a sketch concept, timeline, and
+              final quote. No surprises.
+            </Text>
+          </Stack>
+
+          <Stack gap="xs">
+            <Title order={3}>3. Deposit & Start</Title>
+            <Text>
+              Once you're happy with the plan, I'll send an invoice for a{" "}
+              <strong>50% deposit ($200)</strong>. That locks in your spot. I'll
+              keep you updated as I work — you'll get progress photos along the
+              way.
+            </Text>
+          </Stack>
+
+          <Stack gap="xs">
+            <Title order={3}>4. Delivery</Title>
+            <Text>
+              The finished piece is typically ready in{" "}
+              <strong>2–3 weeks</strong> from your deposit. I'll send you a
+              photo of the final artwork for approval, then ship it (or arrange
+              local pickup in Pittsburgh) along with your digital file.
+            </Text>
+            <Text>
+              <strong>The remaining 50% is due upon delivery.</strong>
+            </Text>
+          </Stack>
+        </Stack>
+
+        <Divider />
+
+        {/* A Few Things to Know */}
+        <Stack gap="sm">
+          <Title order={2}>A Few Things to Know</Title>
+          <List spacing="xs">
+            <List.Item>
+              I currently take <strong>2–3 commissions at a time</strong> so I
+              can give each piece the attention it deserves. If my slots are
+              full, I'll let you know the next available window.
+            </List.Item>
+            <List.Item>
+              I'm happy to work from photos you send or from reference images if
+              on-location isn't possible.
+            </List.Item>
+            <List.Item>
+              If you're buying this as a gift, I can coordinate timing and keep
+              things under wraps.
+            </List.Item>
+            <List.Item>
+              Not sure if your idea is a fit? Just ask. I'm happy to chat about
+              it — no commitment, no pressure.
+            </List.Item>
+          </List>
+        </Stack>
+
+        <Divider />
+
+        {/* Ready? */}
+        <Stack gap="sm">
+          <Title order={2}>Ready?</Title>
+          <Text>
+            <strong>DM me on Instagram</strong> →{" "}
+            <Anchor href={INSTAGRAM_URL} target="_blank">
+              @casswilcoxart
+            </Anchor>
+          </Text>
+          <Text>
+            <strong>Or email me</strong> → {CONTACT_EMAIL}
+          </Text>
+          <Text fs="italic">
+            Tell me about your place. I'd love to hear the story.
           </Text>
         </Stack>
       </Stack>

@@ -16,6 +16,7 @@ export interface ArtworkSummary {
   year?: number;
   tags?: string[];
   featured?: boolean;
+  forSale?: boolean;
 }
 
 export interface Artwork extends ArtworkSummary {

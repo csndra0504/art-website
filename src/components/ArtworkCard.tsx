@@ -1,4 +1,4 @@
-import { Card, Image, Text, Group, Stack } from "@mantine/core";
+import { Badge, Card, Image, Text, Group, Stack } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { urlFor } from "../lib/sanity";
 import type { ArtworkSummary } from "../types/artwork";
@@ -22,11 +22,24 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
       shadow="sm"
       style={{ textDecoration: "none", color: "inherit" }}
     >
-      <Image
-        src={imageUrl}
-        alt={primaryImage?.alt ?? artwork.title}
-        style={{ aspectRatio: "3 / 4", objectFit: "cover" }}
-      />
+      <div style={{ position: "relative" }}>
+        <Image
+          src={imageUrl}
+          alt={primaryImage?.alt ?? artwork.title}
+          style={{ aspectRatio: "3 / 4", objectFit: "cover" }}
+        />
+        {artwork.forSale && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="dark"
+            radius={0}
+            style={{ position: "absolute", top: 8, right: 8 }}
+          >
+            For Sale
+          </Badge>
+        )}
+      </div>
       <Stack gap={4} p="sm">
         <Group justify="space-between" gap="xs" wrap="nowrap">
           <Text size="sm" fw={500} truncate>

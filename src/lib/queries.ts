@@ -12,6 +12,7 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   year,
   tags,
   featured,
+  forSale,
   sortOrder,
 }`;
 

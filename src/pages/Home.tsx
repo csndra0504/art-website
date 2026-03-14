@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
+  Button,
   Container,
   Divider,
   Group,
@@ -113,6 +114,31 @@ export function Home() {
           </Anchor>
           .
         </Text>
+        <Group gap="md" mt="lg" justify="center" wrap="wrap">
+          <Button
+            component="a"
+            href="https://casswilcoxart.etsy.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="dark"
+            radius={0}
+            size="md"
+            px="xl"
+          >
+            Shop Prints
+          </Button>
+          <Button
+            component="a"
+            href="/commissions"
+            variant="outline"
+            color="dark"
+            radius={0}
+            size="md"
+            px="xl"
+          >
+            Commission a Piece
+          </Button>
+        </Group>
       </Stack>
 
       <Divider mb="xl" />

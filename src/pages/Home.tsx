@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { getArtworks } from "../lib/queries";
 import { ArtworkCard } from "../components/ArtworkCard";
+import { EventBanner } from "../components/EventBanner";
 import type { ArtworkSummary } from "../types/artwork";
 
 export function Home() {
@@ -79,6 +80,8 @@ export function Home() {
   }
 
   return (
+    <>
+    <EventBanner />
     <Container size="lg">
       <Stack align="center" py={60} mb="xl">
         <Title order={1} ta="center" fw={700} style={{ letterSpacing: "-0.02em" }}>
@@ -177,5 +180,6 @@ export function Home() {
         ))}
       </SimpleGrid>
     </Container>
+    </>
   );
 }

@@ -11,7 +11,7 @@ import {
 	Title,
 } from '@mantine/core';
 
-const CONTACT_EMAIL = 'csndra0504@gmail.com';
+const CONTACT_EMAIL = 'hello@cassandrawilcoxart.com';
 const INSTAGRAM_URL = 'https://instagram.com/casswilcoxart';
 
 export function Commissions() {

@@ -23,6 +23,10 @@ export interface Artwork extends ArtworkSummary {
   description: PortableTextBlock[];
   dimensions?: string;
   forSale: boolean;
-  purchaseUrl?: string;
-  price?: number;
+  originalPrice?: number;
+  originalSold?: boolean;
+  printEtsyUrl?: string;
+  printEtsyPrice?: number;
+  printLocalPrice?: number;
+  printLocalSold?: boolean;
 }

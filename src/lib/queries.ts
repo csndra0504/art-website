@@ -28,8 +28,12 @@ const ARTWORK_DETAIL_PROJECTION = `{
   tags,
   featured,
   forSale,
-  purchaseUrl,
-  price,
+  originalPrice,
+  originalSold,
+  printEtsyUrl,
+  printEtsyPrice,
+  printLocalPrice,
+  printLocalSold,
 }`;
 
 export async function getArtworks(): Promise<ArtworkSummary[]> {

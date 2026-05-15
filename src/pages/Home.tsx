@@ -16,6 +16,7 @@ import {
 import { getArtworks } from "../lib/queries";
 import { ArtworkCard } from "../components/ArtworkCard";
 import { EventBanner } from "../components/EventBanner";
+import { EmailSignupBanner } from "../components/EmailSignupBanner";
 import type { ArtworkSummary } from "../types/artwork";
 
 export function Home() {
@@ -81,6 +82,7 @@ export function Home() {
 
   return (
     <>
+    <EmailSignupBanner />
     <EventBanner />
     <Container size="lg">
       <Stack align="center" py={60} mb="xl">

@@ -177,20 +177,29 @@ function EventCard({ event }: { event: Event }) {
         )}
 
         {hasPhotos && (
-          <Group gap="sm" wrap="wrap">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gap: "var(--mantine-spacing-sm)",
+            }}
+          >
             {photos.map((photo, idx) => (
               <Image
                 key={photo._key}
-                src={urlFor(photo.asset).width(400).height(300).fit("crop").url()}
+                src={urlFor(photo.asset).width(600).height(450).fit("crop").url()}
                 alt={photo.alt ?? event.title}
-                w={200}
-                h={150}
                 radius={0}
-                style={{ objectFit: "cover", cursor: "zoom-in" }}
+                style={{
+                  width: "100%",
+                  aspectRatio: "4 / 3",
+                  objectFit: "cover",
+                  cursor: "zoom-in",
+                }}
                 onClick={() => setOpenIndex(idx)}
               />
             ))}
-          </Group>
+          </div>
         )}
       </Stack>
 

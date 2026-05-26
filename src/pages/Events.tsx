@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActionIcon,
   Anchor,
   Badge,
   Card,
@@ -9,6 +10,7 @@ import {
   Group,
   Image,
   Loader,
+  Modal,
   Stack,
   Text,
   Title,
@@ -121,7 +123,27 @@ export function Events() {
 }
 
 function EventCard({ event }: { event: Event }) {
-  const hasPhotos = event.photos && event.photos.length > 0;
+  const photos = event.photos ?? [];
+  const hasPhotos = photos.length > 0;
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const close = () => setOpenIndex(null);
+  const showPrev = () =>
+    setOpenIndex((i) => (i === null ? i : (i - 1 + photos.length) % photos.length));
+  const showNext = () =>
+    setOpenIndex((i) => (i === null ? i : (i + 1) % photos.length));
+
+  useEffect(() => {
+    if (openIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") showPrev();
+      else if (e.key === "ArrowRight") showNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openIndex, photos.length]);
+
+  const activePhoto = openIndex === null ? null : photos[openIndex];
 
   return (
     <Card
@@ -156,7 +178,7 @@ function EventCard({ event }: { event: Event }) {
 
         {hasPhotos && (
           <Group gap="sm" wrap="wrap">
-            {event.photos!.map((photo) => (
+            {photos.map((photo, idx) => (
               <Image
                 key={photo._key}
                 src={urlFor(photo.asset).width(400).height(300).fit("crop").url()}
@@ -164,12 +186,87 @@ function EventCard({ event }: { event: Event }) {
                 w={200}
                 h={150}
                 radius={0}
-                style={{ objectFit: "cover" }}
+                style={{ objectFit: "cover", cursor: "zoom-in" }}
+                onClick={() => setOpenIndex(idx)}
               />
             ))}
           </Group>
         )}
       </Stack>
+
+      <Modal
+        opened={openIndex !== null}
+        onClose={close}
+        size="auto"
+        centered
+        padding={0}
+        withCloseButton={false}
+        radius={0}
+        overlayProps={{ backgroundOpacity: 0.85, blur: 2 }}
+        styles={{ content: { background: "transparent", boxShadow: "none" } }}
+      >
+        {activePhoto && (
+          <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+            <Image
+              src={urlFor(activePhoto.asset).width(1600).fit("max").url()}
+              alt={activePhoto.alt ?? event.title}
+              fit="contain"
+              radius={0}
+              style={{ maxHeight: "85vh", maxWidth: "90vw", cursor: "zoom-out" }}
+              onClick={close}
+            />
+
+            {photos.length > 1 && (
+              <>
+                <ActionIcon
+                  variant="filled"
+                  color="dark"
+                  radius="xl"
+                  size="lg"
+                  onClick={showPrev}
+                  aria-label="Previous photo"
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                >
+                  ‹
+                </ActionIcon>
+                <ActionIcon
+                  variant="filled"
+                  color="dark"
+                  radius="xl"
+                  size="lg"
+                  onClick={showNext}
+                  aria-label="Next photo"
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                >
+                  ›
+                </ActionIcon>
+              </>
+            )}
+
+            <ActionIcon
+              variant="filled"
+              color="dark"
+              radius="xl"
+              size="lg"
+              onClick={close}
+              aria-label="Close"
+              style={{ position: "absolute", top: 12, right: 12 }}
+            >
+              ×
+            </ActionIcon>
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 }

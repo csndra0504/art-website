@@ -160,6 +160,13 @@ export const artwork = defineType({
               validation: (rule) => rule.required().positive(),
             }),
             defineField({
+              name: "subtitle",
+              title: "Subtitle",
+              type: "string",
+              description:
+                "Optional note shown under the price, e.g. pickup or shipping instructions.",
+            }),
+            defineField({
               name: "visible",
               title: "Show on page",
               type: "boolean",

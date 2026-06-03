@@ -208,6 +208,11 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
               Buy via Venmo
             </Button>
           </Group>
+          {opt.subtitle && (
+            <Text size="xs" c="dimmed" mt="xs">
+              {opt.subtitle}
+            </Text>
+          )}
         </Box>
       ))}
     </Stack>

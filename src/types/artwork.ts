@@ -23,6 +23,7 @@ export interface CustomPurchaseOption {
   _key: string;
   title: string;
   price: number;
+  subtitle?: string;
   visible?: boolean;
 }
 

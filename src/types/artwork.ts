@@ -19,6 +19,13 @@ export interface ArtworkSummary {
   forSale?: boolean;
 }
 
+export interface CustomPurchaseOption {
+  _key: string;
+  title: string;
+  price: number;
+  visible?: boolean;
+}
+
 export interface Artwork extends ArtworkSummary {
   description: PortableTextBlock[];
   dimensions?: string;
@@ -29,4 +36,5 @@ export interface Artwork extends ArtworkSummary {
   printEtsyPrice?: number;
   printLocalPrice?: number;
   printLocalSold?: boolean;
+  customOptions?: CustomPurchaseOption[];
 }

@@ -34,6 +34,7 @@ const ARTWORK_DETAIL_PROJECTION = `{
   printEtsyPrice,
   printLocalPrice,
   printLocalSold,
+  customOptions,
 }`;
 
 export async function getArtworks(): Promise<ArtworkSummary[]> {

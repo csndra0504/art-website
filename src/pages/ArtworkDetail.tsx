@@ -31,8 +31,12 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   const hasOriginal = artwork.originalPrice != null;
   const hasEtsy = !!artwork.printEtsyUrl;
   const hasLocalPrint = artwork.printLocalPrice != null;
+  const customOptions = (artwork.customOptions ?? []).filter(
+    (opt) => opt.visible !== false
+  );
 
-  if (!hasOriginal && !hasEtsy && !hasLocalPrint) return null;
+  if (!hasOriginal && !hasEtsy && !hasLocalPrint && customOptions.length === 0)
+    return null;
 
   return (
     <Stack gap="sm">
@@ -179,6 +183,33 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           )}
         </Box>
       )}
+
+      {customOptions.map((opt) => (
+        <Box key={opt._key} p="md" style={{ border: "1px solid #e8e8e0" }}>
+          <Group justify="space-between" align="center" wrap="wrap" gap="xs">
+            <div>
+              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
+                {opt.title}
+              </Text>
+              <Text fw={600} size="lg">
+                ${opt.price.toLocaleString()}
+              </Text>
+            </div>
+            <Button
+              component="a"
+              href={venmoUrl(opt.price, `${opt.title} — ${artwork.title}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="filled"
+              color="dark"
+              radius={0}
+              size="sm"
+            >
+              Buy via Venmo
+            </Button>
+          </Group>
+        </Box>
+      ))}
     </Stack>
   );
 }

@@ -136,6 +136,55 @@ export const artwork = defineType({
       initialValue: false,
     }),
     defineField({
+      name: "customOptions",
+      title: "Custom Purchase Options",
+      type: "array",
+      description:
+        "Additional purchase options with a custom title and price. Each shows on the detail page when its toggle is on.",
+      fieldset: "purchase",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Title",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "price",
+              title: "Price",
+              type: "number",
+              description: "Price in dollars.",
+              validation: (rule) => rule.required().positive(),
+            }),
+            defineField({
+              name: "visible",
+              title: "Show on page",
+              type: "boolean",
+              description: "Turn off to hide this option from the detail page.",
+              initialValue: true,
+            }),
+          ],
+          preview: {
+            select: { title: "title", price: "price", visible: "visible" },
+            prepare({ title, price, visible }) {
+              return {
+                title: title ?? "Untitled option",
+                subtitle: [
+                  price != null ? `$${price.toLocaleString()}` : null,
+                  visible === false ? "Hidden" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              };
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "featured",
       title: "Featured",
       type: "boolean",

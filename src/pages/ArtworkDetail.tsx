@@ -85,7 +85,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           </Group>
           {!artwork.originalSold && (
             <Text size="xs" c="dimmed" mt="xs">
-              Pickup on or about May 1 after show concludes
+              Contact hello@cassandrawilcoxart.com to arrange pickup
             </Text>
           )}
         </Box>

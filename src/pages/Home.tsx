@@ -32,28 +32,40 @@ export function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Collapse tags case-insensitively, keeping the first-seen casing as the
+  // display label so "Pittsburgh" and "pittsburgh" share one filter.
   const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
+    const tagMap = new Map<string, string>();
     for (const artwork of artworks) {
-      artwork.tags?.forEach((t) => tagSet.add(t));
+      artwork.tags?.forEach((t) => {
+        const key = t.toLowerCase();
+        if (!tagMap.has(key)) tagMap.set(key, t);
+      });
     }
-    return Array.from(tagSet).sort();
+    return Array.from(tagMap.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
   }, [artworks]);
 
+  // activeTags holds lowercased tag keys for case-insensitive matching.
   const toggleTag = (tag: string) => {
+    const key = tag.toLowerCase();
     setActiveTags((prev) => {
       const next = new Set(prev);
-      if (next.has(tag)) {
-        next.delete(tag);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(tag);
+        next.add(key);
       }
       return next;
     });
   };
 
   const filtered = activeTags.size > 0
-    ? artworks.filter((a) => [...activeTags].every((t) => a.tags?.includes(t)))
+    ? artworks.filter((a) => {
+        const tags = a.tags?.map((t) => t.toLowerCase()) ?? [];
+        return [...activeTags].every((t) => tags.includes(t));
+      })
     : artworks;
 
   if (loading) {
@@ -111,11 +123,11 @@ export function Home() {
           , and shows her work at local markets around Pittsburgh. You can
           follow her on Instagram at{" "}
           <Anchor
-            href="https://instagram.com/cassie_or_cassandra"
+            href="https://instagram.com/casswilcoxart"
             target="_blank"
             c="dark"
           >
-            @cassie_or_cassandra
+            @casswilcoxart
           </Anchor>
           .
         </Text>
@@ -163,7 +175,7 @@ export function Home() {
           {allTags.map((tag) => (
             <Badge
               key={tag}
-              variant={activeTags.has(tag) ? "filled" : "outline"}
+              variant={activeTags.has(tag.toLowerCase()) ? "filled" : "outline"}
               color="dark"
               radius={0}
               size="md"

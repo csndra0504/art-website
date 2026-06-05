@@ -1,6 +1,6 @@
 import {
 	Anchor,
-	Blockquote,
+	Button,
 	Container,
 	Divider,
 	Group,
@@ -13,6 +13,7 @@ import {
 
 const CONTACT_EMAIL = 'hello@cassandrawilcoxart.com';
 const INSTAGRAM_URL = 'https://instagram.com/casswilcoxart';
+const FORM_URL = 'https://oval-spur-211.notion.site/99604deef63e410b94f682c3aac0d6f2?pvs=105';
 
 export function Commissions() {
 	return (
@@ -81,16 +82,12 @@ export function Commissions() {
 				<Stack gap="sm">
 					<Title order={2}>Pricing</Title>
 					<Text>
-						<strong>$300-$500</strong> for a custom commission.
+						<strong>$100-$400</strong> for a custom commission.
 					</Text>
 					<Text>
 						This includes the original artwork and a digital file. Framing is available at an
 						additional cost — just ask and I'll walk you through options.
 					</Text>
-					<Blockquote>
-						I offer a discount for any public place (bar, restaurant, shop) where I'm allowed to
-						also sell prints of the finished piece.
-					</Blockquote>
 				</Stack>
 
 				<Divider />
@@ -100,13 +97,13 @@ export function Commissions() {
 					<Title order={2}>How It Works</Title>
 
 					<Stack gap="xs">
-						<Title order={3}>1. Reach Out</Title>
+						<Title order={3}>1. Complete the Form</Title>
 						<Text>
-							Send me a DM on Instagram (
-							<Anchor href={INSTAGRAM_URL} target="_blank">
-								@casswilcoxart
+							Fill out my{' '}
+							<Anchor href={FORM_URL} target="_blank">
+								commission inquiry form
 							</Anchor>
-							) or email me at <strong>{CONTACT_EMAIL}</strong>. Tell me:
+							. It walks you through everything I need to get started, including:
 						</Text>
 						<List spacing="xs">
 							<List.Item>What place you'd like drawn</List.Item>
@@ -182,18 +179,22 @@ export function Commissions() {
 				<Divider />
 
 				{/* Ready? */}
-				<Stack gap="sm">
+				<Stack gap="sm" align="flex-start">
 					<Title order={2}>Ready?</Title>
 					<Text>
-						<strong>DM me on Instagram</strong> →{' '}
+						Complete the commission inquiry form and tell me about your place. I'd love to hear
+						the story.
+					</Text>
+					<Button component="a" href={FORM_URL} target="_blank" size="md">
+						Start your commission
+					</Button>
+					<Text size="sm" c="dimmed">
+						Questions first? DM me on Instagram (
 						<Anchor href={INSTAGRAM_URL} target="_blank">
 							@casswilcoxart
 						</Anchor>
+						) or email {CONTACT_EMAIL}.
 					</Text>
-					<Text>
-						<strong>Or email me</strong> → {CONTACT_EMAIL}
-					</Text>
-					<Text fs="italic">Tell me about your place. I'd love to hear the story.</Text>
 				</Stack>
 			</Stack>
 		</Container>

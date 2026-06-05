@@ -1,4 +1,4 @@
-import { createTheme } from "@mantine/core";
+import { Anchor, createTheme } from "@mantine/core";
 
 export const theme = createTheme({
   primaryColor: "dark",
@@ -19,8 +19,28 @@ export const theme = createTheme({
       "#3a3a28",
       "#1a1a08",
     ],
+    brick: [
+      "#fbecea",
+      "#f3d3cd",
+      "#e6a79c",
+      "#d97a68",
+      "#cd543d",
+      "#c63d23",
+      "#a8341d",
+      "#8a2a18",
+      "#6c2113",
+      "#4e170d",
+    ],
   },
   other: {
     bgBase: "#FAFAF8",
+  },
+  components: {
+    Anchor: Anchor.extend({
+      defaultProps: {
+        c: "brick.6",
+        underline: "always",
+      },
+    }),
   },
 });

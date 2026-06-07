@@ -19,6 +19,12 @@ import { useParams, Link } from "react-router-dom";
 import { PortableText } from "@portabletext/react";
 import { getArtworkBySlug } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
+import {
+  trackBeginCheckout,
+  trackViewItem,
+  type AnalyticsItem,
+  type PaymentType,
+} from "../lib/analytics";
 import type { Artwork } from "../types/artwork";
 
 const VENMO_HANDLE = "cassandrawilcox";
@@ -33,9 +39,11 @@ function venmoUrl(amount: number, note: string) {
 function BuyButtons({
   squareUrl,
   venmoHref,
+  onCheckout,
 }: {
   squareUrl?: string;
   venmoHref: string;
+  onCheckout?: (method: PaymentType) => void;
 }) {
   if (squareUrl) {
     return (
@@ -45,6 +53,7 @@ function BuyButtons({
           href={squareUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onCheckout?.("card")}
           variant="filled"
           color="dark"
           radius={0}
@@ -57,6 +66,7 @@ function BuyButtons({
           href={venmoHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => onCheckout?.("venmo")}
           variant="subtle"
           color="dark"
           radius={0}
@@ -73,6 +83,7 @@ function BuyButtons({
       href={venmoHref}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => onCheckout?.("venmo")}
       variant="filled"
       color="dark"
       radius={0}
@@ -93,6 +104,13 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
 
   if (!hasOriginal && !hasEtsy && !hasLocalPrint && customOptions.length === 0)
     return null;
+
+  const item = (variant: string, price?: number): AnalyticsItem => ({
+    item_id: artwork.slug.current,
+    item_name: artwork.title,
+    item_variant: variant,
+    price,
+  });
 
   return (
     <Stack gap="sm">
@@ -132,6 +150,9 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                   artwork.originalPrice!,
                   `Original — ${artwork.title}`
                 )}
+                onCheckout={(m) =>
+                  trackBeginCheckout(item("Original", artwork.originalPrice), m)
+                }
               />
             )}
           </Group>
@@ -165,6 +186,9 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
               href={artwork.printEtsyUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackBeginCheckout(item("Print — Etsy", artwork.printEtsyPrice), "etsy")
+              }
               variant="outline"
               color="dark"
               radius={0}
@@ -217,6 +241,12 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() =>
+                  trackBeginCheckout(
+                    item("Print — Local Pickup", artwork.printLocalPrice),
+                    "venmo"
+                  )
+                }
                 variant="filled"
                 color="dark"
                 radius={0}
@@ -248,6 +278,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             <BuyButtons
               squareUrl={opt.squareUrl}
               venmoHref={venmoUrl(opt.price, `${opt.title} — ${artwork.title}`)}
+              onCheckout={(m) => trackBeginCheckout(item(opt.title, opt.price), m)}
             />
           </Group>
           {opt.subtitle && (
@@ -270,7 +301,26 @@ export function ArtworkDetail() {
   useEffect(() => {
     if (!slug) return;
     getArtworkBySlug(slug)
-      .then(setArtwork)
+      .then((data) => {
+        setArtwork(data);
+        if (data) {
+          // Headline value = available original, else cheapest print.
+          const prints = [data.printEtsyPrice, data.printLocalPrice].filter(
+            (n): n is number => n != null
+          );
+          const value =
+            data.originalPrice != null && !data.originalSold
+              ? data.originalPrice
+              : prints.length
+                ? Math.min(...prints)
+                : data.originalPrice;
+          trackViewItem({
+            item_id: data.slug.current,
+            item_name: data.title,
+            price: value,
+          });
+        }
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [slug]);

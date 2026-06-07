@@ -10,6 +10,7 @@ import {
 	Text,
 	Title,
 } from '@mantine/core';
+import { trackLead } from '../lib/analytics';
 
 const CONTACT_EMAIL = 'hello@cassandrawilcoxart.com';
 const INSTAGRAM_URL = 'https://instagram.com/casswilcoxart';
@@ -100,7 +101,11 @@ export function Commissions() {
 						<Title order={3}>1. Complete the Form</Title>
 						<Text>
 							Fill out my{' '}
-							<Anchor href={FORM_URL} target="_blank">
+							<Anchor
+								href={FORM_URL}
+								target="_blank"
+								onClick={() => trackLead('commission_inquiry', { method: 'form' })}
+							>
 								commission inquiry form
 							</Anchor>
 							. It walks you through everything I need to get started, including:
@@ -185,7 +190,13 @@ export function Commissions() {
 						Complete the commission inquiry form and tell me about your place. I'd love to hear
 						the story.
 					</Text>
-					<Button component="a" href={FORM_URL} target="_blank" size="md">
+					<Button
+						component="a"
+						href={FORM_URL}
+						target="_blank"
+						onClick={() => trackLead('commission_inquiry', { method: 'form' })}
+						size="md"
+					>
 						Start your commission
 					</Button>
 					<Text size="sm" c="dimmed">

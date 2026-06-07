@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { isValidEmail, submitEmail } from "../lib/brevo";
+import { trackLead } from "../lib/analytics";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -47,6 +48,7 @@ export function EmailSignupBanner() {
     setStatus("submitting");
     try {
       await submitEmail(email, "banner", honeypot);
+      trackLead("email_signup", { method: "banner" });
       setStatus("success");
     } catch {
       setStatus("error");

@@ -10,6 +10,7 @@ import {
 } from "@mantine/core";
 import { isValidEmail, submitEmail } from "../lib/brevo";
 import { trackLead } from "../lib/analytics";
+import { WELCOME_DISCOUNT } from "../lib/siteContent";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -68,7 +69,11 @@ export function EmailSignupBanner() {
         <Group justify="space-between" wrap="nowrap" gap="sm" align="center">
           {status === "success" ? (
             <Text size="sm" style={{ lineHeight: 1.5 }}>
-              You're on the list. Check your inbox to confirm.
+              You're on the list! Use code{" "}
+              <Text span fw={700}>
+                {WELCOME_DISCOUNT.code}
+              </Text>{" "}
+              for {WELCOME_DISCOUNT.offer}. Check your inbox to confirm.
             </Text>
           ) : (
             <form
@@ -78,8 +83,11 @@ export function EmailSignupBanner() {
             >
               <Group gap="sm" wrap="wrap" align="center">
                 <Text size="sm" style={{ lineHeight: 1.5, flex: "1 1 220px" }}>
-                  Get first look at new originals &amp; print releases &mdash;
-                  straight to your inbox.
+                  Join the list for{" "}
+                  <Text span fw={700}>
+                    {WELCOME_DISCOUNT.offer}
+                  </Text>{" "}
+                  &mdash; plus first look at new originals &amp; print releases.
                 </Text>
                 <Group
                   gap="xs"

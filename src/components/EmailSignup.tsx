@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { isValidEmail, submitEmail } from "../lib/brevo";
 import { trackLead } from "../lib/analytics";
+import { WELCOME_DISCOUNT } from "../lib/siteContent";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -52,7 +53,11 @@ export function EmailSignup() {
         </Title>
         <Text size="sm" style={{ lineHeight: 1.7 }}>
           Check your inbox to confirm your subscription &mdash; once you click
-          the link, you're in.
+          the link, you're in. As a thank-you, use code{" "}
+          <Text span fw={700}>
+            {WELCOME_DISCOUNT.code}
+          </Text>{" "}
+          for {WELCOME_DISCOUNT.offer}.
         </Text>
       </Stack>
     );
@@ -66,7 +71,11 @@ export function EmailSignup() {
       <Text size="sm" style={{ lineHeight: 1.7 }}>
         Once or twice a month, I send out where you can find me; markets, shows,
         and gallery events around Pittsburgh. No spam, no algorithms, no need
-        for social media to know what's coming up!
+        for social media to know what's coming up! Join now and get{" "}
+        <Text span fw={700}>
+          {WELCOME_DISCOUNT.offer}
+        </Text>
+        .
       </Text>
 
       <form onSubmit={handleSubmit} noValidate>

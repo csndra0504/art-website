@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import {
   Anchor,
   Badge,
@@ -13,21 +14,58 @@ import {
   Center,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import { useParams, Link } from "react-router-dom";
 import { useDocumentTitle } from "@mantine/hooks";
 import { PortableText } from "@portabletext/react";
+import type { PortableTextBlock } from "@portabletext/react";
 import { getArtworkBySlug } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
 import {
   trackBeginCheckout,
+  trackLead,
   trackRequestPrint,
   trackViewItem,
   type AnalyticsItem,
   type PaymentType,
 } from "../lib/analytics";
+import { isValidEmail, submitEmail } from "../lib/brevo";
+import { setPageMeta } from "../lib/meta";
+import { WELCOME_DISCOUNT } from "../lib/siteContent";
+import { ShippingReturns } from "../components/ShippingReturns";
+import { Testimonials } from "../components/Testimonials";
 import type { Artwork } from "../types/artwork";
+
+const HONEYPOT_STYLE: React.CSSProperties = {
+  position: "absolute",
+  left: "-10000px",
+  width: 1,
+  height: 1,
+  opacity: 0,
+};
+
+// Pull a plain-text excerpt out of the PortableText description for use in meta
+// tags (search snippets / link previews). Falls back to empty string.
+function descriptionExcerpt(
+  blocks: PortableTextBlock[] | undefined,
+  max = 160,
+): string {
+  if (!blocks) return "";
+  const text = blocks
+    .filter((b) => b._type === "block")
+    .map((b) =>
+      ((b.children as { text?: string }[] | undefined) ?? [])
+        .map((c) => c.text ?? "")
+        .join(""),
+    )
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1).trimEnd() + "…";
+}
 
 const VENMO_HANDLE = "cassandrawilcox";
 
@@ -96,6 +134,18 @@ function BuyButtons({
   );
 }
 
+// Venmo has no coupon engine, so the welcome discount is honor-system on that
+// path: being on the email list is the gate. Shown only beside Venmo options
+// (Etsy/Square validate the code themselves and don't need this).
+function VenmoDiscountNote() {
+  return (
+    <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.5 }}>
+      Paying by Venmo and on my email list? Take {WELCOME_DISCOUNT.offer}{" "}
+      &mdash; just subtract it from the total before you send.
+    </Text>
+  );
+}
+
 function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   const hasOriginal = artwork.originalPrice != null;
   const hasEtsy = !!artwork.printEtsyUrl;
@@ -159,11 +209,14 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             )}
           </Group>
           {!artwork.originalSold && (
-            <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
-              One-of-a-kind original &mdash; once it&rsquo;s gone, it&rsquo;s gone.
-              Ships nationally, carefully packaged, or arrange local pickup in
-              Pittsburgh. Questions? Email hello@cassandrawilcoxart.com.
-            </Text>
+            <>
+              <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
+                One-of-a-kind original. Ships nationally, carefully packaged,
+                or arrange local pickup in Pittsburgh. Questions? Email
+                hello@cassandrawilcoxart.com.
+              </Text>
+              <VenmoDiscountNote />
+            </>
           )}
         </Box>
       )}
@@ -259,9 +312,12 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             )}
           </Group>
           {!artwork.printLocalSold && (
-            <Text size="xs" c="dimmed" mt="xs">
-              Arrange pickup via email or DM
-            </Text>
+            <>
+              <Text size="xs" c="dimmed" mt="xs">
+                Arrange pickup via email or DM
+              </Text>
+              <VenmoDiscountNote />
+            </>
           )}
         </Box>
       )}
@@ -288,41 +344,73 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
               {opt.subtitle}
             </Text>
           )}
+          <VenmoDiscountNote />
         </Box>
       ))}
     </Stack>
   );
 }
 
-// Shown on pieces that aren't offered as a print. One click logs a demand
-// signal to GA4 (request_print) tagged with the artwork, so interest can be
-// gauged per piece before deciding what to print next.
+// Shown on pieces that aren't offered as a print. Captures an email so interest
+// becomes a sellable lead (and a GA4 `request_print` signal tagged with the
+// artwork) instead of an anonymous click — when the print is ready, there's
+// someone to tell. Email is optional: submitting blank still logs the demand
+// signal so the lower-friction path stays open.
 function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
-  const [requested, setRequested] = useState(false);
+  const [email, setEmail] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState(false);
 
   const hasPrint = !!artwork.printEtsyUrl || artwork.printLocalPrice != null;
   if (hasPrint) return null;
 
-  const handleRequest = () => {
-    if (requested) return;
+  const logDemand = () =>
     trackRequestPrint({
       item_id: artwork.slug.current,
       item_name: artwork.title,
       item_variant: "Print (requested)",
     });
-    setRequested(true);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (honeypot) return;
+
+    const wantsEmail = email.trim().length > 0;
+    if (wantsEmail && !isValidEmail(email)) {
+      setEmailError(true);
+      return;
+    }
+
+    setSubmitting(true);
+    logDemand();
+    if (wantsEmail) {
+      // Best-effort: the demand signal is already logged, so never block the
+      // confirmation on a Brevo hiccup.
+      try {
+        await submitEmail(email, "print_request", honeypot);
+        trackLead("email_signup", { method: "print_request" });
+      } catch {
+        /* swallow — interest is recorded regardless */
+      }
+    }
+    setSubmitting(false);
+    setDone(true);
   };
 
   return (
     <Box p="md" style={{ border: "1px dashed #d4d4c8", background: "#fafaf8" }}>
-      {requested ? (
+      {done ? (
         <Stack gap={4}>
           <Text size="sm" fw={600}>
             Thanks &mdash; noted!
           </Text>
           <Text size="xs" c="dimmed" style={{ lineHeight: 1.6 }}>
-            The more interest a piece gets, the sooner I make prints of it. Want
-            to say more? DM{" "}
+            {email.trim()
+              ? "I'll email you the moment a print of this piece is ready. "
+              : "The more interest a piece gets, the sooner I make prints of it. "}
+            Want to say more? DM{" "}
             <Anchor
               href="https://instagram.com/casswilcoxart"
               target="_blank"
@@ -334,25 +422,56 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
           </Text>
         </Stack>
       ) : (
-        <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-          <div style={{ flex: "1 1 200px" }}>
-            <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-              No print yet
-            </Text>
-            <Text size="sm" style={{ lineHeight: 1.5 }}>
-              Want this one as a print? Let me know there&rsquo;s interest.
-            </Text>
-          </div>
-          <Button
-            onClick={handleRequest}
-            variant="outline"
-            color="dark"
-            radius={0}
-            size="sm"
-          >
-            Request a print
-          </Button>
-        </Group>
+        <form onSubmit={handleSubmit} noValidate>
+          <Stack gap="xs">
+            <div>
+              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
+                No print yet
+              </Text>
+              <Text size="sm" style={{ lineHeight: 1.5 }}>
+                Want this as a print? Leave your email and I&rsquo;ll let you
+                know the moment it&rsquo;s available.
+              </Text>
+            </div>
+            <Group gap="xs" wrap="nowrap" align="flex-start">
+              <TextInput
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.currentTarget.value);
+                  if (emailError) setEmailError(false);
+                }}
+                radius={0}
+                size="sm"
+                style={{ flex: 1 }}
+                disabled={submitting}
+                aria-label="Email address"
+                error={emailError ? "Enter a valid email" : undefined}
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                color="dark"
+                radius={0}
+                size="sm"
+                loading={submitting}
+              >
+                Notify me
+              </Button>
+            </Group>
+            <input
+              type="text"
+              name="email_address_check"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.currentTarget.value)}
+              aria-hidden="true"
+              style={HONEYPOT_STYLE}
+            />
+          </Stack>
+        </form>
       )}
     </Box>
   );
@@ -394,6 +513,41 @@ export function ArtworkDetail() {
   useDocumentTitle(
     artwork ? `${artwork.title} — Cassandra Wilcox Art` : "Cassandra Wilcox Art"
   );
+
+  // Per-piece meta: correct title, snippet, and the artwork's own image for
+  // search results and JS-rendering crawlers. Restores prior tags on unmount so
+  // navigating to another route doesn't inherit this piece's preview.
+  useEffect(() => {
+    if (!artwork) return;
+    const priceBits = [
+      artwork.originalPrice != null && !artwork.originalSold
+        ? `Original $${artwork.originalPrice.toLocaleString()}`
+        : null,
+      artwork.printEtsyPrice != null || artwork.printLocalPrice != null
+        ? `prints from $${Math.min(
+            ...[artwork.printEtsyPrice, artwork.printLocalPrice].filter(
+              (n): n is number => n != null
+            )
+          ).toLocaleString()}`
+        : null,
+    ].filter(Boolean);
+    const excerpt = descriptionExcerpt(artwork.description);
+    const description =
+      [excerpt, priceBits.join(" · ")].filter(Boolean).join(" — ") ||
+      `${artwork.title} — hand-drawn Pittsburgh artwork by Cassandra Wilcox.`;
+
+    const shareImage = artwork.images[0]
+      ? urlFor(artwork.images[0].asset).width(1200).height(630).fit("crop").url()
+      : undefined;
+
+    return setPageMeta({
+      title: `${artwork.title} — Cassandra Wilcox Art`,
+      description,
+      image: shareImage,
+      url: `/artwork/${artwork.slug.current}`,
+      type: "article",
+    });
+  }, [artwork]);
 
   if (loading) {
     return (
@@ -445,10 +599,13 @@ export function ArtworkDetail() {
         <>
           <Divider color="#e8e8e0" />
           <PurchaseOptions artwork={artwork} />
+          <ShippingReturns />
         </>
       )}
 
       <RequestPrintPrompt artwork={artwork} />
+
+      <Testimonials />
 
       <Divider color="#e8e8e0" />
 

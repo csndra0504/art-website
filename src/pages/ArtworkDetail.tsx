@@ -335,7 +335,10 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             </div>
             <BuyButtons
               squareUrl={opt.squareUrl}
-              venmoHref={venmoUrl(opt.price, `${opt.title} — ${artwork.title}`)}
+              venmoHref={venmoUrl(
+                opt.price,
+                opt.venmoNote ?? `${opt.title} — ${artwork.title}`
+              )}
               onCheckout={(m) => trackBeginCheckout(item(opt.title, opt.price), m)}
             />
           </Group>
@@ -363,7 +366,12 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
   const [submitting, setSubmitting] = useState(false);
   const [emailError, setEmailError] = useState(false);
 
-  const hasPrint = !!artwork.printEtsyUrl || artwork.printLocalPrice != null;
+  const hasPrint =
+    !!artwork.printEtsyUrl ||
+    artwork.printLocalPrice != null ||
+    (artwork.customOptions ?? []).some(
+      (opt) => opt.visible !== false && opt.kind === "print"
+    );
   if (hasPrint) return null;
 
   const logDemand = () =>

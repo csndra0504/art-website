@@ -24,7 +24,15 @@ export interface ArtworkSummary {
   printEtsyPrice?: number;
   printLocalPrice?: number;
   printLocalSold?: boolean;
+  // True when the piece has at least one visible custom purchase option, so the
+  // gallery's "For Sale" filter counts options-only pieces (e.g. postcards).
+  hasCustomOption?: boolean;
+  // Cheapest visible custom option of kind "print", so the card's "Prints from"
+  // line reflects print-type custom options (e.g. postcards).
+  customPrintFrom?: number;
 }
+
+export type CustomPurchaseKind = "original" | "print";
 
 export interface CustomPurchaseOption {
   _key: string;
@@ -33,6 +41,12 @@ export interface CustomPurchaseOption {
   subtitle?: string;
   visible?: boolean;
   squareUrl?: string;
+  // Overrides the auto-generated Venmo note. Used for options like a postcard
+  // bundle where the buyer needs to tell us which designs they want.
+  venmoNote?: string;
+  // What this option sells. A visible "print" option suppresses the
+  // "request a print" prompt, since a print is already available.
+  kind?: CustomPurchaseKind;
 }
 
 export interface Artwork extends ArtworkSummary {

@@ -161,6 +161,21 @@ export const artwork = defineType({
               validation: (rule) => rule.required(),
             }),
             defineField({
+              name: "kind",
+              title: "Type",
+              type: "string",
+              description:
+                "What this option sells. \"Print\" (which includes postcards) hides the \"request a print\" prompt on this piece.",
+              options: {
+                list: [
+                  { title: "Print", value: "print" },
+                  { title: "Original", value: "original" },
+                ],
+                layout: "radio",
+              },
+              initialValue: "print",
+            }),
+            defineField({
               name: "price",
               title: "Price",
               type: "number",
@@ -180,6 +195,13 @@ export const artwork = defineType({
               type: "url",
               description:
                 "Optional Square checkout link. When set, this option shows a \"Buy with card\" button instead of Venmo.",
+            }),
+            defineField({
+              name: "venmoNote",
+              title: "Venmo Note",
+              type: "string",
+              description:
+                "Optional. Pre-fills the Venmo payment note instead of the default \"Title — Artwork\". Use to ask the buyer for info, e.g. \"3 postcards — reply with the 3 designs you want\".",
             }),
             defineField({
               name: "visible",

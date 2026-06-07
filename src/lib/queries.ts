@@ -20,6 +20,8 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   printEtsyPrice,
   printLocalPrice,
   printLocalSold,
+  "hasCustomOption": count(customOptions[visible != false]) > 0,
+  "customPrintFrom": math::min(customOptions[visible != false && kind == "print"].price),
 }`;
 
 const ARTWORK_DETAIL_PROJECTION = `{

@@ -17,10 +17,14 @@ function pricing(a: ArtworkSummary) {
   if (a.printEtsyPrice != null) printPrices.push(a.printEtsyPrice);
   if (a.printLocalPrice != null && !a.printLocalSold)
     printPrices.push(a.printLocalPrice);
+  if (a.customPrintFrom != null) printPrices.push(a.customPrintFrom);
   const printsFrom = printPrices.length ? Math.min(...printPrices) : null;
 
   const everListed =
-    originalListed || a.printEtsyPrice != null || a.printLocalPrice != null;
+    originalListed ||
+    a.printEtsyPrice != null ||
+    a.printLocalPrice != null ||
+    a.customPrintFrom != null;
   const anyAvailable = originalAvailable || printsFrom != null;
 
   return {

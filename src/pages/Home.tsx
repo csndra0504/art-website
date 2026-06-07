@@ -27,6 +27,7 @@ function isAvailable(a: ArtworkSummary): boolean {
 	if (a.originalPrice != null && !a.originalSold) return true;
 	if (a.printEtsyPrice != null) return true;
 	if (a.printLocalPrice != null && !a.printLocalSold) return true;
+	if (a.hasCustomOption) return true;
 	return false;
 }
 
@@ -141,7 +142,7 @@ export function Home() {
 				{/* Hero — lead with the work and a clear path to buy. */}
 				<Stack align="center" py={48} gap="md">
 					<Title order={1} ta="center" fw={700} style={{ letterSpacing: '-0.02em' }}>
-						Art That Celebrates What Makes Pittsburgh, Pittsburgh
+						Art That Celebrates Main Street Pittsburgh
 					</Title>
 					<Title order={2} ta="center" fw={400} c="dimmed" size="lg">
 						Cassandra Wilcox &middot; Pittsburgh-based Sketch Artist

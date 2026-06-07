@@ -76,8 +76,8 @@ export function EmailSignupBanner() {
             >
               <Group gap="sm" wrap="wrap" align="center">
                 <Text size="sm" style={{ lineHeight: 1.5, flex: "1 1 220px" }}>
-                  Know where I'll be next &mdash; Pittsburgh markets and shows
-                  in your inbox.
+                  Get first look at new originals &amp; print releases &mdash;
+                  straight to your inbox.
                 </Text>
                 <Group
                   gap="xs"

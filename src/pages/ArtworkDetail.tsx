@@ -27,6 +27,62 @@ function venmoUrl(amount: number, note: string) {
   return `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
 }
 
+// One-tap card checkout via a Square link when available, with Venmo as a
+// lower-friction fallback. Card-first lowers the barrier for new visitors who
+// don't already use Venmo.
+function BuyButtons({
+  squareUrl,
+  venmoHref,
+}: {
+  squareUrl?: string;
+  venmoHref: string;
+}) {
+  if (squareUrl) {
+    return (
+      <Group gap="xs" wrap="wrap" justify="flex-end">
+        <Button
+          component="a"
+          href={squareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="filled"
+          color="dark"
+          radius={0}
+          size="sm"
+        >
+          Buy with card
+        </Button>
+        <Button
+          component="a"
+          href={venmoHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="subtle"
+          color="dark"
+          radius={0}
+          size="sm"
+        >
+          or Venmo
+        </Button>
+      </Group>
+    );
+  }
+  return (
+    <Button
+      component="a"
+      href={venmoHref}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="filled"
+      color="dark"
+      radius={0}
+      size="sm"
+    >
+      Buy via Venmo
+    </Button>
+  );
+}
+
 function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   const hasOriginal = artwork.originalPrice != null;
   const hasEtsy = !!artwork.printEtsyUrl;
@@ -70,26 +126,20 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
               </Group>
             </div>
             {!artwork.originalSold && (
-              <Button
-                component="a"
-                href={venmoUrl(
+              <BuyButtons
+                squareUrl={artwork.originalSquareUrl}
+                venmoHref={venmoUrl(
                   artwork.originalPrice!,
                   `Original — ${artwork.title}`
                 )}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="filled"
-                color="dark"
-                radius={0}
-                size="sm"
-              >
-                Buy via Venmo
-              </Button>
+              />
             )}
           </Group>
           {!artwork.originalSold && (
-            <Text size="xs" c="dimmed" mt="xs">
-              Contact hello@cassandrawilcoxart.com to arrange pickup
+            <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
+              One-of-a-kind original &mdash; once it&rsquo;s gone, it&rsquo;s gone.
+              Ships nationally, carefully packaged, or arrange local pickup in
+              Pittsburgh. Questions? Email hello@cassandrawilcoxart.com.
             </Text>
           )}
         </Box>
@@ -195,18 +245,10 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 ${opt.price.toLocaleString()}
               </Text>
             </div>
-            <Button
-              component="a"
-              href={venmoUrl(opt.price, `${opt.title} — ${artwork.title}`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="filled"
-              color="dark"
-              radius={0}
-              size="sm"
-            >
-              Buy via Venmo
-            </Button>
+            <BuyButtons
+              squareUrl={opt.squareUrl}
+              venmoHref={venmoUrl(opt.price, `${opt.title} — ${artwork.title}`)}
+            />
           </Group>
           {opt.subtitle && (
             <Text size="xs" c="dimmed" mt="xs">
@@ -266,6 +308,11 @@ export function ArtworkDetail() {
 
   const infoContent = (
     <Stack gap="md">
+      {artwork.highlightLabel && (
+        <Badge color="brick.6" variant="filled" radius={0} size="md" w="fit-content">
+          {artwork.highlightLabel}
+        </Badge>
+      )}
       <Title order={2}>{artwork.title}</Title>
 
       {meta && (

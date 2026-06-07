@@ -17,6 +17,13 @@ export interface ArtworkSummary {
   tags?: string[];
   featured?: boolean;
   forSale?: boolean;
+  highlightLabel?: string;
+  // Pricing carried on the summary so cards can show "from $X" without a fetch.
+  originalPrice?: number;
+  originalSold?: boolean;
+  printEtsyPrice?: number;
+  printLocalPrice?: number;
+  printLocalSold?: boolean;
 }
 
 export interface CustomPurchaseOption {
@@ -25,6 +32,7 @@ export interface CustomPurchaseOption {
   price: number;
   subtitle?: string;
   visible?: boolean;
+  squareUrl?: string;
 }
 
 export interface Artwork extends ArtworkSummary {
@@ -33,6 +41,7 @@ export interface Artwork extends ArtworkSummary {
   forSale: boolean;
   originalPrice?: number;
   originalSold?: boolean;
+  originalSquareUrl?: string;
   printEtsyUrl?: string;
   printEtsyPrice?: number;
   printLocalPrice?: number;

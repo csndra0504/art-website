@@ -14,6 +14,12 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   featured,
   forSale,
   sortOrder,
+  highlightLabel,
+  originalPrice,
+  originalSold,
+  printEtsyPrice,
+  printLocalPrice,
+  printLocalSold,
 }`;
 
 const ARTWORK_DETAIL_PROJECTION = `{
@@ -28,8 +34,10 @@ const ARTWORK_DETAIL_PROJECTION = `{
   tags,
   featured,
   forSale,
+  highlightLabel,
   originalPrice,
   originalSold,
+  originalSquareUrl,
   printEtsyUrl,
   printEtsyPrice,
   printLocalPrice,

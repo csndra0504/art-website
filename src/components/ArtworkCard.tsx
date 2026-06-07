@@ -7,11 +7,39 @@ interface ArtworkCardProps {
   artwork: ArtworkSummary;
 }
 
+// Build a short availability + price line so buyers can gauge affordability
+// without opening every piece. Returns null when nothing is priced.
+function priceSummary(artwork: ArtworkSummary): { label: string; sold: boolean } | null {
+  const available: number[] = [];
+  if (artwork.originalPrice != null && !artwork.originalSold)
+    available.push(artwork.originalPrice);
+  if (artwork.printEtsyPrice != null) available.push(artwork.printEtsyPrice);
+  if (artwork.printLocalPrice != null && !artwork.printLocalSold)
+    available.push(artwork.printLocalPrice);
+
+  if (available.length > 0) {
+    const min = Math.min(...available);
+    const multiple = available.length > 1 || artwork.printEtsyPrice != null;
+    return { label: `${multiple ? "From " : ""}$${min.toLocaleString()}`, sold: false };
+  }
+
+  // Nothing available, but something was priced → it sold out.
+  const everPriced =
+    artwork.originalPrice != null ||
+    artwork.printEtsyPrice != null ||
+    artwork.printLocalPrice != null;
+  if (everPriced) return { label: "Sold", sold: true };
+
+  return null;
+}
+
 export function ArtworkCard({ artwork }: ArtworkCardProps) {
   const primaryImage = artwork.images?.[0];
   const imageUrl = primaryImage
     ? urlFor(primaryImage.asset).width(600).auto("format").url()
     : undefined;
+
+  const price = artwork.forSale ? priceSummary(artwork) : null;
 
   return (
     <Card
@@ -28,7 +56,18 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
           alt={primaryImage?.alt ?? artwork.title}
           style={{ aspectRatio: "3 / 4", objectFit: "cover" }}
         />
-        {artwork.forSale && (
+        {artwork.highlightLabel && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="brick.6"
+            radius={0}
+            style={{ position: "absolute", top: 8, left: 8 }}
+          >
+            {artwork.highlightLabel}
+          </Badge>
+        )}
+        {price?.sold && (
           <Badge
             size="sm"
             variant="filled"
@@ -36,7 +75,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
             radius={0}
             style={{ position: "absolute", top: 8, right: 8 }}
           >
-            For Sale
+            Sold
           </Badge>
         )}
       </div>
@@ -54,6 +93,11 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
         {artwork.medium && (
           <Text size="xs" c="dimmed">
             {artwork.medium}
+          </Text>
+        )}
+        {price && !price.sold && (
+          <Text size="sm" fw={600}>
+            {price.label}
           </Text>
         )}
       </Stack>

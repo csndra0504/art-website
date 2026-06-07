@@ -105,6 +105,14 @@ export const artwork = defineType({
       initialValue: false,
     }),
     defineField({
+      name: "originalSquareUrl",
+      title: "Original — Square Checkout Link",
+      type: "url",
+      description:
+        "Paste a Square checkout link for the original (Square Dashboard → Online → Checkout Links). When set, buyers see a one-tap \"Buy with card\" button. Venmo stays as a fallback.",
+      fieldset: "purchase",
+    }),
+    defineField({
       name: "printEtsyUrl",
       title: "Print — Etsy URL",
       type: "url",
@@ -167,6 +175,13 @@ export const artwork = defineType({
                 "Optional note shown under the price, e.g. pickup or shipping instructions.",
             }),
             defineField({
+              name: "squareUrl",
+              title: "Square Checkout Link",
+              type: "url",
+              description:
+                "Optional Square checkout link. When set, this option shows a \"Buy with card\" button instead of Venmo.",
+            }),
+            defineField({
               name: "visible",
               title: "Show on page",
               type: "boolean",
@@ -196,6 +211,13 @@ export const artwork = defineType({
       title: "Featured",
       type: "boolean",
       initialValue: false,
+    }),
+    defineField({
+      name: "highlightLabel",
+      title: "Highlight Label",
+      type: "string",
+      description:
+        'Optional ribbon shown on the card and detail page, e.g. "As seen on Instagram", "Bestseller", "Just one left". Leave blank for none.',
     }),
     defineField({
       name: "sortOrder",

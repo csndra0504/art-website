@@ -47,3 +47,16 @@ export function trackBeginCheckout(item: AnalyticsItem, paymentType: PaymentType
 export function trackLead(source: string, params: Record<string, unknown> = {}) {
   send("generate_lead", { source, ...params });
 }
+
+/**
+ * Demand signal: someone wants a print of a piece that isn't offered as one.
+ * item_id/item_name are sent as top-level params (register them as custom
+ * dimensions in GA4 to break the report down by artwork).
+ */
+export function trackRequestPrint(item: AnalyticsItem) {
+  send("request_print", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    items: [withDefaults(item)],
+  });
+}

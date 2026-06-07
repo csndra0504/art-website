@@ -21,6 +21,7 @@ import { getArtworkBySlug } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
 import {
   trackBeginCheckout,
+  trackRequestPrint,
   trackViewItem,
   type AnalyticsItem,
   type PaymentType,
@@ -292,6 +293,70 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   );
 }
 
+// Shown on pieces that aren't offered as a print. One click logs a demand
+// signal to GA4 (request_print) tagged with the artwork, so interest can be
+// gauged per piece before deciding what to print next.
+function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
+  const [requested, setRequested] = useState(false);
+
+  const hasPrint = !!artwork.printEtsyUrl || artwork.printLocalPrice != null;
+  if (hasPrint) return null;
+
+  const handleRequest = () => {
+    if (requested) return;
+    trackRequestPrint({
+      item_id: artwork.slug.current,
+      item_name: artwork.title,
+      item_variant: "Print (requested)",
+    });
+    setRequested(true);
+  };
+
+  return (
+    <Box p="md" style={{ border: "1px dashed #d4d4c8", background: "#fafaf8" }}>
+      {requested ? (
+        <Stack gap={4}>
+          <Text size="sm" fw={600}>
+            Thanks &mdash; noted!
+          </Text>
+          <Text size="xs" c="dimmed" style={{ lineHeight: 1.6 }}>
+            The more interest a piece gets, the sooner I make prints of it. Want
+            to say more? DM{" "}
+            <Anchor
+              href="https://instagram.com/casswilcoxart"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              @casswilcoxart
+            </Anchor>{" "}
+            or email hello@cassandrawilcoxart.com.
+          </Text>
+        </Stack>
+      ) : (
+        <Group justify="space-between" align="center" wrap="wrap" gap="xs">
+          <div style={{ flex: "1 1 200px" }}>
+            <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
+              No print yet
+            </Text>
+            <Text size="sm" style={{ lineHeight: 1.5 }}>
+              Want this one as a print? Let me know there&rsquo;s interest.
+            </Text>
+          </div>
+          <Button
+            onClick={handleRequest}
+            variant="outline"
+            color="dark"
+            radius={0}
+            size="sm"
+          >
+            Request a print
+          </Button>
+        </Group>
+      )}
+    </Box>
+  );
+}
+
 export function ArtworkDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [artwork, setArtwork] = useState<Artwork | null>(null);
@@ -377,6 +442,8 @@ export function ArtworkDetail() {
           <PurchaseOptions artwork={artwork} />
         </>
       )}
+
+      <RequestPrintPrompt artwork={artwork} />
 
       <Divider color="#e8e8e0" />
 

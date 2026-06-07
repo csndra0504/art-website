@@ -15,6 +15,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useDocumentTitle } from "@mantine/hooks";
 import { PortableText } from "@portabletext/react";
 import { getEvents } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
@@ -32,6 +33,7 @@ function formatDate(dateStr: string) {
 }
 
 export function Events() {
+  useDocumentTitle("Events — Cassandra Wilcox Art");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

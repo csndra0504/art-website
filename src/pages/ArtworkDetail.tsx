@@ -16,6 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useParams, Link } from "react-router-dom";
+import { useDocumentTitle } from "@mantine/hooks";
 import { PortableText } from "@portabletext/react";
 import { getArtworkBySlug } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
@@ -389,6 +390,10 @@ export function ArtworkDetail() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useDocumentTitle(
+    artwork ? `${artwork.title} — Cassandra Wilcox Art` : "Cassandra Wilcox Art"
+  );
 
   if (loading) {
     return (

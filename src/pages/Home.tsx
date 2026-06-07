@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useDocumentTitle } from '@mantine/hooks';
 import {
 	Anchor,
 	Badge,
@@ -56,6 +57,7 @@ function TagIcon() {
 }
 
 export function Home() {
+	useDocumentTitle('Cassandra Wilcox Art — Original Pittsburgh Art & Prints');
 	const [artworks, setArtworks] = useState<ArtworkSummary[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);

@@ -210,7 +210,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           <Group justify="space-between" align="center" wrap="wrap" gap="xs">
             <div>
               <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                Print
+                8×10 Print
               </Text>
               {artwork.printEtsyPrice != null ? (
                 <Text fw={600} size="lg">
@@ -253,7 +253,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           <Group justify="space-between" align="center" wrap="wrap" gap="xs">
             <div>
               <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                Print — Local Pickup
+                8×10 Print — Local Pickup
               </Text>
               <Group gap="xs" align="center">
                 <Text

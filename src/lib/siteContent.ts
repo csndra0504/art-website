@@ -10,7 +10,7 @@
 export const SHIPPING_RETURNS: string[] = [
   "Free shipping anywhere in the US — or arrange local pickup in Pittsburgh.",
   "Originals ship within 3–5 business days, packaged flat and rigid to arrive safely.",
-  "Arrives damaged? Send a photo within 7 days and I'll replace or refund it — no fuss.",
+  "All sales are final — no refunds on direct purchases. If you'd like refund protection, order through Etsy instead.",
   "Questions before you buy? Email hello@cassandrawilcoxart.com or DM @casswilcoxart.",
 ];
 

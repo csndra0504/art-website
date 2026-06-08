@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import {
   Anchor,
   Badge,
@@ -14,7 +13,6 @@ import {
   Center,
   Stack,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core";
 import { useParams, Link } from "react-router-dom";
@@ -25,25 +23,15 @@ import { getArtworkBySlug } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
 import {
   trackBeginCheckout,
-  trackLead,
   trackRequestPrint,
   trackViewItem,
   type AnalyticsItem,
   type PaymentType,
 } from "../lib/analytics";
-import { isValidEmail, submitEmail } from "../lib/brevo";
 import { setPageMeta } from "../lib/meta";
 import { ShippingReturns } from "../components/ShippingReturns";
 import { Testimonials } from "../components/Testimonials";
 import type { Artwork } from "../types/artwork";
-
-const HONEYPOT_STYLE: React.CSSProperties = {
-  position: "absolute",
-  left: "-10000px",
-  width: 1,
-  height: 1,
-  opacity: 0,
-};
 
 // Pull a plain-text excerpt out of the PortableText description for use in meta
 // tags (search snippets / link previews). Falls back to empty string.
@@ -334,17 +322,11 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   );
 }
 
-// Shown on pieces that aren't offered as a print. Captures an email so interest
-// becomes a sellable lead (and a GA4 `request_print` signal tagged with the
-// artwork) instead of an anonymous click — when the print is ready, there's
-// someone to tell. Email is optional: submitting blank still logs the demand
-// signal so the lower-friction path stays open.
+// Shown on pieces that aren't offered as a print. A single button logs a GA4
+// `request_print` signal tagged with the artwork, so demand shows up as an
+// anonymous count in Analytics — no email captured, nothing to consent to.
 function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
-  const [email, setEmail] = useState("");
-  const [honeypot, setHoneypot] = useState("");
   const [done, setDone] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [emailError, setEmailError] = useState(false);
 
   const hasPrint =
     !!artwork.printEtsyUrl ||
@@ -354,36 +336,12 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
     );
   if (hasPrint) return null;
 
-  const logDemand = () =>
+  const handleRequest = () => {
     trackRequestPrint({
       item_id: artwork.slug.current,
       item_name: artwork.title,
       item_variant: "Print (requested)",
     });
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (honeypot) return;
-
-    const wantsEmail = email.trim().length > 0;
-    if (wantsEmail && !isValidEmail(email)) {
-      setEmailError(true);
-      return;
-    }
-
-    setSubmitting(true);
-    logDemand();
-    if (wantsEmail) {
-      // Best-effort: the demand signal is already logged, so never block the
-      // confirmation on a Brevo hiccup.
-      try {
-        await submitEmail(email, "print_request", honeypot);
-        trackLead("email_signup", { method: "print_request" });
-      } catch {
-        /* swallow — interest is recorded regardless */
-      }
-    }
-    setSubmitting(false);
     setDone(true);
   };
 
@@ -395,10 +353,8 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
             Thanks &mdash; noted!
           </Text>
           <Text size="xs" c="dimmed" style={{ lineHeight: 1.6 }}>
-            {email.trim()
-              ? "I'll email you the moment a print of this piece is ready. "
-              : "The more interest a piece gets, the sooner I make prints of it. "}
-            Want to say more? DM{" "}
+            The more interest a piece gets, the sooner I make prints of it. Want
+            to make sure you hear when it&rsquo;s ready? DM{" "}
             <Anchor
               href="https://instagram.com/casswilcoxart"
               target="_blank"
@@ -410,56 +366,27 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
           </Text>
         </Stack>
       ) : (
-        <form onSubmit={handleSubmit} noValidate>
-          <Stack gap="xs">
-            <div>
-              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                No print yet
-              </Text>
-              <Text size="sm" style={{ lineHeight: 1.5 }}>
-                Want this as a print? Leave your email and I&rsquo;ll let you
-                know the moment it&rsquo;s available.
-              </Text>
-            </div>
-            <Group gap="xs" wrap="nowrap" align="flex-start">
-              <TextInput
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.currentTarget.value);
-                  if (emailError) setEmailError(false);
-                }}
-                radius={0}
-                size="sm"
-                style={{ flex: 1 }}
-                disabled={submitting}
-                aria-label="Email address"
-                error={emailError ? "Enter a valid email" : undefined}
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                color="dark"
-                radius={0}
-                size="sm"
-                loading={submitting}
-              >
-                Notify me
-              </Button>
-            </Group>
-            <input
-              type="text"
-              name="email_address_check"
-              tabIndex={-1}
-              autoComplete="off"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.currentTarget.value)}
-              aria-hidden="true"
-              style={HONEYPOT_STYLE}
-            />
-          </Stack>
-        </form>
+        <Stack gap="xs">
+          <div>
+            <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
+              No print yet
+            </Text>
+            <Text size="sm" style={{ lineHeight: 1.5 }}>
+              Want this as a print? Let me know there&rsquo;s interest and
+              I&rsquo;ll prioritize making one.
+            </Text>
+          </div>
+          <Button
+            onClick={handleRequest}
+            variant="outline"
+            color="dark"
+            radius={0}
+            size="sm"
+            style={{ alignSelf: "flex-start" }}
+          >
+            Request a print
+          </Button>
+        </Stack>
       )}
     </Box>
   );

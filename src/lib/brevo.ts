@@ -3,7 +3,7 @@ const BREVO_FORM_URL =
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type SignupSource = "inline" | "banner" | "print_request";
+export type SignupSource = "inline" | "banner";
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email.trim());

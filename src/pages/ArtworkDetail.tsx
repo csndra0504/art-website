@@ -33,7 +33,6 @@ import {
 } from "../lib/analytics";
 import { isValidEmail, submitEmail } from "../lib/brevo";
 import { setPageMeta } from "../lib/meta";
-import { WELCOME_DISCOUNT } from "../lib/siteContent";
 import { ShippingReturns } from "../components/ShippingReturns";
 import { Testimonials } from "../components/Testimonials";
 import type { Artwork } from "../types/artwork";
@@ -134,18 +133,6 @@ function BuyButtons({
   );
 }
 
-// Venmo has no coupon engine, so the welcome discount is honor-system on that
-// path: being on the email list is the gate. Shown only beside Venmo options
-// (Etsy/Square validate the code themselves and don't need this).
-function VenmoDiscountNote() {
-  return (
-    <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.5 }}>
-      Paying by Venmo and on my email list? Take {WELCOME_DISCOUNT.offer}{" "}
-      &mdash; just subtract it from the total before you send.
-    </Text>
-  );
-}
-
 function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   const hasOriginal = artwork.originalPrice != null;
   const hasEtsy = !!artwork.printEtsyUrl;
@@ -209,14 +196,11 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             )}
           </Group>
           {!artwork.originalSold && (
-            <>
-              <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
-                One-of-a-kind original. Ships nationally, carefully packaged,
-                or arrange local pickup in Pittsburgh. Questions? Email
-                hello@cassandrawilcoxart.com.
-              </Text>
-              <VenmoDiscountNote />
-            </>
+            <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
+              One-of-a-kind original. Ships nationally, carefully packaged, or
+              arrange local pickup in Pittsburgh. Questions? Email
+              hello@cassandrawilcoxart.com.
+            </Text>
           )}
         </Box>
       )}
@@ -312,12 +296,9 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
             )}
           </Group>
           {!artwork.printLocalSold && (
-            <>
-              <Text size="xs" c="dimmed" mt="xs">
-                Arrange pickup via email or DM
-              </Text>
-              <VenmoDiscountNote />
-            </>
+            <Text size="xs" c="dimmed" mt="xs">
+              Arrange pickup via email or DM
+            </Text>
           )}
         </Box>
       )}
@@ -347,7 +328,6 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
               {opt.subtitle}
             </Text>
           )}
-          <VenmoDiscountNote />
         </Box>
       ))}
     </Stack>

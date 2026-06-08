@@ -1,19 +1,6 @@
 // Hardcoded marketing/trust content. Editing any value here changes the live
 // site after a rebuild & deploy — no Sanity involved. Kept in one place so the
-// shipping promise, testimonials, and welcome offer are easy to find and tweak.
-
-// ---------------------------------------------------------------------------
-// Welcome discount
-// ---------------------------------------------------------------------------
-// IMPORTANT: this code must exist as a real discount in the channels you sell
-// through (Square, Etsy) or be honored manually, or buyers will be let down.
-// Square: Dashboard → Items & Services → Discounts → create a coupon code.
-// Etsy:  Shop Manager → Marketing → Sales & Discounts → new code.
-export const WELCOME_DISCOUNT = {
-  code: "WELCOME10",
-  // Short label used in calls-to-action.
-  offer: "10% off your first order",
-};
+// shipping promise and testimonials are easy to find and tweak.
 
 // ---------------------------------------------------------------------------
 // Shipping & returns — shown on every product page to de-risk a first purchase.

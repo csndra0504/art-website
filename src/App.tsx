@@ -5,6 +5,7 @@ import { ArtworkDetail } from "./pages/ArtworkDetail";
 import { Events } from "./pages/Events";
 import { Commissions } from "./pages/Commissions";
 import { Subscribe } from "./pages/Subscribe";
+import { Raffle } from "./pages/Raffle";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/commissions" element={<Commissions />} />
           <Route path="/subscribe" element={<Subscribe />} />
+          <Route path="/raffle" element={<Raffle />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -6,7 +6,10 @@ type Print = {
 	slug: string;
 };
 
-// One-off static assets served from /public/raffle — see the raffle prompt.
+// One-off static assets served from /public/images/raffle. Note the folder is
+// deliberately NOT /public/raffle — that would collide with the /raffle SPA
+// route and make nginx's `try_files $uri/` resolve the directory (403) instead
+// of falling back to index.html.
 const PRINTS: Print[] = [
 	{ name: "Biddle's Escape", slug: 'biddles-escape' },
 	{ name: 'Bryant Street Market', slug: 'bryant-street-market' },
@@ -52,7 +55,7 @@ export function Raffle() {
 								}}
 							>
 								<img
-									src={`/raffle/${print.slug}.webp`}
+									src={`/images/raffle/${print.slug}.webp`}
 									alt={`${print.name} — 8×10 hand-drawn ink and marker print by Cassandra Wilcox`}
 									loading="lazy"
 									style={{

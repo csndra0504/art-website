@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { usePostHog } from "@posthog/react";
 import {
   ActionIcon,
   Anchor,
@@ -125,6 +126,7 @@ export function Events() {
 }
 
 function EventCard({ event }: { event: Event }) {
+  const posthog = usePostHog();
   const photos = event.photos ?? [];
   const hasPhotos = photos.length > 0;
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -166,7 +168,14 @@ function EventCard({ event }: { event: Event }) {
             </Text>
           </Stack>
           {event.link && (
-            <Anchor href={event.link} target="_blank" rel="noopener noreferrer" c="dark" size="sm">
+            <Anchor
+              href={event.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              c="dark"
+              size="sm"
+              onClick={() => posthog?.capture('event_link_clicked', { event_title: event.title, event_date: event.date })}
+            >
               Event page →
             </Anchor>
           )}

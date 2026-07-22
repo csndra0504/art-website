@@ -3,7 +3,11 @@
     "allow": [
       "mcp__keepdoing__pm_create_tasks",
       "mcp__keepdoing__pm_list_epics",
-      "mcp__keepdoing__pm_sprint_tasks"
+      "mcp__keepdoing__pm_sprint_tasks",
+      "mcp__claude_ai_Square__get_workflow_info",
+      "mcp__claude_ai_Square__get_service_info",
+      "mcp__claude_ai_Square__make_api_request",
+      "mcp__claude_ai_Square__get_type_info"
     ]
   },
   "enableAllProjectMcpServers": true,

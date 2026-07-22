@@ -30,3 +30,4 @@ studio/.env
 *.njsproj
 *.sln
 *.sw?
+.env.local

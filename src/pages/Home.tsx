@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDocumentTitle } from '@mantine/hooks';
+import { usePostHog } from '@posthog/react';
 import {
 	Anchor,
 	Badge,
@@ -59,6 +60,7 @@ function TagIcon() {
 
 export function Home() {
 	useDocumentTitle('Cassandra Wilcox Art — Original Pittsburgh Art & Prints');
+	const posthog = usePostHog();
 	const [artworks, setArtworks] = useState<ArtworkSummary[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -94,11 +96,13 @@ export function Home() {
 		const key = tag.toLowerCase();
 		setActiveTags((prev) => {
 			const next = new Set(prev);
-			if (next.has(key)) {
-				next.delete(key);
-			} else {
+			const adding = !next.has(key);
+			if (adding) {
 				next.add(key);
+			} else {
+				next.delete(key);
 			}
+			posthog?.capture('gallery_filter_applied', { filter_type: 'tag', filter_value: tag, applied: adding });
 			return next;
 		});
 	};
@@ -153,7 +157,16 @@ export function Home() {
 						Lawrenceville and Polish Hill, South Side, and North Side among others!
 					</Text>
 					<Group gap="md" mt="sm" justify="center" wrap="wrap">
-						<Button onClick={scrollToGallery} color="dark" radius={0} size="md" px="xl">
+						<Button
+							onClick={() => {
+								scrollToGallery();
+								posthog?.capture('hero_cta_clicked', { cta_label: 'shop_gallery' });
+							}}
+							color="dark"
+							radius={0}
+							size="md"
+							px="xl"
+						>
 							Shop Originals &amp; Prints
 						</Button>
 						<Button
@@ -164,6 +177,7 @@ export function Home() {
 							radius={0}
 							size="md"
 							px="xl"
+							onClick={() => posthog?.capture('hero_cta_clicked', { cta_label: 'commissions' })}
 						>
 							Commission a Piece
 						</Button>
@@ -195,7 +209,11 @@ export function Home() {
 							size="md"
 							leftSection={<TagIcon />}
 							style={{ cursor: 'pointer' }}
-							onClick={() => setAvailableOnly((v) => !v)}
+							onClick={() => {
+								const next = !availableOnly;
+								setAvailableOnly(next);
+								posthog?.capture('gallery_filter_applied', { filter_type: 'for_sale', applied: next });
+							}}
 						>
 							For Sale
 						</Badge>

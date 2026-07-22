@@ -4,6 +4,7 @@
 // Note on this site's funnel: checkout completes off-domain (Square, Venmo,
 // Etsy), so GA cannot observe a real `purchase`. We treat the click on a buy
 // button as the conversion via `begin_checkout`; true revenue lives in Square.
+import posthog from "posthog-js";
 
 export interface AnalyticsItem {
   /** Stable id — we use the artwork slug. */
@@ -32,6 +33,11 @@ export function trackViewItem(item: AnalyticsItem) {
     value: item.price,
     items: [withDefaults(item)],
   });
+  posthog.capture("artwork_viewed", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    price: item.price,
+  });
 }
 
 export function trackBeginCheckout(item: AnalyticsItem, paymentType: PaymentType) {
@@ -41,11 +47,23 @@ export function trackBeginCheckout(item: AnalyticsItem, paymentType: PaymentType
     payment_type: paymentType,
     items: [withDefaults(item)],
   });
+  posthog.capture("checkout_started", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_variant: item.item_variant,
+    price: item.price,
+    payment_method: paymentType,
+  });
 }
 
 /** Email signups and commission inquiries. `source` distinguishes them. */
 export function trackLead(source: string, params: Record<string, unknown> = {}) {
   send("generate_lead", { source, ...params });
+  if (source === "commission_inquiry") {
+    posthog.capture("commission_inquiry_started", { ...params });
+  } else if (source === "email_signup") {
+    posthog.capture("email_signup_submitted", { ...params });
+  }
 }
 
 /**
@@ -58,5 +76,9 @@ export function trackRequestPrint(item: AnalyticsItem) {
     item_id: item.item_id,
     item_name: item.item_name,
     items: [withDefaults(item)],
+  });
+  posthog.capture("print_requested", {
+    item_id: item.item_id,
+    item_name: item.item_name,
   });
 }

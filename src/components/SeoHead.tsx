@@ -13,6 +13,13 @@ export interface SeoHeadProps {
   type?: "website" | "article";
   /** Optional alt text for the share image. */
   imageAlt?: string;
+  /**
+   * Keep this page out of search results. Note we deliberately do NOT also
+   * block it in robots.txt — a disallowed page can't be crawled, so the
+   * noindex directive would never be seen. Crawlable + noindex is what
+   * actually de-indexes a page.
+   */
+  noindex?: boolean;
 }
 
 // Single source of truth for per-page <title>, description, canonical, and
@@ -26,6 +33,7 @@ export function SeoHead({
   path,
   type = "website",
   imageAlt,
+  noindex = false,
 }: SeoHeadProps) {
   const url = path ? absoluteUrl(path) : undefined;
   const img = absoluteUrl(image ?? DEFAULT_SHARE_IMAGE);
@@ -33,6 +41,7 @@ export function SeoHead({
   return (
     <Head>
       <title>{title}</title>
+      {noindex && <meta name="robots" content="noindex, follow" />}
       {description && <meta name="description" content={description} />}
 
       <meta property="og:type" content={type} />

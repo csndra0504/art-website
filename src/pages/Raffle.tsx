@@ -32,6 +32,9 @@ export function Raffle() {
 				title="Northside Music Fest Raffle — Pick Your Print"
 				description="Raffle winners: pick any one 8×10 hand-drawn print from the twelve options below."
 				path="/raffle"
+				// One-off page for raffle winners reached from an email — not
+				// something that should turn up in search results.
+				noindex
 			/>
 			<Stack gap="xl">
 				<Stack gap="md">

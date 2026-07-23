@@ -3,6 +3,10 @@ name: Deploy
 on:
   push:
     branches: [main]
+  # Fired by the Sanity "content published" webhook (event type: sanity-publish)
+  # so publishing artwork/events rebuilds the prerendered site without a git push.
+  repository_dispatch:
+    types: [sanity-publish]
 
 env:
   REGISTRY: ghcr.io
@@ -57,6 +61,9 @@ jobs:
 
   deploy-studio:
     runs-on: ubuntu-latest
+    # The Studio only changes when its schema/code changes (a git push), not when
+    # content is published — so skip it on the Sanity content webhook.
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 

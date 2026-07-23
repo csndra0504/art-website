@@ -10,17 +10,24 @@ import {
 	Text,
 	Title,
 } from '@mantine/core';
-import { useDocumentTitle } from '@mantine/hooks';
 import { trackLead } from '../lib/analytics';
+import { SeoHead } from '../components/SeoHead';
+import { JsonLd } from '../components/JsonLd';
+import { buildCommissionsJsonLd } from '../lib/structuredData';
 
 const CONTACT_EMAIL = 'hello@cassandrawilcoxart.com';
 const INSTAGRAM_URL = 'https://instagram.com/casswilcoxart';
 const FORM_URL = 'https://oval-spur-211.notion.site/99604deef63e410b94f682c3aac0d6f2?pvs=105';
 
 export function Commissions() {
-	useDocumentTitle('Custom Commissions — Cassandra Wilcox Art');
 	return (
 		<Container size="md" py="xl">
+			<SeoHead
+				title="Custom Commissions — Cassandra Wilcox Art"
+				description="Commission a one-of-a-kind, hand-drawn ink and marker illustration of a place that means something to you. $100–$400, from photo or on-location in Pittsburgh."
+				path="/commissions"
+			/>
+			<JsonLd data={buildCommissionsJsonLd()} />
 			<Stack gap="xl">
 				{/* Hero */}
 				<Group align="flex-start" gap="xl" wrap="wrap">
@@ -213,3 +220,5 @@ export function Commissions() {
 		</Container>
 	);
 }
+
+export const Component = Commissions;

@@ -20,4 +20,16 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Route modules (vite-react-ssg) must export `loader`/`getStaticPaths`
+    // alongside their `Component` — a framework requirement, not a fast-refresh
+    // hazard. Allow those named exports to coexist with the component.
+    files: ['src/pages/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowExportNames: ['loader', 'getStaticPaths'] },
+      ],
+    },
+  },
 ])

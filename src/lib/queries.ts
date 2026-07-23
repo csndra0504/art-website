@@ -75,6 +75,14 @@ export async function getEvents(): Promise<Event[]> {
   );
 }
 
+// Slugs of every artwork, used at build time by getStaticPaths to enumerate the
+// static /artwork/<slug> pages to prerender.
+export async function getArtworkSlugs(): Promise<string[]> {
+  return client.fetch(
+    `*[_type == "artwork" && defined(slug.current)].slug.current`
+  );
+}
+
 export async function getUpcomingEvents(): Promise<Event[]> {
   return client.fetch(
     `*[_type == "event" && date >= now()] | order(date asc) {

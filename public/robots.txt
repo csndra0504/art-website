@@ -1,0 +1,36 @@
+# Cassandra Wilcox Art — crawling policy
+# The whole site is public and meant to be indexed, including by AI crawlers
+# (so the work can surface in AI answers). Everything is allowed.
+
+User-agent: *
+Allow: /
+
+# Explicitly welcome the major AI / answer-engine crawlers.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://cassandrawilcoxart.com/sitemap.xml

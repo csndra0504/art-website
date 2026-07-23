@@ -1,25 +1,27 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Layout } from "./components/Layout";
-import { Home } from "./pages/Home";
-import { ArtworkDetail } from "./pages/ArtworkDetail";
-import { Events } from "./pages/Events";
-import { Commissions } from "./pages/Commissions";
-import { Subscribe } from "./pages/Subscribe";
-import { Raffle } from "./pages/Raffle";
+import type { RouteRecord } from "vite-react-ssg";
+import { RootLayout } from "./components/RootLayout";
+import { getArtworkSlugs } from "./lib/queries";
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/artwork/:slug" element={<ArtworkDetail />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/commissions" element={<Commissions />} />
-          <Route path="/subscribe" element={<Subscribe />} />
-          <Route path="/raffle" element={<Raffle />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
-}
+// Route table consumed by vite-react-ssg. Pages are code-split via `lazy` and
+// export their own `Component` + `loader` (see each page file). The root route
+// renders RootLayout (providers + AppShell) with the page in its Outlet.
+export const routes: RouteRecord[] = [
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      { index: true, lazy: () => import("./pages/Home") },
+      {
+        path: "artwork/:slug",
+        lazy: () => import("./pages/ArtworkDetail"),
+        // Enumerate every artwork page to prerender at build time.
+        getStaticPaths: async () =>
+          (await getArtworkSlugs()).map((slug) => `/artwork/${slug}`),
+      },
+      { path: "events", lazy: () => import("./pages/Events") },
+      { path: "commissions", lazy: () => import("./pages/Commissions") },
+      { path: "subscribe", lazy: () => import("./pages/Subscribe") },
+      { path: "raffle", lazy: () => import("./pages/Raffle") },
+    ],
+  },
+];

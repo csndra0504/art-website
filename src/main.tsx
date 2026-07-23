@@ -1,25 +1,18 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { MantineProvider } from "@mantine/core";
+import { ViteReactSSG } from "vite-react-ssg";
 import "@mantine/core/styles.css";
-import { theme, cssVariablesResolver } from "./lib/theme";
-import App from "./App";
 import posthog from "posthog-js";
-import { PostHogErrorBoundary, PostHogProvider } from "@posthog/react";
+import { routes } from "./App";
 
-posthog.init(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN, {
-  api_host: import.meta.env.VITE_POSTHOG_HOST,
-  defaults: "2026-01-30",
-});
+// posthog-js is browser-only. This module is also imported by the static build
+// (Node, no `window`), so initialise only on the client. The provider itself
+// lives in RootLayout so it's part of the server-rendered tree.
+if (typeof window !== "undefined") {
+  posthog.init(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN, {
+    api_host: import.meta.env.VITE_POSTHOG_HOST,
+    defaults: "2026-01-30",
+  });
+}
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <PostHogProvider client={posthog}>
-      <PostHogErrorBoundary>
-        <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
-          <App />
-        </MantineProvider>
-      </PostHogErrorBoundary>
-    </PostHogProvider>
-  </StrictMode>
-);
+// vite-react-ssg owns app creation: at build it renders each route to static
+// HTML; on the client it hydrates.
+export const createRoot = ViteReactSSG({ routes });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button, CloseButton, Container, Group, Text, TextInput } from '@mantine/core';
 import { isValidEmail, submitEmail } from '../lib/brevo';
@@ -17,10 +17,22 @@ const HONEYPOT_STYLE: React.CSSProperties = {
 };
 
 export function EmailSignupBanner() {
-	const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISSED_KEY) === 'true');
+	// Start visible on the server and first client render (sessionStorage is
+	// browser-only), then reconcile from storage after mount to avoid a hydration
+	// mismatch.
+	const [dismissed, setDismissed] = useState(false);
 	const [email, setEmail] = useState('');
 	const [honeypot, setHoneypot] = useState('');
 	const [status, setStatus] = useState<Status>('idle');
+
+	useEffect(() => {
+		// Reconcile dismissal from storage after mount (SSR-safe). The one extra
+		// render is intentional and cheap — it only hides an already-dismissed banner.
+		if (sessionStorage.getItem(DISMISSED_KEY) === 'true') {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setDismissed(true);
+		}
+	}, []);
 
 	if (dismissed) return null;
 

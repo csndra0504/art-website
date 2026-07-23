@@ -5,24 +5,31 @@ import {
   Anchor,
   Badge,
   Card,
-  Center,
   Container,
   Divider,
   Group,
   Image,
-  Loader,
   Modal,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useLoaderData } from "react-router-dom";
 import { PortableText } from "@portabletext/react";
 import { getEvents } from "../lib/queries";
 import { urlFor } from "../lib/sanity";
+import { SeoHead } from "../components/SeoHead";
+import { JsonLd } from "../components/JsonLd";
+import { buildEventsJsonLd } from "../lib/structuredData";
 import type { Event } from "../types/event";
 
 type Filter = "all" | "upcoming" | "past";
+
+// Runs at build time (and on client navigation) so the events list is baked
+// into the static HTML for crawlers.
+export async function loader() {
+  return { events: await getEvents() };
+}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -34,20 +41,21 @@ function formatDate(dateStr: string) {
 }
 
 export function Events() {
-  useDocumentTitle("Events — Cassandra Wilcox Art");
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Seed from the build-time loader (present in static HTML), then refetch on
+  // the client so newly added or edited events show without a rebuild.
+  const { events: initialEvents } = useLoaderData() as { events: Event[] };
+  const [events, setEvents] = useState<Event[]>(initialEvents);
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
     getEvents()
       .then(setEvents)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, []);
 
   const now = useMemo(() => new Date().toISOString(), []);
+
+  const eventsJsonLd = useMemo(() => buildEventsJsonLd(events), [events]);
 
   const filtered = useMemo(() => {
     if (filter === "upcoming") {
@@ -70,24 +78,14 @@ export function Events() {
     return [...upcoming, ...past];
   }, [events, filter, now]);
 
-  if (loading) {
-    return (
-      <Center py="xl">
-        <Loader color="dark" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container size="lg" py="xl">
-        <Text c="red">Failed to load events: {error}</Text>
-      </Container>
-    );
-  }
-
   return (
     <Container size="lg" py="xl">
+      <SeoHead
+        title="Events — Cassandra Wilcox Art"
+        description="Where to find Cassandra Wilcox in person — markets, shows, and gallery events around Pittsburgh."
+        path="/events"
+      />
+      {eventsJsonLd && <JsonLd data={eventsJsonLd} />}
       <Stack gap="xl">
         <Title order={1} fw={700} style={{ letterSpacing: "-0.02em" }}>
           Events
@@ -290,3 +288,5 @@ function EventCard({ event }: { event: Event }) {
     </Card>
   );
 }
+
+export const Component = Events;

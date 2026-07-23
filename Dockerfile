@@ -13,6 +13,14 @@ ARG VITE_SANITY_DATASET=production
 ARG VITE_POSTHOG_PROJECT_TOKEN
 ARG VITE_POSTHOG_HOST
 
+# The prerender build now fetches artwork slugs + page data from Sanity at build
+# time, so these must be real env vars for the build process (ARG alone leaves
+# them out of some tool environments). Without them no artwork pages prerender.
+ENV VITE_SANITY_PROJECT_ID=$VITE_SANITY_PROJECT_ID \
+    VITE_SANITY_DATASET=$VITE_SANITY_DATASET \
+    VITE_POSTHOG_PROJECT_TOKEN=$VITE_POSTHOG_PROJECT_TOKEN \
+    VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST
+
 RUN npm run build
 
 # -- Production stage --

@@ -17,9 +17,19 @@ function isWithinWindow(event: Event): boolean {
 
 export function EventBanner() {
   const [event, setEvent] = useState<Event | null>(null);
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem(DISMISSED_KEY) === "true"
-  );
+  // Start undismissed on the server and first client render (sessionStorage is
+  // browser-only), then reconcile from storage after mount to avoid a hydration
+  // mismatch.
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    // Reconcile dismissal from storage after mount (SSR-safe). The one extra
+    // render is intentional and cheap — it only hides an already-dismissed banner.
+    if (sessionStorage.getItem(DISMISSED_KEY) === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDismissed(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (dismissed) return;

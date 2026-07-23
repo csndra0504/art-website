@@ -1,5 +1,5 @@
 import { Box, Container, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { useDocumentTitle } from '@mantine/hooks';
+import { SeoHead } from '../components/SeoHead';
 
 type Print = {
 	name: string;
@@ -26,10 +26,13 @@ const PRINTS: Print[] = [
 ];
 
 export function Raffle() {
-	useDocumentTitle('Northside Music Fest Raffle — Pick Your Print');
-
 	return (
 		<Container size="lg" py="xl">
+			<SeoHead
+				title="Northside Music Fest Raffle — Pick Your Print"
+				description="Raffle winners: pick any one 8×10 hand-drawn print from the twelve options below."
+				path="/raffle"
+			/>
 			<Stack gap="xl">
 				<Stack gap="md">
 					<Title order={1} c="black">
@@ -77,3 +80,5 @@ export function Raffle() {
 		</Container>
 	);
 }
+
+export const Component = Raffle;

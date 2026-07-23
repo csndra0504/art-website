@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDocumentTitle } from '@mantine/hooks';
 import { usePostHog } from '@posthog/react';
 import {
 	Anchor,
@@ -13,14 +12,22 @@ import {
 	Stack,
 	Text,
 	Title,
-	Loader,
-	Center,
 } from '@mantine/core';
+import { useLoaderData } from 'react-router-dom';
 import { getArtworks } from '../lib/queries';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { EventBanner } from '../components/EventBanner';
 import { EmailSignupBanner } from '../components/EmailSignupBanner';
+import { SeoHead } from '../components/SeoHead';
+import { JsonLd } from '../components/JsonLd';
+import { buildHomeJsonLd } from '../lib/structuredData';
 import type { ArtworkSummary } from '../types/artwork';
+
+// Runs at build time (and on client navigation) so the gallery is present in the
+// static HTML for crawlers.
+export async function loader() {
+	return { artworks: await getArtworks() };
+}
 
 // A piece is "available" if it's for sale and at least one purchase path is open.
 function isAvailable(a: ArtworkSummary): boolean {
@@ -59,19 +66,20 @@ function TagIcon() {
 }
 
 export function Home() {
-	useDocumentTitle('Cassandra Wilcox Art — Original Pittsburgh Art & Prints');
 	const posthog = usePostHog();
-	const [artworks, setArtworks] = useState<ArtworkSummary[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	// Seed from the build-time loader (present in static HTML), then refetch on
+	// the client so new work / sold status updates without waiting for a rebuild.
+	const { artworks: initialArtworks } = useLoaderData() as {
+		artworks: ArtworkSummary[];
+	};
+	const [artworks, setArtworks] = useState<ArtworkSummary[]>(initialArtworks);
 	const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
 	const [availableOnly, setAvailableOnly] = useState(false);
 
 	useEffect(() => {
 		getArtworks()
 			.then(setArtworks)
-			.catch((err) => setError(err.message))
-			.finally(() => setLoading(false));
+			.catch(() => {});
 	}, []);
 
 	// Collapse tags case-insensitively, keeping the first-seen casing as the
@@ -114,25 +122,21 @@ export function Home() {
 		return [...activeTags].every((t) => tags.includes(t));
 	});
 
-	if (loading) {
-		return (
-			<Center py="xl">
-				<Loader color="dark" />
-			</Center>
-		);
-	}
-
-	if (error) {
-		return (
-			<Container size="lg" py="xl">
-				<Text c="red">Failed to load artworks: {error}</Text>
-			</Container>
-		);
-	}
+	const seo = (
+		<>
+			<SeoHead
+				title="Cassandra Wilcox Art — Original Pittsburgh Art & Prints"
+				description="Hand-drawn originals and prints of Pittsburgh's landmarks and main-street neighborhoods — Lawrenceville, Polish Hill, the South Side, and beyond. By Pittsburgh sketch artist Cassandra Wilcox."
+				path="/"
+			/>
+			<JsonLd data={buildHomeJsonLd()} />
+		</>
+	);
 
 	if (artworks.length === 0) {
 		return (
 			<Container size="lg" py="xl">
+				{seo}
 				<Text c="dimmed">No artworks yet.</Text>
 			</Container>
 		);
@@ -140,6 +144,7 @@ export function Home() {
 
 	return (
 		<>
+			{seo}
 			<EmailSignupBanner />
 			<EventBanner />
 			<Container size="lg">
@@ -276,3 +281,5 @@ export function Home() {
 		</>
 	);
 }
+
+export const Component = Home;

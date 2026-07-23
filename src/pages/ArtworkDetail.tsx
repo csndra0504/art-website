@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
@@ -9,14 +9,11 @@ import {
   Grid,
   Group,
   Image,
-  Loader,
-  Center,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { useParams, Link } from "react-router-dom";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useParams, useLoaderData, Link } from "react-router-dom";
 import { PortableText } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/react";
 import { getArtworkBySlug } from "../lib/queries";
@@ -28,10 +25,19 @@ import {
   type AnalyticsItem,
   type PaymentType,
 } from "../lib/analytics";
-import { setPageMeta } from "../lib/meta";
+import { SeoHead } from "../components/SeoHead";
+import { JsonLd } from "../components/JsonLd";
+import { buildArtworkJsonLd } from "../lib/structuredData";
 import { ShippingReturns } from "../components/ShippingReturns";
 import { Testimonials } from "../components/Testimonials";
 import type { Artwork } from "../types/artwork";
+
+// Runs at build time for every slug (see getStaticPaths in App.tsx) so each
+// artwork page ships as static HTML with its own content and meta.
+export async function loader({ params }: { params: { slug?: string } }) {
+  if (!params.slug) return { artwork: null };
+  return { artwork: await getArtworkBySlug(params.slug) };
+}
 
 // Pull a plain-text excerpt out of the PortableText description for use in meta
 // tags (search snippets / link previews). Falls back to empty string.
@@ -394,46 +400,49 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
 
 export function ArtworkDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const [artwork, setArtwork] = useState<Artwork | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Seed from the build-time loader so the page renders fully on first paint
+  // (and in static HTML for crawlers); refetch on the client for fresh pricing
+  // and sold status without waiting for a rebuild.
+  const { artwork: initialArtwork } = useLoaderData() as {
+    artwork: Artwork | null;
+  };
+  const [artwork, setArtwork] = useState<Artwork | null>(initialArtwork);
 
   useEffect(() => {
     if (!slug) return;
     getArtworkBySlug(slug)
       .then((data) => {
-        setArtwork(data);
-        if (data) {
-          // Headline value = available original, else cheapest print.
-          const prints = [data.printEtsyPrice, data.printLocalPrice].filter(
-            (n): n is number => n != null
-          );
-          const value =
-            data.originalPrice != null && !data.originalSold
-              ? data.originalPrice
-              : prints.length
-                ? Math.min(...prints)
-                : data.originalPrice;
-          trackViewItem({
-            item_id: data.slug.current,
-            item_name: data.title,
-            price: value,
-          });
-        }
+        if (data) setArtwork(data);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, [slug]);
 
-  useDocumentTitle(
-    artwork ? `${artwork.title} — Cassandra Wilcox Art` : "Cassandra Wilcox Art"
-  );
-
-  // Per-piece meta: correct title, snippet, and the artwork's own image for
-  // search results and JS-rendering crawlers. Restores prior tags on unmount so
-  // navigating to another route doesn't inherit this piece's preview.
+  // Fire the GA4 view_item once per piece. Headline value = available original,
+  // else cheapest print.
+  const viewedSlug = artwork?.slug.current;
   useEffect(() => {
     if (!artwork) return;
+    const prints = [artwork.printEtsyPrice, artwork.printLocalPrice].filter(
+      (n): n is number => n != null
+    );
+    const value =
+      artwork.originalPrice != null && !artwork.originalSold
+        ? artwork.originalPrice
+        : prints.length
+          ? Math.min(...prints)
+          : artwork.originalPrice;
+    trackViewItem({
+      item_id: artwork.slug.current,
+      item_name: artwork.title,
+      price: value,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewedSlug]);
+
+  // Per-piece SEO/share values, derived in render so <SeoHead> and the JSON-LD
+  // are part of the static HTML.
+  const seo = useMemo(() => {
+    if (!artwork) return null;
     const priceBits = [
       artwork.originalPrice != null && !artwork.originalSold
         ? `Original $${artwork.originalPrice.toLocaleString()}`
@@ -450,39 +459,19 @@ export function ArtworkDetail() {
     const description =
       [excerpt, priceBits.join(" · ")].filter(Boolean).join(" — ") ||
       `${artwork.title} — hand-drawn Pittsburgh artwork by Cassandra Wilcox.`;
-
     const shareImage = artwork.images[0]
       ? urlFor(artwork.images[0].asset).width(1200).height(630).fit("crop").url()
       : undefined;
-
-    return setPageMeta({
-      title: `${artwork.title} — Cassandra Wilcox Art`,
-      description,
-      image: shareImage,
-      url: `/artwork/${artwork.slug.current}`,
-      type: "article",
-    });
+    return { excerpt, description, shareImage };
   }, [artwork]);
-
-  if (loading) {
-    return (
-      <Center py="xl">
-        <Loader color="dark" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container size="lg" py="xl">
-        <Text c="red">Failed to load artwork: {error}</Text>
-      </Container>
-    );
-  }
 
   if (!artwork) {
     return (
       <Container size="lg" py="xl">
+        <SeoHead
+          title="Artwork not found — Cassandra Wilcox Art"
+          description="This piece could not be found."
+        />
         <Text c="dimmed">Artwork not found.</Text>
         <Anchor component={Link} to="/" size="sm" mt="sm">
           Back to gallery
@@ -553,6 +542,19 @@ export function ArtworkDetail() {
 
   return (
     <Container size="lg" py="xl">
+      {seo && (
+        <>
+          <SeoHead
+            title={`${artwork.title} — Cassandra Wilcox Art`}
+            description={seo.description}
+            image={seo.shareImage}
+            imageAlt={artwork.images[0]?.alt ?? artwork.title}
+            path={`/artwork/${artwork.slug.current}`}
+            type="article"
+          />
+          <JsonLd data={buildArtworkJsonLd(artwork, seo.excerpt)} />
+        </>
+      )}
       <Anchor
         component={Link}
         to="/"
@@ -627,3 +629,5 @@ export function ArtworkDetail() {
     </Container>
   );
 }
+
+export const Component = ArtworkDetail;

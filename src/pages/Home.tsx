@@ -69,10 +69,14 @@ export function Home() {
 	const posthog = usePostHog();
 	// Seed from the build-time loader (present in static HTML), then refetch on
 	// the client so new work / sold status updates without waiting for a rebuild.
-	const { artworks: initialArtworks } = useLoaderData() as {
+	// Loader data is null for any path the build didn't prerender, so read it
+	// defensively — a stale manifest must not blank the page.
+	const loaderData = useLoaderData() as {
 		artworks: ArtworkSummary[];
-	};
-	const [artworks, setArtworks] = useState<ArtworkSummary[]>(initialArtworks);
+	} | null;
+	const [artworks, setArtworks] = useState<ArtworkSummary[]>(
+		loaderData?.artworks ?? [],
+	);
 	const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
 	const [availableOnly, setAvailableOnly] = useState(false);
 

@@ -43,8 +43,10 @@ function formatDate(dateStr: string) {
 export function Events() {
   // Seed from the build-time loader (present in static HTML), then refetch on
   // the client so newly added or edited events show without a rebuild.
-  const { events: initialEvents } = useLoaderData() as { events: Event[] };
-  const [events, setEvents] = useState<Event[]>(initialEvents);
+  // Loader data is null for any path the build didn't prerender, so read it
+  // defensively — a stale manifest must not blank the page.
+  const loaderData = useLoaderData() as { events: Event[] } | null;
+  const [events, setEvents] = useState<Event[]>(loaderData?.events ?? []);
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {

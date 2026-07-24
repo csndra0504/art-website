@@ -403,10 +403,15 @@ export function ArtworkDetail() {
   // Seed from the build-time loader so the page renders fully on first paint
   // (and in static HTML for crawlers); refetch on the client for fresh pricing
   // and sold status without waiting for a rebuild.
-  const { artwork: initialArtwork } = useLoaderData() as {
-    artwork: Artwork | null;
-  };
+  // The static loader returns null outright for any path missing from the
+  // prerender manifest — i.e. a piece published since the last build — so this
+  // must tolerate no loader data at all rather than destructuring blind.
+  const loaderData = useLoaderData() as { artwork: Artwork | null } | null;
+  const initialArtwork = loaderData?.artwork ?? null;
   const [artwork, setArtwork] = useState<Artwork | null>(initialArtwork);
+  // Without build-time data we can't tell "no such piece" from "not fetched
+  // yet", so hold the not-found copy until the client fetch settles.
+  const [resolved, setResolved] = useState(initialArtwork != null);
 
   useEffect(() => {
     if (!slug) return;
@@ -414,7 +419,8 @@ export function ArtworkDetail() {
       .then((data) => {
         if (data) setArtwork(data);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setResolved(true));
   }, [slug]);
 
   // Fire the GA4 view_item once per piece. Headline value = available original,
@@ -464,6 +470,10 @@ export function ArtworkDetail() {
       : undefined;
     return { excerpt, description, shareImage };
   }, [artwork]);
+
+  if (!artwork && !resolved) {
+    return <Container size="lg" py="xl" mih={400} />;
+  }
 
   if (!artwork) {
     return (

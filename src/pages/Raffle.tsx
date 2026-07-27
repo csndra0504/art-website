@@ -51,7 +51,7 @@ export function Raffle() {
 					<Text c="black">
 						Congratulations — you won! You've got your pick of any one 8×10 print below.
 						Take your time browsing the options, then reply to the raffle email with the
-						name of the print you'd like. I'll get it signed and on its way to you.
+						name of the print you'd like.
 					</Text>
 				</Stack>
 

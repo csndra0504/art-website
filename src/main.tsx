@@ -9,6 +9,9 @@ import { routes } from "./App";
 if (typeof window !== "undefined") {
   posthog.init(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN, {
     api_host: import.meta.env.VITE_POSTHOG_HOST,
+    // Events go through the f.cassandrawilcoxart.com reverse proxy (api_host),
+    // but the toolbar and "view in PostHog" links must point at the real app.
+    ui_host: "https://us.posthog.com",
     defaults: "2026-01-30",
   });
 }

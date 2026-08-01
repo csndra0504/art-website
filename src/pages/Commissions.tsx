@@ -14,6 +14,11 @@ import { TESTIMONIALS, ETSY_REVIEW_SUMMARY } from '../lib/siteContent';
 // stories). Reorder or edit to change the gallery.
 const COMMISSIONS: CommissionExample[] = [
 	{
+		src: '/images/commissions/bryant-street-house.jpg',
+		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
+		caption: 'A Victorian home',
+	},
+	{
 		src: '/images/commissions/didi-home.jpg',
 		alt: 'Hand-drawn ink and marker portrait of a brick cottage with an arched door and bay window',
 		caption: 'A brick cottage',
@@ -44,11 +49,6 @@ const COMMISSIONS: CommissionExample[] = [
 // range and style, under a heading that says so, so nothing is implied to be a
 // commission that wasn't.
 const OTHER_WORK: CommissionExample[] = [
-	{
-		src: '/images/commissions/bryant-street-house.jpg',
-		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
-		caption: 'A Victorian home',
-	},
 	{
 		src: '/images/commissions/tazza-doro.jpg',
 		alt: "Hand-drawn ink and marker illustration of Tazza D'oro coffee shop",

@@ -9,15 +9,10 @@ import type { CommissionExample } from '../components/CommissionGallery';
 import { Testimonials } from '../components/Testimonials';
 import { TESTIMONIALS, ETSY_REVIEW_SUMMARY } from '../lib/siteContent';
 
-// Real past commissions, shown to convey range and quality. Images live in
-// /public/images/commissions. Captions describe what each drawing depicts (no
-// invented stories). Reorder or edit this list to change the gallery.
-const EXAMPLES: CommissionExample[] = [
-	{
-		src: '/images/commissions/bryant-street-house.jpg',
-		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
-		caption: 'A Victorian home',
-	},
+// Real past commissions, shown as proof. Images live in /public/images/
+// commissions. Captions describe what each drawing depicts (no invented
+// stories). Reorder or edit to change the gallery.
+const COMMISSIONS: CommissionExample[] = [
 	{
 		src: '/images/commissions/didi-home.jpg',
 		alt: 'Hand-drawn ink and marker portrait of a brick cottage with an arched door and bay window',
@@ -34,6 +29,27 @@ const EXAMPLES: CommissionExample[] = [
 		caption: 'The Queen Victoria Inn',
 	},
 	{
+		src: '/images/commissions/taco-bell.jpg',
+		alt: 'Hand-drawn ink and marker illustration of a Taco Bell storefront',
+		caption: 'A storefront',
+	},
+	{
+		src: '/images/commissions/west-penn-er.jpg',
+		alt: 'Hand-drawn ink and marker illustration of the West Penn Hospital emergency entrance and street',
+		caption: 'A hospital',
+	},
+];
+
+// Other pieces from the Pittsburgh series — NOT commissions. Shown to convey
+// range and style, under a heading that says so, so nothing is implied to be a
+// commission that wasn't.
+const OTHER_WORK: CommissionExample[] = [
+	{
+		src: '/images/commissions/bryant-street-house.jpg',
+		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
+		caption: 'A Victorian home',
+	},
+	{
 		src: '/images/commissions/tazza-doro.jpg',
 		alt: "Hand-drawn ink and marker illustration of Tazza D'oro coffee shop",
 		caption: 'A coffee shop',
@@ -47,16 +63,6 @@ const EXAMPLES: CommissionExample[] = [
 		src: '/images/commissions/thunderbird.jpg',
 		alt: 'Hand-drawn ink and marker illustration of the Thunderbird Cafe and Music Hall',
 		caption: 'A music hall',
-	},
-	{
-		src: '/images/commissions/taco-bell.jpg',
-		alt: 'Hand-drawn ink and marker illustration of a Taco Bell storefront',
-		caption: 'A storefront',
-	},
-	{
-		src: '/images/commissions/west-penn-er.jpg',
-		alt: 'Hand-drawn ink and marker illustration of the West Penn Hospital emergency entrance and street',
-		caption: 'A hospital',
 	},
 ];
 
@@ -153,16 +159,29 @@ export function Commissions() {
 				<Divider />
 
 				{/* Examples gallery — highest priority, kept near the top. */}
-				<Stack gap="sm" ref={galleryRef}>
-					<Title order={2}>Recent commissions</Title>
-					<Text>
-						A few recent pieces, drawn by hand from a photo or on location. Homes, storefronts, a
-						corner bar, the hospital down the street. Whatever the place, as long as it means
-						something to you.
-					</Text>
-					<Box mt="xs">
-						<CommissionGallery examples={EXAMPLES} />
-					</Box>
+				<Stack gap="xl" ref={galleryRef}>
+					<Stack gap="sm">
+						<Title order={2}>Recent commissions</Title>
+						<Text>
+							A few pieces I've drawn for people, from a photo or on location. Homes, a
+							storefront, the hospital down the street. Whatever the place, as long as it
+							means something to you.
+						</Text>
+						<Box mt="xs">
+							<CommissionGallery examples={COMMISSIONS} />
+						</Box>
+					</Stack>
+
+					<Stack gap="sm">
+						<Title order={3}>More of my work</Title>
+						<Text>
+							Not commissions, but a sense of the range and style: a few favorites from my
+							Pittsburgh series. Yours would be drawn the same way, for your place.
+						</Text>
+						<Box mt="xs">
+							<CommissionGallery examples={OTHER_WORK} />
+						</Box>
+					</Stack>
 				</Stack>
 
 				<Divider />

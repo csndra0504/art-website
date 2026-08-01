@@ -121,8 +121,9 @@ export function buildEventsJsonLd(events: Event[]): object | null {
 }
 
 // Commissions are a real revenue line, so describe them as a bookable Service
-// with a price range — this is what lets search/AI answer "who does custom
-// hand-drawn house portraits in Pittsburgh".
+// — this is what lets search/AI answer "who does custom hand-drawn house
+// portraits in Pittsburgh". No price is published: each piece is quoted
+// individually, so the Offer carries availability only, no price.
 export function buildCommissionsJsonLd(): object {
   return {
     "@context": "https://schema.org",
@@ -130,7 +131,7 @@ export function buildCommissionsJsonLd(): object {
     name: "Custom Hand-Drawn Art Commissions",
     serviceType: "Custom illustration commission",
     description:
-      "One-of-a-kind hand-drawn ink and alcohol-marker illustrations of a place that means something to you — homes, storefronts, bars, and landmarks. Worked from your photos or on-location in Pittsburgh.",
+      "One-of-a-kind hand-drawn ink and alcohol-marker illustrations of a place that means something to you (homes, storefronts, bars, and landmarks). Worked from your photos or on-location in Pittsburgh.",
     url: absoluteUrl("/commissions"),
     provider: {
       "@type": "Person",
@@ -150,13 +151,6 @@ export function buildCommissionsJsonLd(): object {
     },
     offers: {
       "@type": "Offer",
-      priceCurrency: "USD",
-      priceSpecification: {
-        "@type": "PriceSpecification",
-        minPrice: 100,
-        maxPrice: 400,
-        priceCurrency: "USD",
-      },
       availability: IN_STOCK,
       url: absoluteUrl("/commissions"),
     },

@@ -66,6 +66,35 @@ export function trackLead(source: string, params: Record<string, unknown> = {}) 
   }
 }
 
+// --- Commissions funnel ----------------------------------------------------
+// Each step fires to BOTH GA4 (gtag) and PostHog so the funnel reads in either
+// tool. `commission_inquiry_started` is the existing event (kept, unchanged),
+// fired when the visitor clicks through to the Notion form;
+// `commission_inquiry_submitted` marks a completed submission. Note: the form
+// itself lives on Notion, so the actual submit happens off-site where we can't
+// observe it — the source of truth for completed submissions stays the Notion
+// "Commission Intake" database. `trackCommissionSubmitted` is kept for parity
+// and any future on-site form.
+export function trackCommissionStarted(params: Record<string, unknown> = {}) {
+  send("generate_lead", { source: "commission_inquiry", ...params });
+  posthog.capture("commission_inquiry_started", { ...params });
+}
+
+export function trackCommissionSubmitted(params: Record<string, unknown> = {}) {
+  send("generate_lead", { source: "commission_inquiry_submitted", ...params });
+  posthog.capture("commission_inquiry_submitted", { ...params });
+}
+
+// Fires once when a key page section first scrolls into view, so we can see how
+// far down the commissions page visitors actually get (examples, testimonials).
+export function trackSectionView(
+  section: string,
+  params: Record<string, unknown> = {}
+) {
+  send("view_section", { section, ...params });
+  posthog.capture("section_viewed", { section, ...params });
+}
+
 /**
  * Demand signal: someone wants a print of a piece that isn't offered as one.
  * item_id/item_name are sent as top-level params (register them as custom

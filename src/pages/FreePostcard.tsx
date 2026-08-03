@@ -19,26 +19,28 @@ type Postcard = {
 // Each entry needs a matching /public/images/postcards/<slug>.webp file. Add,
 // remove, and reorder entries here as designs come and go.
 const POSTCARDS: Postcard[] = [
-	{ name: 'Titty Sphinx', slug: 'titty-sphinx' },
-	{ name: 'Heinz Ketchup', slug: 'heinz-ketchup' },
-	{ name: "Mr. Smalls", slug: 'mr-smalls' },
-	{ name: 'Dippy the Dino', slug: 'dippy-the-dino' },
+	// A handful of favorites are hand-ordered up front; everything after these
+	// five follows alphabetically.
+	{ name: "Tazza D'oro", slug: 'tazza-doro' },
 	{ name: 'Park Place Pub', slug: 'park-place-pub' },
+	{ name: 'Bryant Street Market', slug: 'bryant-street-market' },
 	{ name: 'Highland Park Houses', slug: 'highland-park-houses' },
-	{ name: 'Kennywood Dog & Old German Beer', slug: 'kennywood-dog-and-old-german-beer' },
+	{ name: 'Highland Park Fountain', slug: 'highland-park-fountain' },
 	{ name: '16th Street Bridge', slug: '16th-street-bridge' },
 	{ name: 'Bananas', slug: 'bananas' },
 	{ name: "Biddle's Escape", slug: 'biddles-escape' },
-	{ name: 'Bryant Street Market', slug: 'bryant-street-market' },
-	{ name: 'Kaibur Coffee (Polish Hill)', slug: 'kaibur-coffee' },
-	{ name: 'Skyline View from North Shore', slug: 'north-shore-skyline' },
-	{ name: "Tazza D'oro", slug: 'tazza-doro' },
-	{ name: 'Iron City Clock', slug: 'iron-city-clock' },
+	{ name: 'Dippy the Dino', slug: 'dippy-the-dino' },
+	{ name: 'Heinz Ketchup', slug: 'heinz-ketchup' },
 	{ name: 'Hill Houses (Millvale)', slug: 'hill-houses-millvale' },
-	{ name: 'Rock Room (Polish Hill)', slug: 'rock-room' },
-	{ name: 'Highland Park Fountain', slug: 'highland-park-fountain' },
-	{ name: 'Rainbow Chairs (East End Brewing)', slug: 'rainbow-chairs' },
+	{ name: 'Iron City Clock', slug: 'iron-city-clock' },
+	{ name: 'Kaibur Coffee (Polish Hill)', slug: 'kaibur-coffee' },
+	{ name: 'Kennywood Dog & Old German Beer', slug: 'kennywood-dog-and-old-german-beer' },
 	{ name: "Max's Allegheny Tavern", slug: 'maxs-allegheny-tavern' },
+	{ name: 'Mr. Smalls', slug: 'mr-smalls' },
+	{ name: 'Rainbow Chairs (East End Brewing)', slug: 'rainbow-chairs' },
+	{ name: 'Rock Room (Polish Hill)', slug: 'rock-room' },
+	{ name: 'Skyline View from North Shore', slug: 'north-shore-skyline' },
+	{ name: 'Titty Sphinx', slug: 'titty-sphinx' },
 ];
 
 export function FreePostcard() {

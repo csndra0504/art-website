@@ -197,6 +197,13 @@ export const artwork = defineType({
                 "Optional Square checkout link. When set, this option shows a \"Buy with card\" button instead of Venmo.",
             }),
             defineField({
+              name: "etsyUrl",
+              title: "Etsy URL",
+              type: "url",
+              description:
+                "Optional. When set, this option shows an \"Order Print\" button linking to Etsy instead of the Square/Venmo buttons. Pair with a subtitle like \"Ships via Etsy\".",
+            }),
+            defineField({
               name: "venmoNote",
               title: "Venmo Note",
               type: "string",

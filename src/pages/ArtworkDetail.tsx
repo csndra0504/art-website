@@ -308,14 +308,34 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 ${opt.price.toLocaleString()}
               </Text>
             </div>
-            <BuyButtons
-              squareUrl={opt.squareUrl}
-              venmoHref={venmoUrl(
-                opt.price,
-                opt.venmoNote ?? `${opt.title} — ${artwork.title}`
-              )}
-              onCheckout={(m) => trackBeginCheckout(item(opt.title, opt.price), m)}
-            />
+            {opt.etsyUrl ? (
+              <Button
+                component="a"
+                href={opt.etsyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  trackBeginCheckout(item(opt.title, opt.price), "etsy")
+                }
+                variant="outline"
+                color="dark"
+                radius={0}
+                size="sm"
+              >
+                Order Print
+              </Button>
+            ) : (
+              <BuyButtons
+                squareUrl={opt.squareUrl}
+                venmoHref={venmoUrl(
+                  opt.price,
+                  opt.venmoNote ?? `${opt.title} — ${artwork.title}`
+                )}
+                onCheckout={(m) =>
+                  trackBeginCheckout(item(opt.title, opt.price), m)
+                }
+              />
+            )}
           </Group>
           {opt.subtitle && (
             <Text size="xs" c="dimmed" mt="xs">

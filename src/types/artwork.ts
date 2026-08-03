@@ -41,6 +41,9 @@ export interface CustomPurchaseOption {
   subtitle?: string;
   visible?: boolean;
   squareUrl?: string;
+  // When set, the option renders an "Order Print" button linking to Etsy
+  // instead of the Square/Venmo buttons. Pair with a "Ships via Etsy" subtitle.
+  etsyUrl?: string;
   // Overrides the auto-generated Venmo note. Used for options like a postcard
   // bundle where the buyer needs to tell us which designs they want.
   venmoNote?: string;

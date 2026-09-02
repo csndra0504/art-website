@@ -1,0 +1,35 @@
+/* The home gallery is two-up on phones, so a card renders around 160px wide.
+   Below Mantine's `sm` breakpoint (48em) the price and the Buy button stack
+   instead of sharing a row, where both would be squeezed past readability. */
+.buyRow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.buyAction {
+  width: 100%;
+  /* Full-bleed xs button is short for a thumb; give it a real tap target. */
+  height: 36px;
+}
+
+.soldNote {
+  align-self: flex-start;
+}
+
+@media (min-width: 48em) {
+  .buyRow {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--mantine-spacing-xs);
+  }
+
+  .buyAction {
+    width: auto;
+    height: auto;
+    flex-shrink: 0;
+  }
+}

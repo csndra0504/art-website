@@ -1,7 +1,8 @@
-import { Badge, Button, Card, Image, Text, Group, Stack } from "@mantine/core";
+import { Badge, Box, Button, Card, Image, Text, Stack } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { urlFor } from "../lib/sanity";
 import type { ArtworkSummary } from "../types/artwork";
+import classes from "./ArtworkCard.module.css";
 
 interface ArtworkCardProps {
   artwork: ArtworkSummary;
@@ -49,6 +50,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
 
   const to = `/artwork/${artwork.slug.current}`;
   const p = artwork.forSale ? pricing(artwork) : null;
+  const meta = [artwork.medium, artwork.year].filter(Boolean).join(" · ");
 
   return (
     <Card
@@ -88,20 +90,15 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
           )}
         </div>
 
+        {/* Title over a single meta line: at two-up phone widths there isn't
+            room to put the year on the title row without truncating names. */}
         <Stack gap={2} px="sm" pt="sm">
-          <Group justify="space-between" gap="xs" wrap="nowrap">
-            <Text size="sm" fw={500} truncate>
-              {artwork.title}
-            </Text>
-            {artwork.year && (
-              <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                {artwork.year}
-              </Text>
-            )}
-          </Group>
-          {artwork.medium && (
-            <Text size="xs" c="dimmed">
-              {artwork.medium}
+          <Text size="sm" fw={500} lineClamp={2}>
+            {artwork.title}
+          </Text>
+          {meta && (
+            <Text size="xs" c="dimmed" lineClamp={1}>
+              {meta}
             </Text>
           )}
         </Stack>
@@ -110,7 +107,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
       {/* Price + buy row sits outside the card link so the button is its own
           tap target (no nested links). */}
       {p && (p.originalListed || p.printsFrom != null) && (
-        <Group justify="space-between" align="flex-end" wrap="nowrap" gap="xs" px="sm" pt={6} pb="sm" mt="auto">
+        <Box className={classes.buyRow} px="sm" pt={6} pb="sm">
           <Stack gap={0} style={{ minWidth: 0 }}>
             {p.originalListed && (
               <Text size="sm" fw={600}>
@@ -149,16 +146,16 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
               color="dark"
               radius={0}
               size="xs"
-              style={{ flexShrink: 0 }}
+              className={classes.buyAction}
             >
               Buy
             </Button>
           ) : (
-            <Text size="xs" c="dimmed" fw={500} style={{ flexShrink: 0 }}>
+            <Text size="xs" c="dimmed" fw={500} className={classes.soldNote}>
               Sold out
             </Text>
           )}
-        </Group>
+        </Box>
       )}
     </Card>
   );

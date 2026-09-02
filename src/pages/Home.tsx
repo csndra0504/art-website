@@ -153,7 +153,7 @@ export function Home() {
 			<EventBanner />
 			<Container size="lg">
 				{/* Hero — lead with the work and a clear path to buy. */}
-				<Stack align="center" py={48} gap="md">
+				<Stack align="center" py={{ base: 28, sm: 48 }} gap="md">
 					<Title order={1} ta="center" fw={700} style={{ letterSpacing: '-0.02em' }}>
 						Art That Celebrates Main Street Pittsburgh
 					</Title>
@@ -251,7 +251,13 @@ export function Home() {
 						Nothing matches that filter yet. Try clearing it.
 					</Text>
 				) : (
-					<SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="lg">
+					// Two-up on phones (most of the traffic) so four pieces are on screen
+					// at once instead of one; three-up once there's desktop room.
+					<SimpleGrid
+						cols={{ base: 2, md: 3 }}
+						spacing={{ base: 'xs', sm: 'lg' }}
+						verticalSpacing={{ base: 'md', sm: 'lg' }}
+					>
 						{filtered.map((artwork) => (
 							<ArtworkCard key={artwork._id} artwork={artwork} />
 						))}

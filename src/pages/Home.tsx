@@ -252,9 +252,9 @@ export function Home() {
 					</Text>
 				) : (
 					// Two-up on phones (most of the traffic) so four pieces are on screen
-					// at once instead of one; three-up once there's desktop room.
+					// at once instead of one, stepping up to four across on desktop.
 					<SimpleGrid
-						cols={{ base: 2, md: 3 }}
+						cols={{ base: 2, sm: 3, md: 4 }}
 						spacing={{ base: 'xs', sm: 'lg' }}
 						verticalSpacing={{ base: 'md', sm: 'lg' }}
 					>

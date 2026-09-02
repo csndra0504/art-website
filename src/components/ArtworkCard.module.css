@@ -1,35 +1,37 @@
-/* The home gallery is two-up on phones, so a card renders around 160px wide.
-   Below Mantine's `sm` breakpoint (48em) the price and the Buy button stack
-   instead of sharing a row, where both would be squeezed past readability. */
+/* Desktop/tablet is the base case here — the price and Buy button share one
+   row, exactly as they did before the gallery went two-up, so the button keeps
+   Mantine's own `xs` sizing. */
 .buyRow {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  gap: var(--mantine-spacing-xs);
   margin-top: auto;
 }
 
 .buyAction {
-  width: 100%;
-  /* Full-bleed xs button is short for a thumb; give it a real tap target. */
-  height: 36px;
+  flex-shrink: 0;
 }
 
-.soldNote {
-  align-self: flex-start;
-}
-
-@media (min-width: 48em) {
+/* Below Mantine's `sm` breakpoint the home gallery is two-up, so a card is only
+   ~160px wide and the price and button can't share a row without squeezing both
+   past readability. Stack them, and widen the button into a real tap target.
+   Scoped to a max-width query so nothing here touches the desktop button. */
+@media (max-width: 47.9375em) {
   .buyRow {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: var(--mantine-spacing-xs);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
   .buyAction {
-    width: auto;
-    height: auto;
-    flex-shrink: 0;
+    width: 100%;
+    height: 36px;
+  }
+
+  .soldNote {
+    align-self: flex-start;
   }
 }

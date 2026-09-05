@@ -2,6 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm run dev:app)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
       "mcp__chrome-devtools__evaluate_script",
       "mcp__chrome-devtools__list_network_requests"
     ]

@@ -152,9 +152,30 @@ CLI-token pattern in the existing `studio/scripts/`.
 - Backfill `shipWeightOz` and dimensions from the Etsy drafts where a
   `sanity_id` matches (§5).
 
-**The Cathedral of Learning originals are the acceptance test.** If the migration
-is right, all three exist as separate products against one subject and #38 stops
-being held back.
+**The Cathedral of Learning acceptance test was wrong — corrected 2026-09-05
+after the first dry run.**
+
+The original wording was "all three exist as separate products against one
+subject". The migration cannot do that, because **two of the three do not exist
+in Sanity at all**:
+
+- **#36** (6x8, $125, active) → `artwork-cathedral-of-learning`. The only one in
+  Sanity. The migration turns it into one `original` product, correctly.
+- **#37** (5x7, $50, drafting) → `sanity_id` blank; would derive its own page.
+- **#38** (5x7-b, $50, **HELD**) → points at `artwork-cathedral-of-learning-5x7`,
+  the same page as #37, and is held because only one can occupy it.
+
+So the three are not three originals of one subject. #36 is a 6x8 with its own
+subject; **#37 and #38 are two distinct 5x7 originals meant to share one**. That
+shared page is the actual conflict, and it is what the restructure fixes.
+
+Creating the 5x7 subject and its two products is **authoring new content, not
+migrating** — there is no source data to migrate from.
+
+**Corrected acceptance test:** after the migration, create the 5x7 subject once
+and add #37 and #38 as two `original` products against it. Both are sellable
+simultaneously and #38 stops being held. The migration makes that *possible*; a
+person still has to do it.
 
 ## 5. What this unlocks for shipping
 

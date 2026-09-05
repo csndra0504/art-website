@@ -181,7 +181,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 squareUrl={artwork.originalSquareUrl}
                 venmoHref={venmoUrl(
                   artwork.originalPrice!,
-                  `Original — ${artwork.title}`
+                  `Original: ${artwork.title}`
                 )}
                 onCheckout={(m) =>
                   trackBeginCheckout(item("Original", artwork.originalPrice), m)
@@ -247,7 +247,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           <Group justify="space-between" align="center" wrap="wrap" gap="xs">
             <div>
               <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                8×10 Print — Local Pickup
+                8×10 Print (Local Pickup)
               </Text>
               <Group gap="xs" align="center">
                 <Text
@@ -270,7 +270,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 component="a"
                 href={venmoUrl(
                   artwork.printLocalPrice!,
-                  `Print — ${artwork.title}`
+                  `Print: ${artwork.title}`
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -329,7 +329,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
                 squareUrl={opt.squareUrl}
                 venmoHref={venmoUrl(
                   opt.price,
-                  opt.venmoNote ?? `${opt.title} — ${artwork.title}`
+                  opt.venmoNote ?? `${opt.title}: ${artwork.title}`
                 )}
                 onCheckout={(m) =>
                   trackBeginCheckout(item(opt.title, opt.price), m)
@@ -376,7 +376,7 @@ function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
       {done ? (
         <Stack gap={4}>
           <Text size="sm" fw={600}>
-            Thanks &mdash; noted!
+            Thanks, noted!
           </Text>
           <Text size="xs" c="dimmed" style={{ lineHeight: 1.6 }}>
             The more interest a piece gets, the sooner I make prints of it. Want
@@ -483,8 +483,8 @@ export function ArtworkDetail() {
     ].filter(Boolean);
     const excerpt = descriptionExcerpt(artwork.description);
     const description =
-      [excerpt, priceBits.join(" · ")].filter(Boolean).join(" — ") ||
-      `${artwork.title} — hand-drawn Pittsburgh artwork by Cassandra Wilcox.`;
+      [excerpt, priceBits.join(" · ")].filter(Boolean).join(" · ") ||
+      `${artwork.title}: hand-drawn Pittsburgh artwork by Cassandra Wilcox.`;
     const shareImage = artwork.images[0]
       ? urlFor(artwork.images[0].asset).width(1200).height(630).fit("crop").url()
       : undefined;
@@ -499,7 +499,7 @@ export function ArtworkDetail() {
     return (
       <Container size="lg" py="xl">
         <SeoHead
-          title="Artwork not found — Cassandra Wilcox Art"
+          title="Artwork not found | Cassandra Wilcox Art"
           description="This piece could not be found."
         />
         <Text c="dimmed">Artwork not found.</Text>
@@ -575,7 +575,7 @@ export function ArtworkDetail() {
       {seo && (
         <>
           <SeoHead
-            title={`${artwork.title} — Cassandra Wilcox Art`}
+            title={`${artwork.title} | Cassandra Wilcox Art`}
             description={seo.description}
             image={seo.shareImage}
             imageAlt={artwork.images[0]?.alt ?? artwork.title}

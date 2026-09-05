@@ -83,8 +83,8 @@ export function Events() {
   return (
     <Container size="lg" py="xl">
       <SeoHead
-        title="Events — Cassandra Wilcox Art"
-        description="Where to find Cassandra Wilcox in person — markets, shows, and gallery events around Pittsburgh."
+        title="Events | Cassandra Wilcox Art"
+        description="Where to find Cassandra Wilcox in person: markets, shows, and gallery events around Pittsburgh."
         path="/events"
       />
       {eventsJsonLd && <JsonLd data={eventsJsonLd} />}

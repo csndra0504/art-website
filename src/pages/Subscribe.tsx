@@ -6,7 +6,7 @@ export function Subscribe() {
   return (
     <Container size="lg" py={60}>
       <SeoHead
-        title="Subscribe — Cassandra Wilcox Art"
+        title="Subscribe | Cassandra Wilcox Art"
         description="Join the email list for new originals, print releases, and where to find Cassandra Wilcox at markets and shows around Pittsburgh."
         path="/subscribe"
       />

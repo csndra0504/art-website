@@ -129,8 +129,8 @@ export function Home() {
 	const seo = (
 		<>
 			<SeoHead
-				title="Cassandra Wilcox Art — Original Pittsburgh Art & Prints"
-				description="Hand-drawn originals and prints of Pittsburgh's landmarks and main-street neighborhoods — Lawrenceville, Polish Hill, the South Side, and beyond. By Pittsburgh sketch artist Cassandra Wilcox."
+				title="Cassandra Wilcox Art | Original Pittsburgh Art & Prints"
+				description="Hand-drawn originals and prints of Pittsburgh's landmarks and main-street neighborhoods: Lawrenceville, Polish Hill, the South Side, and beyond. By Pittsburgh sketch artist Cassandra Wilcox."
 				path="/"
 			/>
 			<JsonLd data={buildHomeJsonLd()} />
@@ -271,8 +271,8 @@ export function Home() {
 						About Cassandra
 					</Title>
 					<Text ta="center" size="sm" style={{ lineHeight: 1.7 }}>
-						Cassandra Wilcox is a Pittsburgh artist drawn to the things that make this city itself
-						&mdash; the corner storefronts, the neon signs, the row houses climbing the hillsides
+						Cassandra Wilcox is a Pittsburgh artist drawn to the things that make this city itself:
+						the corner storefronts, the neon signs, the row houses climbing the hillsides
 						of Polish Hill and the South Side Slopes. Neighborhood by neighborhood, she draws the
 						landmarks and everyday details locals recognize in their bones. She sells original
 						artwork and prints here, takes custom commissions, and shows her work at markets

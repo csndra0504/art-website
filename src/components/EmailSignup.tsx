@@ -51,8 +51,8 @@ export function EmailSignup() {
           You're on the list.
         </Title>
         <Text size="sm" style={{ lineHeight: 1.7 }}>
-          Check your inbox to confirm your subscription &mdash; once you click
-          the link, you're in.
+          Check your inbox to confirm your subscription. Once you click the link,
+          you're in.
         </Text>
       </Stack>
     );

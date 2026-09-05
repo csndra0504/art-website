@@ -107,7 +107,7 @@ export function Commissions() {
 	return (
 		<Container size="md" py="xl">
 			<SeoHead
-				title="Custom Commissions — Cassandra Wilcox Art"
+				title="Custom Commissions | Cassandra Wilcox Art"
 				description="Commission a one-of-a-kind, hand-drawn ink and marker illustration of a place that means something to you (your home, your corner bar, a Pittsburgh landmark). Worked from a photo or on location in Pittsburgh."
 				path="/commissions"
 			/>

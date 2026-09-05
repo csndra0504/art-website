@@ -47,7 +47,7 @@ export function FreePostcard() {
 	return (
 		<Container size="lg" py="xl">
 			<SeoHead
-				title="Your Free Postcard — Pick a Design"
+				title="Your Free Postcard: Pick a Design"
 				description="Thanks for signing up! Pick any one 5×7 hand-drawn postcard from the designs below and reply to the confirmation email with your choice and mailing address."
 				path="/free-postcard"
 				// Reached only from the sign-up confirmation email — not something
@@ -57,7 +57,7 @@ export function FreePostcard() {
 			<Stack gap="xl">
 				<Stack gap="md">
 					<Title order={1} c="black">
-						Your Free Postcard — Pick a Design
+						Your Free Postcard: Pick a Design
 					</Title>
 					<Text c="black">
 						Thanks for signing up! As a thank-you, you've got your pick of any one
@@ -85,7 +85,7 @@ export function FreePostcard() {
 							>
 								<img
 									src={`/images/postcards/${postcard.slug}.webp`}
-									alt={`${postcard.name} — 5×7 hand-drawn ink and marker postcard by Cassandra Wilcox`}
+									alt={`${postcard.name}, 5×7 hand-drawn ink and marker postcard by Cassandra Wilcox`}
 									loading="lazy"
 									style={{
 										maxWidth: '100%',

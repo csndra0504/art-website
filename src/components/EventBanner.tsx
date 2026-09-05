@@ -60,7 +60,7 @@ export function EventBanner() {
       <Container size="lg" py={10}>
         <Group justify="space-between" wrap="nowrap" gap="sm">
           <Text size="sm" style={{ lineHeight: 1.5 }}>
-            See my work in person &mdash; {event.title}.{" "}
+            See my work in person: {event.title}.{" "}
             <Anchor component={Link} to="/events" c="dark" fw={600}>
               View details &rarr;
             </Anchor>

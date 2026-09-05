@@ -36,7 +36,7 @@ export function Raffle() {
 	return (
 		<Container size="lg" py="xl">
 			<SeoHead
-				title="Email Raffle — Pick Your Print"
+				title="Email Raffle: Pick Your Print"
 				description="Raffle winners: pick any one 8×10 hand-drawn print from the options below."
 				path="/raffle"
 				// One-off page for raffle winners reached from an email — not
@@ -46,10 +46,10 @@ export function Raffle() {
 			<Stack gap="xl">
 				<Stack gap="md">
 					<Title order={1} c="black">
-						Email Raffle — Pick Your Print
+						Email Raffle: Pick Your Print
 					</Title>
 					<Text c="black">
-						Congratulations — you won! You've got your pick of any one 8×10 print below.
+						Congratulations, you won! You've got your pick of any one 8×10 print below.
 						Take your time browsing the options, then reply to the raffle email with the
 						name of the print you'd like.
 					</Text>
@@ -75,7 +75,7 @@ export function Raffle() {
 							>
 								<img
 									src={`/images/raffle/${print.slug}.webp`}
-									alt={`${print.name} — 8×10 hand-drawn ink and marker print by Cassandra Wilcox`}
+									alt={`${print.name}, 8×10 hand-drawn ink and marker print by Cassandra Wilcox`}
 									loading="lazy"
 									style={{
 										maxWidth: '100%',

@@ -56,7 +56,7 @@ export function Testimonials({ heading = "What buyers say" }: { heading?: string
             &ldquo;{t.quote}&rdquo;
           </Text>
           <Text size="xs" c="dimmed" mt="xs" fw={600}>
-            &mdash; {t.attribution}
+            {t.attribution}
           </Text>
         </Box>
       ))}

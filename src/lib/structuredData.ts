@@ -62,7 +62,7 @@ function artworkOffers(artwork: Artwork, url: string): object[] {
 
   add("Original", artwork.originalPrice, !!artwork.originalSold);
   add("Print", artwork.printEtsyPrice, false, artwork.printEtsyUrl);
-  add("Print — local pickup", artwork.printLocalPrice, !!artwork.printLocalSold);
+  add("Print (local pickup)", artwork.printLocalPrice, !!artwork.printLocalSold);
   (artwork.customOptions ?? [])
     .filter((o) => o.visible !== false)
     .forEach((o) => add(o.title, o.price, false, o.squareUrl));

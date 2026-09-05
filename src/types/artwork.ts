@@ -39,7 +39,22 @@ export interface ArtworkSummary {
 // represent. Maps 1:1 to a Square catalog variation.
 // See docs/cart-checkout/product-model-migration.md.
 
-export type ProductKind = "original" | "print";
+/**
+ * What a product physically is. Only "print" and "postcard" suppress the
+ * "want this as a print?" prompt; anything added here defaults to not
+ * suppressing it, so a new format can't silently kill the demand signal.
+ *
+ * The gallery card shows the cheapest visible non-original product as
+ * "From $X" regardless of format — there is deliberately no per-format
+ * pricing rule to keep in sync.
+ */
+export type ProductKind =
+  | "original"
+  | "print"
+  | "postcard"
+  | "magnet"
+  | "sticker"
+  | "other";
 
 export type ProductChannel = "local" | "etsy";
 

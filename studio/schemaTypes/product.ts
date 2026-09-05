@@ -46,16 +46,19 @@ export const product = defineType({
     }),
     defineField({
       name: "kind",
-      title: "Kind",
+      title: "Format",
       type: "string",
       description:
-        'Coarse type. A visible "Print" suppresses the "request a print" prompt on the subject page.',
+        'What this physically is. Only "Print" and "Postcard" suppress the "want this as a print?" prompt — a magnet does not satisfy someone asking for a print, and silently switching that prompt off would cost the demand signal that tells you what to print next. Any format added later defaults to not suppressing it.',
       options: {
         list: [
-          { title: "Print", value: "print" },
           { title: "Original", value: "original" },
+          { title: "Print", value: "print" },
+          { title: "Postcard", value: "postcard" },
+          { title: "Magnet", value: "magnet" },
+          { title: "Sticker", value: "sticker" },
+          { title: "Other", value: "other" },
         ],
-        layout: "radio",
       },
       initialValue: "print",
       validation: (rule) => rule.required(),

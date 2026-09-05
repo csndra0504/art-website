@@ -54,7 +54,9 @@ artwork  — Studio title "Subject". Role unchanged, fields mostly unchanged.
 product
   subject       reference → artwork        required
   title         "5×7 Print", "Original (framed)"
-  kind          original | print            (replaces customOptions[].kind)
+  kind          original | print | postcard | magnet | sticker | other
+                             Studio label "Format". Replaces customOptions[].kind,
+                             which only had print|original — see §8.
   price         number, dollars
   quantity      number — opening stock; 1 for originals
   soldOut       boolean — mirrored from Square by webhook, not hand-edited
@@ -188,3 +190,53 @@ corrected against it.
    prerender and a page with no loader data still renders.
 8. Retire the old fields in a separate commit.
 9. Resume Phase 1 at CAS-34.
+
+---
+
+## 8. Format and the gallery "From" price
+
+Decided 2026-09-05, while reviewing the schema in the Studio.
+
+**The problem.** `kind` was inherited from `customOptions[].kind`, which only had
+`print | original`. A magnet or sticker had no honest value to pick. Worse, `kind`
+was never a taxonomy — it silently drove two behaviours:
+
+- [queries.ts:24](../../src/lib/queries.ts#L24) — `customPrintFrom` is the cheapest
+  visible option with `kind == "print"`, which sets the card's **"Prints from $X"**.
+- [ArtworkDetail.tsx:361](../../src/pages/ArtworkDetail.tsx#L361) — suppresses the
+  "want this as a print?" prompt.
+
+So filing a $2 magnet under `print` would advertise **"Prints from $2"** on a piece
+whose actual print is $35. A mispricing on the gallery grid, not a tidiness problem.
+
+**The decision.** `kind` becomes a real format list — `original | print | postcard |
+magnet | sticker | other`, labelled "Format" in the Studio — and the card stops
+discriminating by format entirely:
+
+> **The card shows the cheapest visible non-original product as "From $X",
+> whatever format it is.** The `Original $X` line is unchanged.
+
+No per-format pricing rule, no per-product override flag, no conditional to keep in
+sync as formats are added. Adding tote bags later is a schema list edit and nothing
+else.
+
+**The tradeoff, accepted knowingly:** a $2 magnet sets the headline on a piece with
+a $35 print, and "Prints from $35" is a stronger merchandising signal than
+"From $2". The counter is that "own a piece of this for $2" is honest and works well
+for a business that sells at markets. Mostly forward-looking — there are no magnet
+or sticker products in the data yet.
+
+**Rejected:** a free-text format field. It moves brittleness from the schema into
+string matching, and this migration exists partly because eleven hand-typed titles
+describe four real product types (§6). `kind === "magnet"` breaks the first time
+someone types "Magnets".
+
+**The print prompt keeps a format rule**, because it is a different question:
+only `print` and `postcard` suppress it. A magnet does not satisfy someone asking
+for a print. **Formats added later default to not suppressing it**, so a new product
+type can never silently switch off the demand signal that tells Cassandra what to
+print next.
+
+**For the migration:** default `shippingType` from `kind` so the same fact isn't
+typed twice, and correct the framed cases by hand — framed bands by packed weight,
+which `kind` cannot know.

@@ -32,6 +32,66 @@ export interface ArtworkSummary {
   customPrintFrom?: number;
 }
 
+// --- products ---------------------------------------------------------------
+// A product is one sellable thing, referencing an artwork ("Subject") for its
+// images and story. One subject can back several products — three separate
+// originals of the same scene, say — which the legacy fields below cannot
+// represent. Maps 1:1 to a Square catalog variation.
+// See docs/cart-checkout/product-model-migration.md.
+
+export type ProductKind = "original" | "print";
+
+export type ProductChannel = "local" | "etsy";
+
+/** Framed bands by packed weight (≤16 oz / >16 oz), not by frame contents. */
+export type ShippingType =
+  | "magnet"
+  | "postcard"
+  | "print"
+  | "original"
+  | "framedSmall"
+  | "framedLarge";
+
+export interface Product {
+  _id: string;
+  title: string;
+  kind: ProductKind;
+  price: number;
+  quantity?: number;
+  /** Mirrored from Square by webhook — never hand-edited. */
+  soldOut?: boolean;
+  channel: ProductChannel;
+  /** Set when channel is "etsy". Those products link out and never enter the cart. */
+  etsyUrl?: string;
+  subtitle?: string;
+  visible?: boolean;
+  sortOrder?: number;
+  shippingType?: ShippingType;
+  shipWeightOz?: number;
+  shipLengthIn?: number;
+  shipWidthIn?: number;
+  shipHeightIn?: number;
+  /** Without this the product can't be sold — Square only tracks stock for catalog line items. */
+  squareVariationId?: string;
+  /** Legacy one-off checkout link, retired once the cart is live. */
+  squareUrl?: string;
+  venmoNote?: string;
+}
+
+/** A product joined with the subject fields the cart and detail page need. */
+export interface ProductWithSubject extends Product {
+  subject: {
+    _id: string;
+    title: string;
+    slug: { current: string };
+    images?: ArtworkImage[];
+  };
+}
+
+// --- legacy purchase model --------------------------------------------------
+// Everything below is superseded by Product and removed once the read path is
+// proven. Do not build anything new on it.
+
 export type CustomPurchaseKind = "original" | "print";
 
 export interface CustomPurchaseOption {

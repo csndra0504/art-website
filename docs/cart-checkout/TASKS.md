@@ -69,9 +69,15 @@ PRD document: <https://linear.app/cassandra-wilcox-art/document/prd-cart-and-squ
 Phase 0; the cart would otherwise have been built on a model that can't represent
 the actual stock.*
 
-- [ ] `studio/schemaTypes/product.ts` — `product` doc referencing an `artwork`
-      subject. Add `title: "Subject"` to the artwork type while there.
-- [ ] TS types in `src/types/artwork.ts`.
+- [x] `studio/schemaTypes/product.ts` — `product` doc referencing an `artwork`
+      subject. Add `title: "Subject"` to the artwork type while there. **(CAS-51)**
+      Registered in `index.ts`; `soldOut` is `readOnly` in the Studio since the
+      webhook owns it; the legacy fieldset is retitled "(legacy — moving to
+      Products)" so it's obvious which half is dying. `sanity build` passes, so
+      the schema loads.
+- [x] TS types in `src/types/artwork.ts`. **(CAS-51)** `Product`,
+      `ProductWithSubject`, `ProductKind`, `ProductChannel`, `ShippingType`.
+      Legacy types kept below a divider comment, not yet deleted.
 - [ ] `studio/scripts/migrate-to-products.mjs` — dry-run by default, deterministic
       ids, prints its inferred `shippingType` for review. Does **not** delete the
       old fields in the same run.

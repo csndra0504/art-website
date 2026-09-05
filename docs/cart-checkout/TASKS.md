@@ -88,8 +88,13 @@ the actual stock.*
       data: 82 products / 45 subjects, 0 id collisions, 13 framed prints with no
       packed weight. Findings in Notes and CAS-50.
 - [ ] Run the dry run, review inferred shipping types by hand, then `--apply`.
-      **Acceptance: all three Cathedral of Learning originals exist as separate
-      products** and #38 stops being held back.
+      **(CAS-50 — yours, not an agent's.)** Normalise the postcard titles first:
+      they don't collide, so nothing will stop four spellings becoming four
+      Square variations with split stock. Supply the 13 missing framed weights.
+      **Acceptance (corrected):** the migration turns the one Cathedral original
+      that exists into a product; then create the 5x7 subject by hand and add #37
+      and #38 as two originals against it, so #38 stops being held. The other two
+      aren't in Sanity, so no migration can produce them — see plan §4.
 - [ ] Re-key `src/lib/cart.ts` line identity to `productId`.
 - [ ] Read path: `queries.ts`, `ArtworkDetail`, `ArtworkCard`, `structuredData`.
 - [ ] **Verify:** `/verify` clean, artwork pages still prerender, a page with no

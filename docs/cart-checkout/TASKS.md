@@ -19,7 +19,7 @@ then **Phase 0.5 restructure before CAS-34** · **Last touched:** 2026-09-05
 | | Issue |
 |---|---|
 | Phase 0 | CAS-29 inventory spike · CAS-30 shipping rates · CAS-31 credentials |
-| Phase 0.5 | CAS-51 product type · CAS-49 migration script · CAS-50 review + apply · CAS-52 re-key cart · CAS-53 retire legacy fields |
+| Phase 0.5 | CAS-51 product type ✅ · CAS-49 migration script · CAS-50 review + apply · CAS-52 re-key cart · CAS-55 read path · CAS-53 retire legacy fields |
 | Phase 1 | CAS-32 cart state · CAS-33 drawer + badge · CAS-34 add to cart · CAS-35 /cart + analytics |
 | Phase 2 | CAS-36 schema · CAS-37 seed script · CAS-38 stock counts · CAS-39 server scaffold · CAS-40 shipping calc · CAS-41 /api/checkout · CAS-42 success page |
 | Phase 3 | CAS-43 webhook verify · CAS-44 stock mirror + order email |
@@ -28,22 +28,9 @@ then **Phase 0.5 restructure before CAS-34** · **Last touched:** 2026-09-05
 
 PRD document: <https://linear.app/cassandra-wilcox-art/document/prd-cart-and-square-checkout-2a83e6d0a599>
 
-### ⚠️ Pending Linear sync (Linear US was degraded 2026-09-05, writes timing out)
-
-Do these when Linear recovers. Recorded here because a tracker you can't write to
-isn't a tracker.
-
-- [ ] **CAS-51 → Done.** Product schema + Subject rename + TS types shipped in
-      `98c9159`. Two attempts to set the status timed out; it still reads Backlog.
-- [ ] **File the read-path issue** — Phase 0.5 step 6: `queries.ts`,
-      `ArtworkDetail`, `ArtworkCard`, `structuredData`. Confirmed never created
-      (CAS-54 does not exist). This is the largest piece of the restructure and
-      is currently tracked nowhere but this file.
-- [ ] **CAS-29 → Done**, **CAS-31 → Done.** Ticked here, still Backlog in Linear.
-- [ ] **CAS-30 — retitle, don't just close.** It says "Confirm shipping rates
-      against three real labels". Real labels were deliberately *not* priced;
-      rates were estimated and verification moved to Phase 4. Closing it as-is
-      would erase the fact that customers get charged unverified rates.
+> **CAS-30 is open on purpose.** Retitled to "Verify shipping rates against real
+> labels (Phase 4)". Rates were estimated, not measured — closing it would erase
+> the fact that real customers get charged unverified postage.
 
 ---
 

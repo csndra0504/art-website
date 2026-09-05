@@ -82,9 +82,11 @@ the actual stock.*
 - [x] TS types in `src/types/artwork.ts`. **(CAS-51)** `Product`,
       `ProductWithSubject`, `ProductKind`, `ProductChannel`, `ShippingType`.
       Legacy types kept below a divider comment, not yet deleted.
-- [ ] `studio/scripts/migrate-to-products.mjs` — dry-run by default, deterministic
+- [x] `studio/scripts/migrate-to-products.mjs` — dry-run by default, deterministic
       ids, prints its inferred `shippingType` for review. Does **not** delete the
-      old fields in the same run.
+      old fields in the same run. **(CAS-49)** Dry run exercised against real
+      data: 82 products / 45 subjects, 0 id collisions, 13 framed prints with no
+      packed weight. Findings in Notes and CAS-50.
 - [ ] Run the dry run, review inferred shipping types by hand, then `--apply`.
       **Acceptance: all three Cathedral of Learning originals exist as separate
       products** and #38 stops being held back.
@@ -319,3 +321,21 @@ future session reads to avoid re-deriving context.)*
   base URL is hardcoded with no override on purpose: it creates catalog objects
   and sets inventory counts, neither of which should ever touch live data. It
   writes its verdict to `docs/cart-checkout/spike-inventory-result.md`.
+- 2026-09-05 — **Migration dry run, first real exercise.** Three things the plan
+  did not predict:
+  - **The Cathedral acceptance test was unachievable.** Two of the three
+    originals aren't in Sanity at all — #37 and #38 are two distinct 5x7 pieces
+    meant to share one page, which is *why* #38 is held. Creating them is
+    authoring, not migrating. Plan §4 corrected.
+  - **Weight backfill was stamping a framed original's packed weight onto that
+    subject's postcards** (a postcard at 40 oz). Etsy drafts describe one
+    product; they're keyed to a subject. Weights now attach only when
+    unambiguous — matched count dropped 16 → 7. A missing weight is visible; a
+    wrong one silently misprices postage.
+  - **The framed band boundary is fragile.** `framedSmall`/`framedLarge` splits
+    at exactly 16 oz, which is where most recorded weights sit, several marked
+    `[confirm]`. The one measured value is `458 g` = **16.16 oz** — over the line
+    — but recorded as `16`, so it lands in `framedSmall` and undercharges $10.
+    Worth moving the boundary to ~20 oz so rounding can't flip it.
+  - Also: **82 products across 45 subjects**, against the plan's estimate of 47
+    across 38. Worth confirming that's real and not double-counting.

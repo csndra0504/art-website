@@ -52,7 +52,16 @@ const client = createClient({
 // a real measurement rather than assigned.
 const FRAMED_BAND_OZ = 16;
 
+// Explicit decisions that beat the title rules. Title and shipping band are
+// independent axes: a 5x7 sleeved with backing ships like a postcard whatever
+// it is called, and calling it "5x7 Print" would otherwise pull it into the
+// print band and charge $2 more. Decided 2026-09-05.
+const SHIPPING_OVERRIDES = new Map([["5x7 Print", "postcard"]]);
+
 function inferShippingType({ title, kind, weightOz }) {
+  const override = SHIPPING_OVERRIDES.get(title);
+  if (override) return { type: override, why: "explicit override" };
+
   const t = title.toLowerCase();
 
   if (/magnet/.test(t)) return { type: "magnet" };

@@ -2,6 +2,7 @@ import { MantineProvider } from "@mantine/core";
 import posthog from "posthog-js";
 import { PostHogProvider, PostHogErrorBoundary } from "@posthog/react";
 import { theme, cssVariablesResolver } from "../lib/theme";
+import { CartProvider } from "./CartProvider";
 import { Layout } from "./Layout";
 
 // Root route element. Holds every app-wide provider so they're part of the
@@ -23,7 +24,9 @@ export function RootLayout() {
           defaultColorScheme="light"
           forceColorScheme="light"
         >
-          <Layout />
+          <CartProvider>
+            <Layout />
+          </CartProvider>
         </MantineProvider>
       </PostHogErrorBoundary>
     </PostHogProvider>

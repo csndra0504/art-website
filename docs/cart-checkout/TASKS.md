@@ -49,12 +49,15 @@ PRD document: <https://linear.app/cassandra-wilcox-art/document/prd-cart-and-squ
 
 *(Independent of the platform decision — safe to start now.)*
 
-- [ ] `src/lib/cart.ts` — versioned localStorage cart: add / remove / setQty /
-      clear / subtotal. Pure functions, no React.
-- [ ] `src/lib/cartContext.tsx` — provider + `useCart()`, mounted in `RootLayout`.
-      Must be SSG-safe: no `localStorage` during prerender.
-- [ ] Cart reconciliation on load — drop lines that are gone or sold out, surface
-      what was removed.
+- [x] `src/lib/cart.ts` — versioned localStorage cart: add / remove / setQty /
+      clear / subtotal. Pure functions, no React. **(CAS-32)**
+- [x] `src/lib/cartContext.ts` + `src/components/CartProvider.tsx` — context and
+      hook split from the provider component (eslint forbids exporting both from
+      one module). Mounted in `RootLayout`. SSG-safe. **(CAS-32)**
+- [~] Cart reconciliation on load — `reconcileCart()` exists in `cart.ts` as a
+      pure function taking a status resolver. **Not yet wired**: needs real
+      availability data, which arrives with the Square catalog in Phase 2. Wire
+      it in CAS-34 against Sanity, then repoint at Square.
 - [ ] `src/components/CartDrawer.tsx` — Mantine Drawer in the site's square /
       hairline style. Line items, qty steppers, subtotal, empty state.
 - [ ] Header cart icon + count badge. Hidden at zero.
@@ -188,6 +191,16 @@ future session reads to avoid re-deriving context.)*
   mailer; framed items each need their own box, so boxed types are charged per
   unit. Flat charges collapse to the single highest rate present, and are waived
   outright when anything boxed is in the cart. See PRD §9.
+- 2026-09-05 — **CAS-32 done.** Two things worth knowing for the rest of Phase 1:
+  - `cartContext` had to split in two. A module exporting both a component and a
+    hook trips `react-refresh/only-export-components`, which is an eslint *error*
+    here, not a warning. Context + `useCart()` live in `src/lib/cartContext.ts`;
+    the provider is `src/components/CartProvider.tsx`. Follow that split for any
+    future provider.
+  - The cart is deliberately **empty on first client render** and hydrates in an
+    effect, because reading `localStorage` during render would mismatch the
+    prerendered HTML. Consumers must key off `ready`, and the header badge must
+    hide at zero — for one frame after load every visitor's cart looks empty.
 - 2026-09-05 — Seed script deliberately **not** written yet: it depends on schema
   fields that don't exist, on rates not yet verified against real labels, and on
   the Phase 0 inventory spike. Its design is captured in the Phase 2 task so the

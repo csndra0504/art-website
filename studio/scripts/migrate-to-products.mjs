@@ -16,6 +16,10 @@ import { join } from "node:path";
 // re-run as titles get normalised.
 
 const APPLY = process.argv.includes("--apply");
+// Grouping by title rather than by subject is what makes near-duplicate titles
+// visible. They don't collide on id, so nothing stops four spellings of
+// "postcard" becoming four Square variations with the stock split between them.
+const TITLES_ONLY = process.argv.includes("--titles");
 
 const ETSY_DRAFTS =
   process.env.ETSY_DRAFTS_DIR ??
@@ -307,6 +311,29 @@ console.log(`Products to write:    ${products.length}`);
 console.log(`Weight data matched:  ${products.filter((p) => p._shipSource).length}`);
 console.log(`Needs review:         ${needsReview.length}`);
 console.log(`Id collisions:        ${collisions.length}\n`);
+
+if (TITLES_ONLY) {
+  const byTitle = new Map();
+  for (const p of products) {
+    const g = byTitle.get(p.title) ?? { count: 0, prices: new Set(), types: new Set() };
+    g.count++;
+    g.prices.add(p.price);
+    g.types.add(p.shippingType ?? "⚠ none");
+    byTitle.set(p.title, g);
+  }
+  console.log("— Distinct titles, most used first —");
+  console.log("  Titles meaning the same product should be spelled the same.\n");
+  for (const [title, g] of [...byTitle].sort((a, b) => b[1].count - a[1].count)) {
+    const prices = [...g.prices].sort((a, b) => a - b);
+    const priceLabel =
+      prices.length === 1 ? `$${prices[0]}` : `$${prices[0]}–$${prices.at(-1)}`;
+    console.log(
+      `  ${String(g.count).padStart(3)}  ${title.padEnd(52)} ${priceLabel.padEnd(10)} ${[...g.types].join(", ")}`
+    );
+  }
+  console.log("\nRe-run without --titles for the full per-subject listing.\n");
+  process.exit(0);
+}
 
 console.log("— Products —");
 let lastSubject = null;

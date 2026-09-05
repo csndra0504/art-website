@@ -53,7 +53,16 @@ artwork  — Studio title "Subject". Role unchanged, fields mostly unchanged.
 
 product
   subject       reference → artwork        required
-  title         "5×7 Print", "Original (framed)"
+  title         "5×7 Print", "Original (framed)" — FORMAT ONLY, no subject name.
+                             The subject comes from the reference; the Studio
+                             preview, the cart and the Square catalog each
+                             compose "Subject — Title" where a full name is
+                             needed. Copying the subject in would go stale on
+                             rename, read redundantly under a page heading that
+                             already says it, and hide duplicate titles from
+                             the migration's --titles review.
+                             ⚠ The Square catalog item name MUST be composed —
+                             28 items called "Original" is an unusable POS.
   kind          original | print | postcard | magnet | sticker | other
                              Studio label "Format". Replaces customOptions[].kind,
                              which only had print|original — see §8.

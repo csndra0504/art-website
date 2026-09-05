@@ -1,11 +1,11 @@
 # PRD — Cart & Square Checkout
 
-**Linear:** [CAS-19](https://linear.app/cassandra-wilcox-art/issue/CAS-19/add-a-cart-and-stripe-checkout-to-the-website)
+**Linear:** [CAS-19](https://linear.app/cassandra-wilcox-art/issue/CAS-19/add-a-cart-and-square-checkout-to-the-website)
 · **Project:** Website cart & checkout · **Due:** 2026-11-20 (before the Black Friday send)
-· **Status:** draft, pre-implementation
+· **Status:** Phase 0 decisions closed, pre-implementation
 
-> ⚠️ **CAS-19 says Stripe. This PRD says Square.** The issue title and body need
-> updating — see §5 for why the decision changed.
+> CAS-19 was retitled and rewritten for Square on 2026-09-05. §5 records why the
+> decision changed.
 
 ---
 
@@ -53,6 +53,11 @@
 | Scope | Originals + local prints + custom options. Etsy links untouched. | Etsy has its own fulfillment and refund policy. |
 | Shipping | Boxed items per unit; flat items collapse to the highest rate, waived when boxed present | See §9. |
 | Tax | None in v1 | See §6. |
+| Data model | **A `product` document, referencing an `artwork` subject.** Not purchase options nested in the artwork. | Six subjects already back two products each, and Cathedral of Learning has three originals the current schema can't represent. See [product-model-migration.md](product-model-migration.md). |
+| Naming | `_type: "artwork"` in code, **"Subject"** as its Studio title | Renaming a Sanity type means recreating every document; the display title gets the same result for free. |
+| Catalog seeding | Idempotent migration script from Sanity | 47 variations, each also needing its Square id written back — 94 manual steps otherwise, with no re-run when a price changes. |
+| Order notification | **Square's own merchant emails.** No Brevo. | Square already sends items, buyer and address on a new online order. Zero code, and it still arrives when our webhook handler is the thing that's broken. |
+| Returns | "All sales are final", worded as a policy, shown before checkout | Chargeback rights exist regardless of the wording; the policy sets expectations rather than removing rights. |
 
 ## 5. Why Square, not Stripe
 
@@ -113,11 +118,31 @@ Square catalog — we can't price inline at checkout the way a Stripe build woul
 - **Originals:** stock 1. Selling at a market decrements it; the website follows.
 - **Prints & postcards:** real counts now that they're free to track.
 
-**⚠️ Open risk:** inventory adjusts when an order is *completed or refunded*. When
-a paid online order transitions to `COMPLETED` isn't documented clearly — it may
-wait on fulfillment. POS sales complete at the point of sale, so the
-**market → website** direction (the one that matters) works. The **web → stock**
-direction needs a sandbox test before Phase 2 is designed. Tracked as a spike.
+**✅ Resolved by sandbox test, 2026-09-05** (CAS-29 —
+[spike-inventory-result.md](spike-inventory-result.md)).
+
+**Stock decrements on payment, not on order completion.** A paid Checkout API
+order dropped stock 3 → 2 about six seconds after payment, while the order was
+still `state=OPEN` with its fulfillment at `SHIPMENT:PROPOSED`. So the premise
+this PRD was written on — "inventory adjusts when an order is completed or
+refunded" — is **wrong for the online path**. Nothing has to reach `COMPLETED`
+for stock to be correct.
+
+Consequences:
+
+- **Phase 3 gets simpler.** The webhook only mirrors Square's stock into Sanity.
+  It does *not* need to complete orders, so a missed webhook leaves the website
+  stale rather than leaving Square wrong. No reconciliation path needed.
+- **Orders will sit at `OPEN` in the Square dashboard** with an unfulfilled
+  shipment until marked fulfilled. That's a fulfillment workflow question, not a
+  stock-correctness one — worth knowing before the first real order rather than
+  discovering it then.
+- **Not tested: refund and cancellation.** Whether stock returns on a refunded or
+  cancelled `OPEN` order is still unknown. It doesn't block Phase 2, but don't
+  assume it — verify before go-live.
+- Tested with one unit on one order in sandbox. Production behaviour is expected
+  to match, but the first real order is still worth watching (Phase 4 already
+  says to watch the first three).
 
 ## 8. Architecture
 
@@ -187,22 +212,62 @@ items being in scope and would have eaten the second framed original's shipping.
 | 1 framed original + 3 magnets | framed original rate only |
 | anything, local pickup | $0 |
 
-**Rates — recommended, pending verification against real labels:**
+**Rates — Cassandra's estimates, 2026-09-05. Not label-verified.**
 
-| Type | Packaging | Est. real cost | Charge |
-|---|---|---|---|
-| `magnet` | letter / small mailer, ~1 oz | $1–2 | **$2** |
-| `postcard` | rigid mailer | $2–4 | **$3** |
-| `print` | rigid flat mailer, 6–8 oz | $5–7 | **$6** |
-| `original` | rigid flat or tube | $8–12 | **$10** |
-| `framedPrint` | boxed, 2–4 lb, fragile | $12–18 | **$15** |
-| `framedOriginal` | boxed, insured | $20–30 | **$25** |
+| Type | Class | Packaging | Real weight | Charge |
+|---|---|---|---|---|
+| `magnet` | flat | letter / small mailer | ~1 oz | **$2** |
+| `postcard` | flat | rigid mailer | 2–4 oz | **$3** |
+| `print` | flat | rigid flat mailer | *no data* | **$5** |
+| `original` | flat | rigid flat or tube | 8–12 oz | **$10** |
+| `framedSmall` | boxed | boxed, fragile | **≤ 16 oz** | **$10** |
+| `framedLarge` | boxed | boxed, insured | **> 16 oz** | **$20** |
 
-- Derived from published USPS Ground Advantage retail rates (from **$7.90**, $100
-  insurance + tracking included); Click-N-Ship commercial is cheaper. **Check
-  against three real labels before go-live** — these don't know your zones, box
-  sizes, or commercial discount. Framed originals matter most: most expensive to
-  get wrong, and most likely to need insurance above the included $100.
+**Framed items band by weight, not by what's in the frame.** The old
+`framedPrint` / `framedOriginal` split assumed the contents drove the cost; the
+data says packed weight does. The threshold is **16 oz**, which puts ten of the
+eleven measured framed items in `framedSmall` and one in `framedLarge`.
+
+⚠️ **These are estimates, not measurements**, and they will be charged to real
+customers. If they're low, the difference comes out of each sale. `print` is the
+weakest of the three — it prices an item type with no recorded shipping data at
+all, and prints are what the cart most exists to bundle. Revisit against real
+figures after the first orders; tracked as a Phase 4 task rather than remembered.
+
+**Corrected 2026-09-05 against real data.** The Etsy listing drafts in
+`artbizhq/projects/etsy/drafts` record actual packed weights and box dimensions
+per product. Measured across the 14 framed drafts:
+
+- **Weights: 7, 7, 7, 7, 12, 12, 16, 16, 16, 16, 40 oz.** Nine of eleven are at
+  or under 1 lb. The PRD assumed 2–4 lb for framed items; almost nothing is.
+- **Boxes: 9×7×1.5, 8×6×3, 12×10×1, 12.6×11.4×1.97, 16×13×2 in.** All well under
+  1 cu ft, so dimensional weight doesn't apply on Ground Advantage.
+- **A flat $25 on a 7 oz, 9×7×1.5 parcel overcharges by roughly 3×** — and that
+  is the most common framed size, not an edge case. Framed items also span
+  7 oz → 40 oz, which is too wide for one flat rate in either direction.
+- **The 25 print drafts record no shipping data at all.** The `print` rate is
+  entirely unverified, and prints are the item the cart is most meant to bundle.
+
+**Consequences for the model:**
+
+- Per-product `shipWeightOz` and dimensions get a home in the new `product`
+  document (see [product-model-migration.md](product-model-migration.md) §2), so
+  the bands stay auditable and the estimates above can be checked against reality
+  without a schema change.
+- Rates stay in one config object, as before. The rule at the top of this section
+  is unchanged — only the numbers and the banding moved.
+- The band threshold is a **property of the rate table, not of the product**. A
+  product carries its weight; the table decides where the line falls. Moving the
+  threshold later must not mean re-tagging products.
+
+**Verification deferred (2026-09-05 decision).** Real labels were not priced —
+the rates above are estimates and knowingly provisional. When the real figures
+are wanted, the three parcels worth pricing are the 7 oz framed at 9×7×1.5, the
+40 oz framed at 16×13×2, and one weighed print in its rigid flat mailer. Price
+each to a near and a far zone: one national flat rate has to cover the worst zone
+or absorb the gap. Published USPS Ground Advantage retail starts around $7.90
+including $100 insurance and tracking, and Click-N-Ship commercial is cheaper —
+but neither figure knows these zones or this discount. Tracked in Phase 4.
 - Computed by **our server** as a pure function over cart lines, then attached to
   the Square Order as a shipping charge. The rule lives in our code.
 - Two options at checkout: **US shipping** (computed) and **Local pickup —
@@ -251,25 +316,32 @@ unchanged — Square owns only the payment page, which takes your branding.
 
 ## 11. Data model
 
-**Sanity (`studio/schemaTypes/artwork.ts`)**
-- `squareVariationId: string` on each purchase option — the catalog link. Required
-  for anything sellable.
-- `shippingType: "magnet" | "postcard" | "print" | "original" | "framedPrint" |
-  "framedOriginal"` — drives §9. Required for anything sellable.
+**Sanity (`studio/schemaTypes/product.ts`)** — full field list and the migration
+plan in [product-model-migration.md](product-model-migration.md).
+- A `product` document per sellable thing, with `subject` referencing an
+  `artwork`. Replaces the hardcoded `originalPrice` / `printLocal*` /
+  `printEtsy*` fields and the `customOptions[]` array.
+- `squareVariationId: string` — the catalog link. Required for anything sellable.
+- `shippingType: "magnet" | "postcard" | "print" | "original" | "framedSmall" |
+  "framedLarge"` — drives §9. Required for anything sellable. Framed items band
+  by packed weight (≤16 oz / >16 oz), not by what's in the frame.
+- `shipWeightOz` + box dimensions — real packed figures, so §9's bands stay
+  auditable.
 - `soldOut?: boolean` — mirrored from Square by webhook. Not hand-edited.
 - Matching TS types in `src/types/artwork.ts`.
 
 **Cart (client, `localStorage`)**
 ```ts
 type CartLine = {
-  artworkId: string;      // Sanity _id
-  optionKey: string;      // custom option _key
-  squareVariationId: string;
+  productId: string;      // Sanity _id of the product — 1:1 with a Square variation
   qty: number;
+  oneOfAKind?: boolean;   // locks qty to 1
   // display-only snapshot; the server never trusts these
-  title: string; optionTitle: string; price: number; image?: string;
+  slug: string; title: string; optionTitle: string; price: number; image?: string;
 };
 ```
+- One id, not an `artworkId` + `optionKey` composite. The server re-reads price
+  and stock from Square by `squareVariationId`, resolved from the product.
 - Version the stored payload (`{ v: 1, lines: [] }`) so a schema change discards
   stale carts instead of crashing.
 - Reconcile on load: drop lines that are gone or sold out, tell the user what went.
@@ -344,13 +416,30 @@ Task-level breakdown in [TASKS.md](TASKS.md) and in Linear under CAS-19.
 
 ## 17. Open questions
 
-- [ ] **Confirm the §9 rates against three real labels.** They're derived from
-      published USPS retail pricing, not your zones or commercial discount.
-- [ ] **Does a paid online order auto-complete, decrementing stock?** (§7) Blocks
-      Phase 2 design. Sandbox test.
+Answered 2026-09-05 unless marked otherwise.
+
+- [ ] **Confirm the §9 rates against three real labels.** Still open, but no
+      longer a guess: §9 now names which three to buy, chosen from the real
+      weight spread in the Etsy drafts.
+- [ ] **Does a paid online order auto-complete, decrementing stock?** (§7) Still
+      open — blocked only on sandbox credentials. The test is written and ready
+      to run: `scripts/square-inventory-spike.mjs`.
+- [x] **Order notification** — Square's own merchant emails. Brevo drops out of
+      Phase 3 entirely (§4).
+- [x] **"All sales are final"** — keep it, worded as a policy rather than a
+      guarantee, shown above the checkout button. Chargeback rights exist
+      regardless of the wording, so the policy sets expectations; it doesn't
+      remove rights.
+- [x] **Catalog seeding** — migration script from Sanity, not by hand (§4).
+- [x] **Purchase-option model** — a `product` document referencing an `artwork`
+      subject. This one changed the plan rather than confirming it; see
+      [product-model-migration.md](product-model-migration.md).
 - [ ] Does Venmo stay as a secondary option after Phase 4, or get removed?
-- [ ] Order notification via Brevo (already integrated) or Square's own emails?
-- [ ] Does "all sales are final" survive, given card chargeback rights?
-- [ ] When does tax get switched on (§6)?
+      **Deliberately deferred to CAS-47** — it's a question about how the new
+      checkout actually performs, and there's no data to answer it before launch.
+- [ ] When does tax get switched on (§6)? **Deferred to CAS-48**, post-launch,
+      and filed rather than remembered.
 - [ ] What happens to Notion once products move — retired entirely, or kept for
-      non-product tracking?
+      non-product tracking? **Phase 4.** Note that the `sales`, `subjects` and
+      `events` databases are doing work the website never replaces; only
+      `inventory` is superseded by Square.

@@ -1,15 +1,19 @@
 import {
+  ActionIcon,
   Anchor,
   AppShell,
   Burger,
   Container,
   Group,
+  Indicator,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
+import { useCart } from "../lib/cartContext";
+import { CartDrawer } from "./CartDrawer";
 
 const NAV_LINKS = [
   { label: "Home", to: "/" },
@@ -17,8 +21,32 @@ const NAV_LINKS = [
   { label: "Commissions", to: "/commissions" },
 ];
 
+// Inline rather than from an icon package — the site has no icon dependency and
+// this is the only glyph it needs.
+function CartGlyph() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.55L21 8H6" />
+      <circle cx="10" cy="20" r="1" />
+      <circle cx="18" cy="20" r="1" />
+    </svg>
+  );
+}
+
 export function Layout() {
   const [opened, { toggle, close }] = useDisclosure();
+  const [cartOpened, { open: openCart, close: closeCart }] = useDisclosure();
+  const { count, ready } = useCart();
 
   return (
     <AppShell
@@ -57,10 +85,41 @@ export function Layout() {
               ))}
             </Group>
 
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Group gap="xs" wrap="nowrap">
+              {/* The cart hydrates from localStorage after mount, so the badge
+                  is suppressed until then — otherwise every visitor sees an
+                  empty cart flash a count in. */}
+              <Indicator
+                label={count}
+                size={16}
+                color="brick.6"
+                radius={0}
+                disabled={!ready || count === 0}
+                offset={4}
+              >
+                <ActionIcon
+                  variant="subtle"
+                  color="dark"
+                  radius={0}
+                  size="lg"
+                  onClick={openCart}
+                  aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
+                >
+                  <CartGlyph />
+                </ActionIcon>
+              </Indicator>
+              <Burger
+                opened={opened}
+                onClick={toggle}
+                hiddenFrom="sm"
+                size="sm"
+              />
+            </Group>
           </Group>
         </Container>
       </AppShell.Header>
+
+      <CartDrawer opened={cartOpened} onClose={closeCart} />
 
       <AppShell.Navbar py="md" px="md">
         <Stack gap="sm">

@@ -98,18 +98,21 @@ the actual stock.*
       pure function taking a status resolver. **Not yet wired**: needs real
       availability data, which arrives with the Square catalog in Phase 2. Wire
       it in CAS-34 against Sanity, then repoint at Square.
-- [~] `src/components/CartDrawer.tsx` — Mantine Drawer in the site's square /
+- [x] `src/components/CartDrawer.tsx` — Mantine Drawer in the site's square /
       hairline style. Line items, qty steppers, subtotal, empty state. **(CAS-33)**
-      Written; lint + build pass. **Browser pass outstanding** — not ticked until
-      it's been seen at 375px.
-- [~] Header cart icon + count badge. Hidden at zero, and also while `ready` is
-      false. **(CAS-33)** Same: written, not yet looked at.
+      Browser pass done at 375px: subtotal arithmetic correct, Shipping & Returns
+      sits above the Checkout button, Checkout disabled until CAS-41, console clean.
+- [x] Header cart icon + count badge. Hidden at zero, and also while `ready` is
+      false. **(CAS-33)** Inline SVG glyph — the header had no icon dependency and
+      CLAUDE.md forbids adding one for a single glyph.
 - [ ] 🛑 **`Add to cart` on `ArtworkDetail` options. BLOCKED on Phase 0.5.** This
       is the first task that builds a cart line from a purchase option, so it is
       the first that would bake in the old `artworkId` + `optionKey` identity.
       Everything above it is identity-agnostic and safe to finish. Venmo stays
       secondary, Etsy options untouched, suppressed on sold-out items.
-- [ ] One-of-a-kind items lock to qty 1.
+- [x] One-of-a-kind items lock to qty 1. `clampQty()` in `cart.ts`; the drawer
+      shows "1 only" instead of a stepper that couldn't do anything. Verified
+      in-browser 2026-09-05.
 - [ ] `/cart` route as a full-page fallback (`src/App.tsx`).
 - [ ] Analytics: `add_to_cart`, `remove_from_cart`, `view_cart`.
 - [ ] **Verify:** `/verify` clean, drawer usable at 375px, cart survives reload.

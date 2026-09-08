@@ -7,9 +7,33 @@ Spec: [PRD.md](PRD.md) · Plan: [product-model-migration.md](product-model-migra
 · Linear: [CAS-19](https://linear.app/cassandra-wilcox-art/issue/CAS-19/add-a-cart-and-square-checkout-to-the-website)
 · Due 2026-11-20
 
-**Status:** **Phase 0 complete.** Phase 1 paused at CAS-33 pending a browser pass,
-then **Phase 0.5 restructure before CAS-34** · **Last touched:** 2026-09-05
-**Platform: Square** (changed from Stripe — see PRD §5)
+**Status:** Phase 0 complete · Phase 1 done through CAS-33 · **Phase 0.5 in
+progress** · **Last touched:** 2026-09-08 · **Platform: Square** (see PRD §5)
+
+> ### 👉 Next action — a human's, not an agent's
+>
+> **Nothing has been written to Sanity yet.** The product schema, the Studio desk
+> structure, and both scripts are committed, but every run so far has been a dry
+> run. Two scripts need applying, in this order:
+>
+> ```bash
+> node studio/scripts/normalize-option-titles.mjs           # review first
+> node studio/scripts/normalize-option-titles.mjs --apply   # 24 edits
+> node studio/scripts/migrate-to-products.mjs --titles      # expect 5 titles
+> node studio/scripts/migrate-to-products.mjs               # full review
+> node studio/scripts/migrate-to-products.mjs --apply       # ~82 products
+> ```
+>
+> **Order matters.** Product ids derive from the legacy title, so a rename after
+> migrating gets rebuilt from the old title and silently reverted.
+>
+> Before `--apply` on the migration, decide the two open items in CAS-50: the
+> 13 framed prints with no packed weight, and whether the framed band should
+> move off exactly 16 oz (the one measured value, 458 g, is 16.16 oz — over the
+> line, but recorded as 16, so it lands in the cheap band).
+>
+> After that, agent work resumes at **CAS-52** (re-key cart to `productId`),
+> then **CAS-55** (read path). CAS-34 stays blocked until both land.
 
 > Linear is the source of truth for status. This file is the loop's working
 > memory — keep both ticked.

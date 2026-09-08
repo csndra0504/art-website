@@ -14,6 +14,21 @@ import { TESTIMONIALS, ETSY_REVIEW_SUMMARY } from '../lib/siteContent';
 // stories). Reorder or edit to change the gallery.
 const COMMISSIONS: CommissionExample[] = [
 	{
+		src: '/images/commissions/william-penn-tavern.jpg',
+		alt: 'Hand-drawn ink and colored pen illustration of the red brick storefront of the William Penn Tavern in Lawrenceville',
+		caption: 'The William Penn Tavern',
+	},
+	{
+		src: '/images/commissions/nanas-hotdog-shop.jpg',
+		alt: "Hand-drawn ink and watercolor illustration of Nana's New York Hot Dogs, a two-story storefront with a red awning",
+		caption: "Nana's Hot Dogs",
+	},
+	{
+		src: '/images/commissions/lawrenceville-lofts.jpg',
+		alt: 'Hand-drawn ink and watercolor illustration of the Lawrenceville Lofts on a street corner, with the Round Corner Hotel across the way',
+		caption: 'The Lawrenceville Lofts',
+	},
+	{
 		src: '/images/commissions/bryant-street-house.jpg',
 		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
 		caption: 'A Victorian home',
@@ -42,27 +57,6 @@ const COMMISSIONS: CommissionExample[] = [
 		src: '/images/commissions/west-penn-er.jpg',
 		alt: 'Hand-drawn ink and marker illustration of the West Penn Hospital emergency entrance and street',
 		caption: 'A hospital',
-	},
-];
-
-// Other pieces from the Pittsburgh series — NOT commissions. Shown to convey
-// range and style, under a heading that says so, so nothing is implied to be a
-// commission that wasn't.
-const OTHER_WORK: CommissionExample[] = [
-	{
-		src: '/images/commissions/tazza-doro.jpg',
-		alt: "Hand-drawn ink and marker illustration of Tazza D'oro coffee shop",
-		caption: 'A coffee shop',
-	},
-	{
-		src: '/images/commissions/park-place-pub.jpg',
-		alt: 'Hand-drawn ink and marker illustration of Park Place Pub',
-		caption: 'A corner bar',
-	},
-	{
-		src: '/images/commissions/thunderbird.jpg',
-		alt: 'Hand-drawn ink and marker illustration of the Thunderbird Cafe and Music Hall',
-		caption: 'A music hall',
 	},
 ];
 
@@ -119,11 +113,11 @@ export function Commissions() {
 					<Title order={2} size="h3" fw={400} fs="italic">
 						A Place That Means Something to You, Drawn by Hand
 					</Title>
-					<Text mt="sm">
+					{/* <Text mt="sm">
 						A commission is a custom drawing of a place that matters to you (the house you grew up
 						in, your corner bar, the storefront where it all started). Every piece is hand-drawn
 						in fine-line ink and alcohol marker, the same style as the Pittsburgh series.
-					</Text>
+					</Text> */}
 					{/* [Cassandra: drop in a line here in your own voice about why you love
 					    drawing people's places, then un-comment this.]
 					<Text c="dimmed" fs="italic">...</Text> */}
@@ -159,29 +153,15 @@ export function Commissions() {
 				<Divider />
 
 				{/* Examples gallery — highest priority, kept near the top. */}
-				<Stack gap="xl" ref={galleryRef}>
-					<Stack gap="sm">
-						<Title order={2}>Recent commissions</Title>
-						<Text>
-							A few pieces I've drawn for people, from a photo or on location. Homes, a
-							storefront, the hospital down the street. Whatever the place, as long as it
-							means something to you.
-						</Text>
-						<Box mt="xs">
-							<CommissionGallery examples={COMMISSIONS} />
-						</Box>
-					</Stack>
-
-					<Stack gap="sm">
-						<Title order={3}>More of my work</Title>
-						<Text>
-							Not commissions, but a sense of the range and style: a few favorites from my
-							Pittsburgh series. Yours would be drawn the same way, for your place.
-						</Text>
-						<Box mt="xs">
-							<CommissionGallery examples={OTHER_WORK} />
-						</Box>
-					</Stack>
+				<Stack gap="sm" ref={galleryRef}>
+					<Title order={2}>Recent commissions</Title>
+					<Text>
+						A few pieces I've drawn for people, from a photo or on location. Click to view each in
+						detail.
+					</Text>
+					<Box mt="xs">
+						<CommissionGallery examples={COMMISSIONS} />
+					</Box>
 				</Stack>
 
 				<Divider />
@@ -197,11 +177,12 @@ export function Commissions() {
 						</List.Item>
 						<List.Item>
 							<strong>From a photo, or on location.</strong> I can work from a photo you send,
-							or sketch on location if the place is in the Pittsburgh area. On location I can find
-							the best angle and leave out the parked cars and overgrown trees I can't see around
-							in a photo, and being there helps me capture the feel of the place. It isn't always
-							possible, and photos work well too (the Queen Victoria Inn was drawn entirely from
-							one). A photo just needs to be your own, so there's no copyright risk.
+							or sketch on location if the place is in the Pittsburgh area. On location I can
+							find the best angle and leave out the parked cars and overgrown trees I can't see
+							around in a photo, and being there helps me capture the feel of the place. It
+							isn't always possible, and photos work well too (the Queen Victoria Inn was drawn
+							entirely from one). A photo just needs to be your own, so there's no copyright
+							risk.
 						</List.Item>
 						<List.Item>
 							<strong>What you get.</strong> The original hand-drawn piece plus a
@@ -209,9 +190,9 @@ export function Commissions() {
 							it.
 						</List.Item>
 						<List.Item>
-							<strong>The process.</strong> Tell me about the place using the button below.
-							I'll get back to you within two business days, usually to set up a short phone call
-							so we can talk through the details. From there I follow up with any questions, a
+							<strong>The process.</strong> Tell me about the place using the button below. I'll
+							get back to you within two business days, usually to set up a short phone call so
+							we can talk through the details. From there I follow up with any questions, a
 							timeline, and a quote. A deposit books your spot, and the rest is due on delivery.
 						</List.Item>
 						<List.Item>
@@ -239,8 +220,8 @@ export function Commissions() {
 				<Stack gap="sm" align="flex-start">
 					<Title order={2}>Start your commission</Title>
 					<Text>
-						Tell me about the place and I'll take it from there. The form goes straight to
-						me, and I read every one.
+						Tell me about the place and I'll take it from there. The form goes straight to me, and
+						I read every one.
 					</Text>
 					<Button
 						component="a"

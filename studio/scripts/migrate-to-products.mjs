@@ -7,15 +7,23 @@ import { join } from "node:path";
 // documents. See docs/cart-checkout/product-model-migration.md.
 //
 //   node studio/scripts/migrate-to-products.mjs            # dry run, writes nothing
-//   node studio/scripts/migrate-to-products.mjs --apply    # create/update products
+//   node studio/scripts/migrate-to-products.mjs --apply    # create missing products
+//   node studio/scripts/migrate-to-products.mjs --apply --force   # also overwrite
 //
 // Dry run is the default because this writes to live production content.
 //
 // It deliberately does NOT delete the legacy fields. A migration that removes
 // its own source of truth can only be run once, and this one is meant to be
 // re-run as titles get normalised.
+//
+// Re-running is safe by default: products that already exist are left alone.
+// Once products exist, they are where weights, shipping bands and (later) the
+// Square variation ids get edited — overwriting them from the legacy fields
+// would silently wipe that work. --force exists for the case where that is
+// genuinely wanted, e.g. before anyone has touched the products.
 
 const APPLY = process.argv.includes("--apply");
+const FORCE = process.argv.includes("--force");
 // Grouping by title rather than by subject is what makes near-duplicate titles
 // visible. They don't collide on id, so nothing stops four spellings of
 // "postcard" becoming four Square variations with the stock split between them.
@@ -183,6 +191,7 @@ const etsyShipping = loadEtsyShipping();
 const products = [];
 const collisions = [];
 const needsReview = [];
+const etsyLinks = [];
 
 for (const art of artworks) {
   if (!art.slug) {
@@ -267,9 +276,11 @@ for (const art of artworks) {
       sortOrder: 0,
     });
   }
+  // The legacy "local pickup" print is an 8x10 (confirmed 2026-09-21). Titled to
+  // match the custom 8x10 prints, so one real product has one name.
   if (art.printLocalPrice != null) {
     emit({
-      title: "Print (local pickup)",
+      title: "8x10 Print",
       kind: "print",
       price: art.printLocalPrice,
       soldOut: art.printLocalSold === true,
@@ -277,15 +288,12 @@ for (const art of artworks) {
       sortOrder: 10,
     });
   }
+  // Etsy links are not products. They carry no stock, never enter the cart and
+  // never go to Square — they are a fallback for pieces with no print on hand,
+  // and stay on the subject (printEtsyUrl/printEtsyPrice) for the site to show
+  // when nothing local is for sale. Decided 2026-09-21.
   if (art.printEtsyPrice != null || art.printEtsyUrl) {
-    emit({
-      title: "Print (Etsy)",
-      kind: "print",
-      price: art.printEtsyPrice ?? 0,
-      channel: "etsy",
-      etsyUrl: art.printEtsyUrl,
-      sortOrder: 20,
-    });
+    etsyLinks.push({ subject: art.title, price: art.printEtsyPrice, onSubject: true });
   }
   (art.customOptions ?? []).forEach((opt, i) => {
     if (opt.price == null || !opt.title) {
@@ -296,11 +304,17 @@ for (const art of artworks) {
       });
       return;
     }
+    if (opt.etsyUrl) {
+      // Unlike printEtsyUrl, this link lives only in customOptions, which gets
+      // retired later — so it would be lost unless copied onto the subject.
+      etsyLinks.push({ subject: art.title, price: opt.price, title: opt.title, onSubject: false });
+      return;
+    }
     emit({
       title: opt.title,
       kind: opt.kind === "original" ? "original" : "print",
       price: opt.price,
-      channel: opt.etsyUrl ? "etsy" : "local",
+      channel: "local",
       etsyUrl: opt.etsyUrl,
       squareUrl: opt.squareUrl,
       subtitle: opt.subtitle,
@@ -319,7 +333,8 @@ console.log(`\nSubjects read:        ${artworks.length}`);
 console.log(`Products to write:    ${products.length}`);
 console.log(`Weight data matched:  ${products.filter((p) => p._shipSource).length}`);
 console.log(`Needs review:         ${needsReview.length}`);
-console.log(`Id collisions:        ${collisions.length}\n`);
+console.log(`Id collisions:        ${collisions.length}`);
+console.log(`Etsy links (not products): ${etsyLinks.length}\n`);
 
 if (TITLES_ONLY) {
   const byTitle = new Map();
@@ -383,6 +398,19 @@ if (needsReview.length) {
   }
 }
 
+if (etsyLinks.length) {
+  console.log("\n— Etsy links — kept on the subject, not turned into products —");
+  for (const l of etsyLinks.filter((l) => l.onSubject)) {
+    console.log(`  ${l.subject}${l.price != null ? ` ($${l.price})` : ""}`);
+  }
+  const stranded = etsyLinks.filter((l) => !l.onSubject);
+  if (stranded.length) {
+    console.log("\n  ⚠ These Etsy links exist only as a custom option, which gets retired");
+    console.log("  later. Copy each onto its subject's Etsy URL first, or it will be lost:");
+    for (const l of stranded) console.log(`  ${l.subject} — "${l.title}" ($${l.price})`);
+  }
+}
+
 const unconfirmed = products.filter((p) => p._shipUnconfirmed);
 if (unconfirmed.length) {
   console.log("\n— ⚠ WEIGHTS MARKED [confirm] IN THE ETSY DRAFTS —");
@@ -390,6 +418,23 @@ if (unconfirmed.length) {
   console.log(`  ${FRAMED_BAND_OZ} oz. A guess on the wrong side undercharges $10 per order.`);
   for (const p of unconfirmed) {
     console.log(`  ${p.title} — ${p.shipWeightOz}oz (${p._shipSource})`);
+  }
+}
+
+const existingIds = new Set(
+  await client.fetch(`*[_type == "product" && _id in $ids]._id`, {
+    ids: products.map((p) => p._id),
+  })
+);
+if (existingIds.size) {
+  console.log(
+    `\n${existingIds.size} of these products already exist and ${
+      FORCE ? "WILL BE OVERWRITTEN (--force)" : "will be left alone"
+    }.`
+  );
+  if (!FORCE) {
+    console.log("  Edits made to them in the Studio are preserved. Pass --force to");
+    console.log("  rebuild them from the legacy fields instead, discarding those edits.");
   }
 }
 
@@ -408,18 +453,27 @@ if (collisions.length) {
 // ---------------------------------------------------------------------------
 
 let written = 0;
+let skipped = 0;
 const tx = client.transaction();
 for (const p of products) {
   const { _shipSource, _shipUnconfirmed, ...doc } = p;
   void _shipSource;
   void _shipUnconfirmed;
-  // createOrReplace keeps re-runs idempotent: deterministic ids mean a second
-  // run updates in place rather than duplicating.
-  tx.createOrReplace(doc);
-  written++;
+  // Deterministic ids mean a re-run never duplicates. Whether it overwrites is
+  // the --force decision above.
+  if (FORCE) {
+    tx.createOrReplace(doc);
+    written++;
+  } else if (existingIds.has(doc._id)) {
+    skipped++;
+  } else {
+    tx.createIfNotExists(doc);
+    written++;
+  }
 }
 await tx.commit();
 
 console.log(`\n✓ Wrote ${written} product documents.`);
+if (skipped) console.log(`  Left ${skipped} existing products untouched.`);
 console.log("Legacy fields on artwork are untouched — retire them separately,");
 console.log("once the site is verified reading from products.\n");

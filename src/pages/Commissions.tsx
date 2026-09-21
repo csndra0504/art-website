@@ -15,48 +15,66 @@ import { TESTIMONIALS, ETSY_REVIEW_SUMMARY } from '../lib/siteContent';
 const COMMISSIONS: CommissionExample[] = [
 	{
 		src: '/images/commissions/william-penn-tavern.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and colored pen illustration of the red brick storefront of the William Penn Tavern in Lawrenceville',
-		caption: 'The William Penn Tavern',
+		caption: 'The William Penn Tavern. A gift from one sister to another. Their old stopping grounds.',
 	},
 	{
 		src: '/images/commissions/nanas-hotdog-shop.jpg',
+		width: 1050,
+		height: 1400,
 		alt: "Hand-drawn ink and watercolor illustration of Nana's New York Hot Dogs, a two-story storefront with a red awning",
-		caption: "Nana's Hot Dogs",
+		caption: "Nana's Hot Dogs. Ode to a lost Northside staple and a symbol of determination.",
 	},
 	{
 		src: '/images/commissions/lawrenceville-lofts.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and watercolor illustration of the Lawrenceville Lofts on a street corner, with the Round Corner Hotel across the way',
-		caption: 'The Lawrenceville Lofts',
+		caption: 'Lawrenceville Lofts. A piece of home for a far away lover.',
 	},
 	{
 		src: '/images/commissions/bryant-street-house.jpg',
+		width: 1200,
+		height: 1500,
 		alt: 'Hand-drawn ink and marker portrait of a red-brick Victorian house',
-		caption: 'A Victorian home',
+		caption: 'Colonial Revival. First home in Pittsburgh.',
 	},
 	{
 		src: '/images/commissions/didi-home.jpg',
+		width: 1400,
+		height: 1050,
 		alt: 'Hand-drawn ink and marker portrait of a brick cottage with an arched door and bay window',
-		caption: 'A brick cottage',
+		caption: 'The home where they raised their children.',
 	},
 	{
 		src: '/images/commissions/callowhill-house.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and marker portrait of a three-story Victorian house',
-		caption: 'A house',
+		caption: 'Where she lived as a young adult.',
 	},
 	{
 		src: '/images/commissions/queen-victoria-inn.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and marker portrait of the Queen Victoria Inn, a green Second Empire Victorian',
-		caption: 'The Queen Victoria Inn',
+		caption: 'The Queen Victoria Inn. Where they always went for their anniversary.',
 	},
 	{
 		src: '/images/commissions/taco-bell.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and marker illustration of a Taco Bell storefront',
-		caption: 'A storefront',
+		caption: 'Taco Bell. Sometimes all you have to keep going in this life.',
 	},
 	{
 		src: '/images/commissions/west-penn-er.jpg',
+		width: 1400,
+		height: 1000,
 		alt: 'Hand-drawn ink and marker illustration of the West Penn Hospital emergency entrance and street',
-		caption: 'A hospital',
+		caption: 'The place where everything changed.',
 	},
 ];
 
@@ -113,6 +131,12 @@ export function Commissions() {
 					<Title order={2} size="h3" fw={400} fs="italic">
 						A Place That Means Something to You, Drawn by Hand
 					</Title>
+					{/* Matches the Sep 2026 holiday newsletter (order by Thanksgiving).
+					    Remove after Nov 26 so it doesn't outlive the deadline. */}
+					<Text fw={600} mt="xs">
+						I need 30 days to complete your custom artwork. Please send your request by Thursday,
+						November 26 to have it in time for Christmas.
+					</Text>
 					{/* <Text mt="sm">
 						A commission is a custom drawing of a place that matters to you (the house you grew up
 						in, your corner bar, the storefront where it all started). Every piece is hand-drawn

@@ -8,6 +8,36 @@ export interface CommissionExample {
   alt: string;
   /** Short caption shown under the image. */
   caption: string;
+  /** Intrinsic pixel size. Lets the frame match the image's shape before it loads. */
+  width: number;
+  height: number;
+}
+
+// Frame and mat thickness as a share of the frame's own width. Percentage padding
+// resolves against the parent's width, so the frame scales with the piece: a small
+// grid tile gets a proportionally slim frame, the big lightbox one a substantial one.
+const FRAME_PAD = "3%";
+const MAT_PAD = "7%";
+// Combined padding per side as a fraction of frame width: 0.03 + 0.07 * (1 - 2 * 0.03).
+const PAD_TOTAL = 0.096;
+
+// The faux frame + mat, shared by the grid and the lightbox so they always match.
+// The parent must give it a definite width.
+function Frame({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      style={{
+        padding: FRAME_PAD,
+        background: "#2a2622",
+        boxShadow: "0 6px 14px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)",
+      }}
+    >
+      {/* The mat: a paper border between frame and drawing. */}
+      <Box style={{ padding: MAT_PAD, background: "#fafaf8", boxShadow: "inset 0 0 0 1px #e8e8e0" }}>
+        {children}
+      </Box>
+    </Box>
+  );
 }
 
 // Real past commissions, shown to convey range and quality. Clicking opens a
@@ -41,27 +71,38 @@ export function CommissionGallery({ examples }: { examples: CommissionExample[] 
       <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }} spacing="lg">
         {examples.map((ex, idx) => (
           <Stack key={ex.src} gap={6}>
-            <UnstyledButton
-              onClick={() => setOpenIndex(idx)}
-              aria-label={`View larger: ${ex.caption}`}
-              style={{ display: "block" }}
-            >
-              <Image
-                src={ex.src}
-                alt={ex.alt}
-                loading="lazy"
-                radius="sm"
+            {/* Every piece hangs in an identical square "wall slot", and the frame
+                is sized to the image's own shape inside it: the longer side fills
+                the slot, so each piece is as large as it can be without cropping,
+                and the grid stays evenly spaced whatever the aspect ratios. Frames sit at
+                the bottom of the slot so each caption hugs its own frame; the slack
+                lands above the frame, between rows. */}
+            <Box style={{ aspectRatio: "1 / 1", display: "grid", placeItems: "end center" }}>
+              <UnstyledButton
+                onClick={() => setOpenIndex(idx)}
+                aria-label={`View larger: ${ex.caption}`}
                 style={{
-                  aspectRatio: "1 / 1",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  boxShadow: "var(--mantine-shadow-sm)",
+                  display: "block",
+                  // Slot is square, so a portrait frame is ratio-wide, a landscape one full-width.
+                  width: `${Math.min(1, ex.width / ex.height) * 100}%`,
                   cursor: "zoom-in",
                 }}
-              />
-            </UnstyledButton>
+              >
+                <Frame>
+                  <Image
+                    src={ex.src}
+                    alt={ex.alt}
+                    width={ex.width}
+                    height={ex.height}
+                    loading="lazy"
+                    radius={0}
+                    style={{ aspectRatio: `${ex.width} / ${ex.height}`, display: "block", height: "auto" }}
+                  />
+                </Frame>
+              </UnstyledButton>
+            </Box>
             <Box>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c="dimmed" ta="center">
                 {ex.caption}
               </Text>
             </Box>
@@ -83,16 +124,31 @@ export function CommissionGallery({ examples }: { examples: CommissionExample[] 
         {active && (
           <Stack gap="xs" align="center">
             <Box style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-              {/* Uncropped here — the grid square-crops, but the lightbox is
-                  where the whole piece should finally be visible. */}
-              <Image
-                src={active.src}
-                alt={active.alt}
-                fit="contain"
-                radius={0}
-                style={{ maxHeight: "85vh", maxWidth: "90vw", cursor: "zoom-out" }}
-                onClick={close}
-              />
+              {/* Frame width is the largest that fits both 90vw and 85vh. Frame height is
+                  W * ((1 - 2p) / ratio + 2p), so solve for W against the height budget.
+                  Capped at the file's own width so we never upscale past sharp. */}
+              <Box
+                style={{
+                  width: `min(90vw, calc(85vh / ${(1 - 2 * PAD_TOTAL) / (active.width / active.height) + 2 * PAD_TOTAL}), ${active.width}px)`,
+                }}
+              >
+                <Frame>
+                  <Image
+                    src={active.src}
+                    alt={active.alt}
+                    width={active.width}
+                    height={active.height}
+                    radius={0}
+                    style={{
+                      aspectRatio: `${active.width} / ${active.height}`,
+                      display: "block",
+                      height: "auto",
+                      cursor: "zoom-out",
+                    }}
+                    onClick={close}
+                  />
+                </Frame>
+              </Box>
 
               {examples.length > 1 && (
                 <>

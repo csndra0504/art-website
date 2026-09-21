@@ -21,6 +21,7 @@ import { EmailSignupBanner } from '../components/EmailSignupBanner';
 import { SeoHead } from '../components/SeoHead';
 import { JsonLd } from '../components/JsonLd';
 import { buildHomeJsonLd } from '../lib/structuredData';
+import { isAvailable } from '../lib/offers';
 import type { ArtworkSummary } from '../types/artwork';
 
 // Runs at build time (and on client navigation) so the gallery is present in the
@@ -29,15 +30,8 @@ export async function loader() {
 	return { artworks: await getArtworks() };
 }
 
-// A piece is "available" if it's for sale and at least one purchase path is open.
-function isAvailable(a: ArtworkSummary): boolean {
-	if (!a.forSale) return false;
-	if (a.originalPrice != null && !a.originalSold) return true;
-	if (a.printEtsyPrice != null) return true;
-	if (a.printLocalPrice != null && !a.printLocalSold) return true;
-	if (a.hasCustomOption) return true;
-	return false;
-}
+// "Available" — for sale with at least one purchase path open — is decided in
+// lib/offers so the filter and the cards can't disagree about it.
 
 function scrollToGallery() {
 	document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });

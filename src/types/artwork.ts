@@ -18,18 +18,12 @@ export interface ArtworkSummary {
   featured?: boolean;
   forSale?: boolean;
   highlightLabel?: string;
-  // Pricing carried on the summary so cards can show "from $X" without a fetch.
-  originalPrice?: number;
-  originalSold?: boolean;
+  // Visible products, joined in so cards can show prices without a fetch.
+  // Interpret them through lib/offers.ts rather than reading them directly.
+  products?: SubjectProduct[] | null;
+  // The Etsy link stays on the subject: a fallback, not a product.
+  printEtsyUrl?: string;
   printEtsyPrice?: number;
-  printLocalPrice?: number;
-  printLocalSold?: boolean;
-  // True when the piece has at least one visible custom purchase option, so the
-  // gallery's "For Sale" filter counts options-only pieces (e.g. postcards).
-  hasCustomOption?: boolean;
-  // Cheapest visible custom option of kind "print", so the card's "Prints from"
-  // line reflects print-type custom options (e.g. postcards).
-  customPrintFrom?: number;
 }
 
 // --- products ---------------------------------------------------------------
@@ -92,6 +86,12 @@ export interface Product {
   squareUrl?: string;
   venmoNote?: string;
 }
+
+/** The product fields the site reads, joined onto each subject by the queries. */
+export type SubjectProduct = Pick<
+  Product,
+  "_id" | "title" | "kind" | "price" | "soldOut" | "subtitle" | "squareUrl" | "venmoNote"
+>;
 
 /** A product joined with the subject fields the cart and detail page need. */
 export interface ProductWithSubject extends Product {

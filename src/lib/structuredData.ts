@@ -11,6 +11,7 @@ import {
   INSTAGRAM_URL,
   ETSY_URL,
 } from "./seo";
+import { offersFor } from "./offers";
 import type { Artwork } from "../types/artwork";
 import type { Event } from "../types/event";
 
@@ -60,12 +61,11 @@ function artworkOffers(artwork: Artwork, url: string): object[] {
     });
   };
 
-  add("Original", artwork.originalPrice, !!artwork.originalSold);
-  add("Print", artwork.printEtsyPrice, false, artwork.printEtsyUrl);
-  add("Print (local pickup)", artwork.printLocalPrice, !!artwork.printLocalSold);
-  (artwork.customOptions ?? [])
-    .filter((o) => o.visible !== false)
-    .forEach((o) => add(o.title, o.price, false, o.squareUrl));
+  // Same view of what's for sale as the page itself (lib/offers), so search
+  // results never advertise an offer the page doesn't show.
+  const o = offersFor(artwork);
+  for (const p of o.products) add(p.title, p.price, !!p.soldOut);
+  if (o.showEtsy) add("Print", artwork.printEtsyPrice, false, artwork.printEtsyUrl);
 
   return offers;
 }

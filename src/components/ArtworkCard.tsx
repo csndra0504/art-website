@@ -1,5 +1,6 @@
 import { Badge, Box, Button, Card, Image, Text, Stack } from "@mantine/core";
 import { Link } from "react-router-dom";
+import { offersFor } from "../lib/offers";
 import { urlFor } from "../lib/sanity";
 import type { ArtworkSummary } from "../types/artwork";
 import classes from "./ArtworkCard.module.css";
@@ -9,32 +10,16 @@ interface ArtworkCardProps {
 }
 
 // Break pricing into the original (one-of-a-kind, higher) and the entry-level
-// print price so the card reads like a shop, not just a "from $X" number.
+// price so the card reads like a shop, not just a "from $X" number.
 function pricing(a: ArtworkSummary) {
-  const originalListed = a.originalPrice != null;
-  const originalAvailable = originalListed && !a.originalSold;
-
-  const printPrices: number[] = [];
-  if (a.printEtsyPrice != null) printPrices.push(a.printEtsyPrice);
-  if (a.printLocalPrice != null && !a.printLocalSold)
-    printPrices.push(a.printLocalPrice);
-  if (a.customPrintFrom != null) printPrices.push(a.customPrintFrom);
-  const printsFrom = printPrices.length ? Math.min(...printPrices) : null;
-
-  const everListed =
-    originalListed ||
-    a.printEtsyPrice != null ||
-    a.printLocalPrice != null ||
-    a.customPrintFrom != null;
-  const anyAvailable = originalAvailable || printsFrom != null;
-
+  const o = offersFor(a);
   return {
-    originalListed,
-    originalPrice: a.originalPrice,
-    originalSold: !!a.originalSold,
-    printsFrom,
-    anyAvailable,
-    soldOut: everListed && !anyAvailable,
+    originalListed: !!o.original,
+    originalPrice: o.original?.price,
+    originalSold: o.originalSold,
+    fromPrice: o.fromPrice,
+    anyAvailable: o.anyAvailable,
+    soldOut: o.soldOut,
   };
 }
 
@@ -106,7 +91,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
 
       {/* Price + buy row sits outside the card link so the button is its own
           tap target (no nested links). */}
-      {p && (p.originalListed || p.printsFrom != null) && (
+      {p && (p.originalListed || p.fromPrice != null) && (
         <Box className={classes.buyRow} px="sm" pt={6} pb="sm">
           <Stack gap={0} style={{ minWidth: 0 }}>
             {p.originalListed && (
@@ -129,12 +114,14 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
                 )}
               </Text>
             )}
-            {p.printsFrom != null && (
+            {p.fromPrice != null && (
               <Text size="sm" fw={600}>
+                {/* "From", not "Prints from": the cheapest non-original may be a
+                    magnet or a postcard, and the card doesn't discriminate. */}
                 <Text span size="xs" fw={500} c="dimmed">
-                  Prints from{" "}
+                  From{" "}
                 </Text>
-                {money(p.printsFrom)}
+                {money(p.fromPrice)}
               </Text>
             )}
           </Stack>

@@ -137,9 +137,17 @@ the actual stock.*
       old shape are ignored rather than half-read. Browser-checked: an old-format
       cart shows as empty, a new-format cart renders, and the quantity stepper
       finds its line by product id and persists.
-- [ ] Read path: `queries.ts`, `ArtworkDetail`, `ArtworkCard`, `structuredData`.
-- [ ] **Verify:** `/verify` clean, artwork pages still prerender, a page with no
-      loader data still renders.
+- [x] Read path: `queries.ts`, `ArtworkDetail`, `ArtworkCard`, `structuredData`
+      — plus `Home.tsx`'s "For Sale" filter, which also read the legacy fields.
+      **(CAS-55)** All "what's for sale" rules now live in `src/lib/offers.ts`
+      so the card, filter, detail page and JSON-LD can't disagree. **On the
+      branch, not merged — nothing live has changed.**
+- [x] **Verify:** typecheck, lint, build (all 51 pages prerender against live
+      products), browser pass at 375px, console clean. The "For Sale" set is
+      **identical before and after: 34 pieces**. The Etsy rule checked on the
+      prerendered HTML: hidden where local prints exist (Thunderbird, Tazza),
+      shown where they don't (Cathedral, William Penn). The client refetch —
+      the no-loader-data path — uses the same query and runs on every page load.
 - [ ] Retire `originalPrice` / `printLocal*` / `printEtsy*` / `customOptions` —
       separate commit, after the read path is proven.
 

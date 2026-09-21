@@ -190,6 +190,14 @@ the actual stock.*
       variation id. `shippingType` is a required enum for anything sellable:
       `magnet` | `postcard` | `print` | `original` | `framedSmall` |
       `framedLarge` (PRD §9). Framed bands by packed weight, not contents.
+- [x] **Sandbox catalog mirror** — `scripts/seed-sandbox-catalog.mjs` (added
+      2026-09-21, sandbox-first order). Copies all 64 visible products into the
+      Square **sandbox** with stock (originals 1, others 10, sold 0), SKU = Sanity
+      product id so re-runs update rather than duplicate. Writes the git-ignored
+      `server/sandbox-catalog.json` (product → sandbox variation), which the
+      checkout API reads in sandbox mode. **Sandbox ids never go into Sanity** —
+      one dataset, and it's live. Verified: idempotent re-run creates nothing;
+      stock read back from Square matches. Hardcoded sandbox URL, no override.
 - [ ] **`studio/scripts/seed-square-catalog.mjs`** — seed the Square catalog from
       Sanity and link the two. Blocked on the schema task above and the Phase 0
       spike. Design already worked out, don't re-derive:
@@ -454,3 +462,9 @@ future session reads to avoid re-deriving context.)*
   works. Rejected: a feature flag to ship the CAS-55 read path early. Cost
   accepted: the read-path improvements wait, and the branch must be kept in step
   with `main`.
+- 2026-09-21 — **Sandbox-first for checkout.** CAS-41/42 are built and tested
+  against the Square sandbox, using a mirror of the site's products. Linking
+  to the real Square catalog (CAS-37) waits for go-live, so production
+  credentials stay off the machine until they're needed. The API picks its
+  variation ids by environment: the sandbox map in sandbox, each product's
+  `squareVariationId` in production.

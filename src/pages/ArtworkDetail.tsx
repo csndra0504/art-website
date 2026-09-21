@@ -23,7 +23,6 @@ import {
   trackRequestPrint,
   trackViewItem,
   type AnalyticsItem,
-  type PaymentType,
 } from "../lib/analytics";
 import { SeoHead } from "../components/SeoHead";
 import { JsonLd } from "../components/JsonLd";
@@ -62,26 +61,14 @@ function descriptionExcerpt(
   return text.slice(0, max - 1).trimEnd() + "…";
 }
 
-const VENMO_HANDLE = "cassandrawilcox";
-
-function venmoUrl(amount: number, note: string) {
-  return `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
-}
-
-// Add to cart is the primary action; Venmo stays as the secondary link during
-// v1 because it's a proven path, and removing it before card checkout is proven
-// would risk sales. The per-product Square links this replaces are superseded
-// by checkout from the cart.
+// The cart is the only way to buy locally. It replaced both the per-product
+// Square links and Venmo, which charged the item price with no shipping.
 function CartActions({
   product: p,
   artwork,
-  venmoHref,
-  onVenmo,
 }: {
   product: SubjectProduct;
   artwork: Artwork;
-  venmoHref: string;
-  onVenmo: () => void;
 }) {
   const { add, lines, ready } = useCart();
   const [justAdded, setJustAdded] = useState(false);
@@ -122,32 +109,17 @@ function CartActions({
       : "Add to cart";
 
   return (
-    <Group gap="xs" wrap="wrap" justify="flex-end">
-      <Button
-        onClick={handleAdd}
-        disabled={!ready || (oneOfAKind && inCart && !justAdded)}
-        variant="filled"
-        color="dark"
-        radius={0}
-        size="sm"
-        aria-live="polite"
-      >
-        {label}
-      </Button>
-      <Button
-        component="a"
-        href={venmoHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onVenmo}
-        variant="subtle"
-        color="dark"
-        radius={0}
-        size="sm"
-      >
-        or Venmo
-      </Button>
-    </Group>
+    <Button
+      onClick={handleAdd}
+      disabled={!ready || (oneOfAKind && inCart && !justAdded)}
+      variant="filled"
+      color="dark"
+      radius={0}
+      size="sm"
+      aria-live="polite"
+    >
+      {label}
+    </Button>
   );
 }
 
@@ -167,12 +139,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
   return (
     <Stack gap="sm">
       {o.products.map((p) => (
-        <ProductRow
-          key={p._id}
-          product={p}
-          artwork={artwork}
-          onCheckout={(m) => trackBeginCheckout(item(p.title, p.price), m)}
-        />
+        <ProductRow key={p._id} product={p} artwork={artwork} />
       ))}
 
       {o.showEtsy && (
@@ -218,11 +185,9 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
 function ProductRow({
   product: p,
   artwork,
-  onCheckout,
 }: {
   product: SubjectProduct;
   artwork: Artwork;
-  onCheckout: (method: PaymentType) => void;
 }) {
   const sold = !!p.soldOut;
   return (
@@ -255,12 +220,7 @@ function ProductRow({
           </Group>
         </div>
         {!sold && (
-          <CartActions
-            product={p}
-            artwork={artwork}
-            venmoHref={venmoUrl(p.price, p.venmoNote ?? `${p.title}: ${artwork.title}`)}
-            onVenmo={() => onCheckout("venmo")}
-          />
+          <CartActions product={p} artwork={artwork} />
         )}
       </Group>
       {!sold && p.kind === "original" && (

@@ -317,7 +317,7 @@ export function CartDrawer({
           {checkout.status === "error" && (
             <Text size="sm" c="red.8" role="alert">
               {checkout.message}
-              {!blocked && " You can still buy with Venmo from each piece's page."}
+              {!blocked && " Or email hello@cassandrawilcoxart.com and I'll sort it out."}
             </Text>
           )}
 

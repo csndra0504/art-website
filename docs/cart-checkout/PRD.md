@@ -298,7 +298,8 @@ unchanged — Square owns only the payment page, which takes your branding.
 
 **Product page (`ArtworkDetail`)**
 - Each purchase option row gains **Add to cart** as the primary action.
-- Keep **or Venmo** as the secondary link during v1 — a proven path.
+- ~~Keep **or Venmo** as the secondary link during v1.~~ Removed 2026-09-21: it
+  charged the item price with no shipping, so it undercut the cart.
 - Etsy options keep **Order Print** → Etsy, unchanged.
 - Sold-out items show the existing Sold badge, no cart button.
 - After adding: brief inline confirmation, cart badge increments. **No modal.**
@@ -385,7 +386,7 @@ server re-reads price and stock from Square. Client prices are display-only.
 - Webhook never arrives / Sanity mirror fails → **payment already succeeded.** Log
   loudly and email regardless; never fail silently. Square stays correct even when
   the mirror lags.
-- Square API down → cart drawer shows an error, Venmo stays reachable.
+- Square API down → cart drawer shows an error and offers email.
 - Option missing `squareVariationId` → not sellable; surface in the Studio.
 
 ## 15. Acceptance criteria
@@ -442,7 +443,8 @@ Answered 2026-09-05 unless marked otherwise.
 - [x] **Purchase-option model** — a `product` document referencing an `artwork`
       subject. This one changed the plan rather than confirming it; see
       [product-model-migration.md](product-model-migration.md).
-- [ ] Does Venmo stay as a secondary option after Phase 4, or get removed?
+- [x] ~~Does Venmo stay as a secondary option after Phase 4, or get removed?~~
+  Removed (2026-09-21), before go-live.
       **Deliberately deferred to CAS-47** — it's a question about how the new
       checkout actually performs, and there's no data to answer it before launch.
 - [ ] When does tax get switched on (§6)? **Deferred to CAS-48**, post-launch,

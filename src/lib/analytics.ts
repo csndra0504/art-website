@@ -2,9 +2,9 @@
 // available (e.g. ad blockers, local dev, SSR) so callers never need to guard.
 //
 // Note on this site's funnel: cart orders return to /checkout/success after
-// paying on Square, so they fire a real `purchase` with the order value. Venmo
-// and Etsy still complete off-domain with no return trip, so for those the
-// click on the buy button (`begin_checkout`) is the conversion we can see.
+// paying on Square, so they fire a real `purchase` with the order value. Etsy
+// still completes off-domain with no return trip, so for it the click on the
+// buy button (`begin_checkout`) is the conversion we can see.
 import posthog from "posthog-js";
 
 export interface AnalyticsItem {
@@ -17,7 +17,7 @@ export interface AnalyticsItem {
   quantity?: number;
 }
 
-export type PaymentType = "card" | "venmo" | "etsy" | "square";
+export type PaymentType = "card" | "etsy" | "square";
 
 function send(event: string, params: Record<string, unknown> = {}) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;

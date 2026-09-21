@@ -335,15 +335,20 @@ the actual stock.*
       copy change ships *with* the branch, not after it.
 - [x] **Update `siteContent.ts` shipping copy** — replacement drafted in PRD §9
       **(CAS-45)**. The only free-shipping claim in code; none in Sanity content.
-      Venmo links still charge the item price alone, so Venmo buyers ship free
-      despite the new copy. Settle with Venmo's fate (PRD §17).
+      Venmo links charged the item price alone, so Venmo buyers shipped free
+      despite the new copy. Resolved by removing Venmo (CAS-47).
 - [ ] Production API env file on the droplet, `/opt/cass-art/api.env`:
       `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
       `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`.
       Without it checkout answers "unavailable" (by design, not a crash).
       Not before this point: the free-shipping promise is true until checkout is live.
 - [ ] Retire Notion for product/inventory tracking.
-- [ ] Decide Venmo's fate (PRD §17).
+- [x] Decide Venmo's fate (PRD §17) **(CAS-47)** — removed from product pages,
+      and the cart's error fallback now points to email.
+- [ ] ⚠️ **Merge blocker: buyers can't say which design they want.** Two
+      products took the choice in the Venmo note: "5x7 in Prints (various
+      options)" and the Dippy 5x7. The cart has no way to ask. Their
+      `venmoNote` text is kept in Sanity until this is decided.
 - [ ] File the tax follow-up issue (PRD §6).
 - [ ] One real low-value purchase end to end, reconciled against Square.
 - [ ] Watch the first 3 real orders before touching anything else.
@@ -510,3 +515,8 @@ future session reads to avoid re-deriving context.)*
   only touches the redirect. Sandbox-verified: $13 before and after the update.
   The Square sandbox panel doesn't redirect on its own; it shows the return URL
   as a link.
+- 2026-09-21 — **Venmo removed** from product pages before go-live. It charged
+  the item price with no shipping, so after CAS-45 it contradicted the site's
+  own copy. It also carried something the cart can't yet do: two "pick your
+  design" products asked for the choice in the Venmo note. The `venmoNote`
+  field and its data stay until that has a replacement.

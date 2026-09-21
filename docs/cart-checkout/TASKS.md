@@ -223,7 +223,14 @@ the actual stock.*
 - [ ] `server/` scaffold — TS, Hono or Express, `GET /api/health`, Dockerfile.
 - [ ] Add the service to `docker-compose.yml`; nginx `/api/` proxy block.
 - [ ] Extend the GitHub Actions deploy to build/push/restart the service.
-- [ ] `src/lib/shipping.ts` (shared) — **pure function**: cart lines → shipping
+- [x] **Done 2026-09-21 (CAS-40).** `shippingCents(lines, "ship" | "pickup")`
+      with rates in one cents table. A line with no shipping type **throws**
+      (`MissingShippingTypeError`, naming the products) rather than shipping
+      free. Written without parameter properties so Node can run it directly —
+      the checkout server shares it. `npm run check:shipping` exercises all 13
+      branches incl. every PRD §9 example; `/verify` calls for it when shipping
+      changes. Original task text below.
+- [ ] ~~`src/lib/shipping.ts` (shared)~~ — **pure function**: cart lines → shipping
       cents (PRD §9). The rule:
       ```
       shipping = sum(boxed items, per unit)

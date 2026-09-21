@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "studio:dev": "npm --prefix studio run dev",
-    "studio:build": "npm --prefix studio run build"
+    "studio:build": "npm --prefix studio run build",
+    "check:shipping": "node --experimental-strip-types --no-warnings scripts/check-shipping.mts"
   },
   "dependencies": {
     "@mantine/core": "^8.3.15",

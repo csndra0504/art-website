@@ -19,6 +19,10 @@ npm run lint           # eslint
 npm run build          # tsc + vite-react-ssg prerender + sitemap
 ```
 
+If the change touches shipping rules or rates (`src/lib/shipping.ts`), also run
+`npm run check:shipping` — it exercises every branch of the one piece of money
+logic the site owns, and there is no other test for it.
+
 The build is not redundant with the typecheck: `vite-react-ssg` renders every
 route to static HTML, so it catches code that touches `window`, `localStorage`,
 or `document` at module scope or during render. That class of bug **only** shows

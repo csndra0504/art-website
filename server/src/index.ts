@@ -1,4 +1,6 @@
 import express from "express";
+import { createCheckout } from "./checkout.ts";
+import { SQUARE_ENV } from "./config.ts";
 
 // The checkout API. The website itself stays fully static and prerendered; this
 // service exists only for the work that needs a secret — creating Square orders
@@ -18,12 +20,25 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+// JSON parsed for this route only (see the note above). A cart is small; the
+// limit stops anyone posting megabytes at it.
+app.post("/api/checkout", express.json({ limit: "16kb" }), createCheckout);
+
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
+// Anything unexpected: log the detail, tell the buyer nothing about internals.
+// Express only treats a handler as an error handler if it declares all four
+// parameters, so `_next` must stay even though it's unused.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: "Something went wrong. Please try again." });
+});
+
 const server = app.listen(PORT, () => {
-  console.log(`cass-art-api listening on :${PORT}`);
+  console.log(`cass-art-api listening on :${PORT} (Square ${SQUARE_ENV})`);
 });
 
 // `docker stop` sends SIGTERM. Let in-flight requests finish — a checkout

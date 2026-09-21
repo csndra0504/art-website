@@ -1,3 +1,5 @@
+import type { ShippingType } from "../types/artwork";
+
 // Cart state as pure data + pure functions. No React, no localStorage access —
 // the context layer owns both, which keeps this file trivially testable and,
 // more importantly, safe to import from anywhere including the SSG build.
@@ -31,6 +33,12 @@ export interface CartLine {
   optionTitle: string;
   price: number;
   image?: string;
+  /**
+   * Lets the drawer preview postage. Display-only like the price: the checkout
+   * server recomputes shipping from its own read of the product. Optional, so a
+   * line saved before this existed just shows "calculated at checkout".
+   */
+  shippingType?: ShippingType | null;
 }
 
 export interface Cart {

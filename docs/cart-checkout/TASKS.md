@@ -271,13 +271,29 @@ the actual stock.*
       - Rates live in one config object, not scattered literals. Pure and
         exhaustively exercised by hand before Phase 2 ships — this is the one piece
         of money logic we own outright.
-- [ ] `POST /api/checkout` — validate payload, **re-read price + stock from Square**,
-      reject bad lines with per-line reasons, compute shipping, build the Order
-      with catalog-referenced line items, return the hosted checkout URL.
-- [ ] Wire the cart's Checkout button; render per-line rejection reasons.
+- [x] `POST /api/checkout` **(CAS-41, 2026-09-21)** — takes only product ids,
+      quantities and ship/pickup. Re-reads products from Sanity (uncached API),
+      checks **live Square stock**, rejects with one reason per line (sold out,
+      only N left, one of a kind, no longer available, not buyable online yet),
+      merges duplicate ids so an original can't be bought twice, computes
+      shipping with the shared function (missing band → pickup-only, never
+      free), creates a hosted payment link with catalog-referenced lines (so
+      Square charges its catalog price and decrements stock). Pickup orders get
+      a payment note so they aren't posted. Unconfigured → friendly 503, health
+      unaffected. **Sandbox-tested:** 9 cases incl. rejections, stock limit,
+      and a tampered `price: 0.01` ignored; orders read back from Square:
+      ship $290 (incl. $20), pickup $270, tampered $13 — all exactly right.
+- [x] Wire the cart's Checkout button **(CAS-41)** — ship/pickup toggle in the
+      drawer (Square's hosted page takes one fee and offers no choice), live
+      shipping + total preview, per-line rejection reasons, Checkout disabled
+      until flagged lines are removed. Browser-tested end to end at 375px:
+      totals match Square, Checkout lands on Square's sandbox page, a sold item
+      is named and blocks checkout until removed.
 - [ ] `/checkout/success` — summary, next steps, clears the cart, fires `purchase`
       once per order id, offers email signup.
-- [ ] `cancel_url` → `/cart` with the cart intact.
+- [x] ~~`cancel_url` → `/cart` with the cart intact.~~ Square payment links have
+      no cancel URL; the buyer uses Back. The cart is only cleared on the
+      success page (CAS-42), so it's intact when they return.
 - [ ] **Verify:** sandbox purchase of two different items, and a 3-postcard order
       charged one postcard shipping rate.
 
@@ -307,7 +323,15 @@ the actual stock.*
       rigid flat mailer — each to a near and a far zone, and reset the config.
       `print` is the weakest number: no recorded data at all for that type.
       Also check the 16 oz band threshold still falls in the right place.
+- [ ] ⚠️ **Must land before the branch merges.** The cart drawer now shows
+      "Shipping $20" directly above "Free shipping anywhere in the US" — the
+      branch contradicts itself. Under the hold-until-checkout-works plan this
+      copy change ships *with* the branch, not after it.
 - [ ] **Update `siteContent.ts` shipping copy** — replacement drafted in PRD §9.
+- [ ] Production API env file on the droplet, `/opt/cass-art/api.env`:
+      `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
+      `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`.
+      Without it checkout answers "unavailable" (by design, not a crash).
       Not before this point: the free-shipping promise is true until checkout is live.
 - [ ] Retire Notion for product/inventory tracking.
 - [ ] Decide Venmo's fate (PRD §17).

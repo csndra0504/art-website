@@ -90,7 +90,7 @@ export interface Product {
 /** The product fields the site reads, joined onto each subject by the queries. */
 export type SubjectProduct = Pick<
   Product,
-  "_id" | "title" | "kind" | "price" | "soldOut" | "subtitle" | "squareUrl" | "venmoNote"
+  "_id" | "title" | "kind" | "price" | "soldOut" | "subtitle" | "squareUrl" | "venmoNote" | "shippingType"
 >;
 
 /** A product joined with the subject fields the cart and detail page need. */

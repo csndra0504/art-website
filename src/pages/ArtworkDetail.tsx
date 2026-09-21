@@ -104,6 +104,7 @@ function CartActions({
       title: artwork.title,
       optionTitle: p.title,
       price: p.price,
+      shippingType: p.shippingType,
       image: image
         ? urlFor(image.asset).width(128).height(128).fit("crop").auto("format").url()
         : undefined,

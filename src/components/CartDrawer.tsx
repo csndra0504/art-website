@@ -6,11 +6,18 @@ import {
   Drawer,
   Group,
   Image,
+  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
+import { useMemo, useState } from "react";
 import { lineId, type CartLine } from "../lib/cart";
 import { useCart } from "../lib/cartContext";
+import {
+  MissingShippingTypeError,
+  shippingCents,
+  type FulfillmentMethod,
+} from "../lib/shipping";
 import { ShippingReturns } from "./ShippingReturns";
 
 function QtyStepper({
@@ -57,7 +64,7 @@ function QtyStepper({
   );
 }
 
-function CartLineRow({ line }: { line: CartLine }) {
+function CartLineRow({ line, problem }: { line: CartLine; problem?: string }) {
   const { remove, setLineQty } = useCart();
   const id = lineId(line);
 
@@ -82,6 +89,11 @@ function CartLineRow({ line }: { line: CartLine }) {
           <Text size="xs" c="dimmed">
             {line.optionTitle}
           </Text>
+          {problem && (
+            <Text size="xs" c="red.8" fw={500}>
+              {problem} — please remove to continue
+            </Text>
+          )}
           <Group justify="space-between" align="center" wrap="nowrap" mt={4}>
             <QtyStepper line={line} onChange={(qty) => setLineQty(id, qty)} />
             <Text size="sm" fw={600}>
@@ -109,6 +121,11 @@ function CartLineRow({ line }: { line: CartLine }) {
   );
 }
 
+type CheckoutState =
+  | { status: "idle" }
+  | { status: "working" }
+  | { status: "error"; message: string; lines: Record<string, string>; forCart: string };
+
 export function CartDrawer({
   opened,
   onClose,
@@ -117,6 +134,73 @@ export function CartDrawer({
   onClose: () => void;
 }) {
   const { lines, total, count } = useCart();
+  const [fulfillment, setFulfillment] = useState<FulfillmentMethod>("ship");
+  const [lastCheckout, setCheckout] = useState<CheckoutState>({ status: "idle" });
+
+  // An error describes the cart as it was when checkout was tried. Once the
+  // cart or the ship/pickup choice changes, it no longer applies, so it's
+  // ignored rather than reset — no effect, no extra render.
+  const cartKey = `${fulfillment}|${lines.map((l) => `${l.productId}×${l.qty}`).join(",")}`;
+  const checkout: CheckoutState =
+    lastCheckout.status === "error" && lastCheckout.forCart !== cartKey
+      ? { status: "idle" }
+      : lastCheckout;
+
+  // Preview only: the server recomputes shipping from its own read of each
+  // product. If a line doesn't know its band (saved before bands existed, or a
+  // product without one), say "calculated at checkout" rather than guess.
+  const shipping = useMemo(() => {
+    try {
+      return shippingCents(
+        lines.map((l) => ({ shippingType: l.shippingType, qty: l.qty })),
+        fulfillment
+      );
+    } catch (err) {
+      if (err instanceof MissingShippingTypeError) return null;
+      throw err;
+    }
+  }, [lines, fulfillment]);
+
+  const startCheckout = async () => {
+    setCheckout({ status: "working" });
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fulfillment,
+          items: lines.map((l) => ({ productId: l.productId, qty: l.qty })),
+        }),
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        url?: string;
+        error?: string;
+        lines?: { productId: string; reason: string }[];
+      };
+      if (res.ok && body.url) {
+        // Hand over to Square's hosted page. The cart stays saved, so backing
+        // out of payment returns to it intact.
+        window.location.assign(body.url);
+        return;
+      }
+      setCheckout({
+        status: "error",
+        message: body.error ?? "Checkout is unavailable right now.",
+        lines: Object.fromEntries((body.lines ?? []).map((l) => [l.productId, l.reason])),
+        forCart: cartKey,
+      });
+    } catch {
+      setCheckout({
+        status: "error",
+        message: "Couldn't reach checkout. Check your connection and try again.",
+        lines: {},
+        forCart: cartKey,
+      });
+    }
+  };
+
+  const problems = checkout.status === "error" ? checkout.lines : {};
+  const blocked = Object.keys(problems).some((id) => lines.some((l) => l.productId === id));
 
   return (
     <Drawer
@@ -153,34 +237,89 @@ export function CartDrawer({
         <Stack gap="md">
           <Stack gap="sm">
             {lines.map((line) => (
-              <CartLineRow key={lineId(line)} line={line} />
+              <CartLineRow
+                key={lineId(line)}
+                line={line}
+                problem={problems[line.productId]}
+              />
             ))}
           </Stack>
 
           <Divider color="#e8e8e0" />
 
-          <Group justify="space-between" align="baseline">
-            <Text size="sm" fw={600}>
-              Subtotal
-            </Text>
-            <Text size="lg" fw={600}>
-              ${total.toLocaleString()}
-            </Text>
-          </Group>
-          <Text size="xs" c="dimmed">
-            Shipping calculated at checkout.
-          </Text>
+          {/* Square's hosted page takes one shipping fee and can't offer a
+              choice, so ship-or-pickup is decided here, before handing over. */}
+          <SegmentedControl
+            value={fulfillment}
+            onChange={(v) => setFulfillment(v as FulfillmentMethod)}
+            data={[
+              { label: "Ship to me", value: "ship" },
+              { label: "Local pickup", value: "pickup" },
+            ]}
+            radius={0}
+            fullWidth
+          />
+
+          <Stack gap={4}>
+            <Group justify="space-between">
+              <Text size="sm">Subtotal</Text>
+              <Text size="sm">{money(total * 100)}</Text>
+            </Group>
+            <Group justify="space-between">
+              <Text size="sm">
+                {fulfillment === "pickup" ? "Local pickup, Pittsburgh" : "Shipping"}
+              </Text>
+              <Text size="sm">
+                {fulfillment === "pickup"
+                  ? "Free"
+                  : shipping == null
+                    ? "Calculated at checkout"
+                    : money(shipping)}
+              </Text>
+            </Group>
+            <Group justify="space-between" align="baseline" mt={4}>
+              <Text size="sm" fw={600}>
+                Total
+              </Text>
+              <Text size="lg" fw={600}>
+                {shipping == null && fulfillment === "ship"
+                  ? `${money(total * 100)} + shipping`
+                  : money(total * 100 + (shipping ?? 0))}
+              </Text>
+            </Group>
+          </Stack>
 
           {/* Policy sits above the button on purpose: a buyer should meet the
               all-sales-final terms before committing, not after. */}
           <ShippingReturns />
 
-          {/* Wired to the checkout service in Phase 2 (CAS-41). */}
-          <Button variant="filled" color="dark" radius={0} size="md" disabled>
+          {checkout.status === "error" && (
+            <Text size="sm" c="red.8" role="alert">
+              {checkout.message}
+              {!blocked && " You can still buy with Venmo from each piece's page."}
+            </Text>
+          )}
+
+          <Button
+            variant="filled"
+            color="dark"
+            radius={0}
+            size="md"
+            onClick={startCheckout}
+            loading={checkout.status === "working"}
+            disabled={blocked}
+          >
             Checkout
           </Button>
         </Stack>
       )}
     </Drawer>
   );
+}
+
+function money(cents: number) {
+  return `$${(cents / 100).toLocaleString(undefined, {
+    minimumFractionDigits: cents % 100 ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
 }

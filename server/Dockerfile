@@ -13,6 +13,11 @@ COPY server/package.json server/package-lock.json ./server/
 RUN cd server && npm ci --omit=dev
 
 COPY server/src ./server/src
+# The shipping rules are shared with the site, and imported from src/lib.
+COPY src/lib/shipping.ts ./src/lib/shipping.ts
+# Node decides ESM vs CommonJS from the nearest package.json, and the shared
+# file sits outside server/. Without this it would load as CommonJS and fail.
+RUN echo '{"type":"module"}' > package.json
 
 # Never run as root inside the container.
 USER node

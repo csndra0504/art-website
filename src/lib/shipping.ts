@@ -4,7 +4,9 @@
 // authoritative) and anything on the client that wants to preview it.
 // Rules and rates: docs/cart-checkout/PRD.md §9.
 
-import type { ShippingType } from "../types/artwork";
+// Explicit ".ts": the checkout server imports this file too, and Node's
+// resolution requires extensions. (Type-only, so it's erased at runtime.)
+import type { ShippingType } from "../types/artwork.ts";
 
 /**
  * Cassandra's estimates, 2026-09-05. Not label-verified — CAS-30 tracks that,

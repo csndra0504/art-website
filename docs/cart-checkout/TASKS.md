@@ -119,7 +119,12 @@ the actual stock.*
       that exists into a product; then create the 5x7 subject by hand and add #37
       and #38 as two originals against it, so #38 stops being held. The other two
       aren't in Sanity, so no migration can produce them — see plan §4.
-- [ ] Re-key `src/lib/cart.ts` line identity to `productId`.
+- [x] Re-key `src/lib/cart.ts` line identity to `productId`. **(CAS-52)** Done
+      ahead of the migration — it's pure code with no data dependency. The change
+      was confined to `cart.ts` as intended; `CART_VERSION` 1 → 2, so carts in the
+      old shape are ignored rather than half-read. Browser-checked: an old-format
+      cart shows as empty, a new-format cart renders, and the quantity stepper
+      finds its line by product id and persists.
 - [ ] Read path: `queries.ts`, `ArtworkDetail`, `ArtworkCard`, `structuredData`.
 - [ ] **Verify:** `/verify` clean, artwork pages still prerender, a page with no
       loader data still renders.

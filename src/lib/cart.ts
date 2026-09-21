@@ -11,13 +11,16 @@ export const CART_STORAGE_KEY = "cassart.cart";
 // Bump when the shape of CartLine changes. A stored cart at any other version is
 // discarded rather than migrated: a stale cart is a minor annoyance, but a
 // half-understood one that crashes the drawer costs a sale.
-export const CART_VERSION = 1;
+// v2: lines keyed by product rather than artwork + option (product model).
+export const CART_VERSION = 2;
 
 export interface CartLine {
-  /** Sanity document _id of the artwork. */
-  artworkId: string;
-  /** _key of the purchase option within that artwork. */
-  optionKey: string;
+  /**
+   * Sanity _id of the product. One id per sellable thing, mapping 1:1 to a
+   * Square variation — the old artwork + option-key pair couldn't address the
+   * hardcoded purchase fields, which had no key at all.
+   */
+  productId: string;
   qty: number;
   /** Locks qty to 1. Originals are the obvious case. */
   oneOfAKind?: boolean;
@@ -39,9 +42,9 @@ export function emptyCart(): Cart {
   return { v: CART_VERSION, lines: [] };
 }
 
-/** Identity of a line: one artwork + one purchase option. */
-export function lineId(line: Pick<CartLine, "artworkId" | "optionKey">): string {
-  return `${line.artworkId}:${line.optionKey}`;
+/** Identity of a line: one product. */
+export function lineId(line: Pick<CartLine, "productId">): string {
+  return line.productId;
 }
 
 function clampQty(line: CartLine, qty: number): number {
@@ -114,8 +117,7 @@ function isCartLine(value: unknown): value is CartLine {
   if (typeof value !== "object" || value === null) return false;
   const l = value as CartLine;
   return (
-    typeof l.artworkId === "string" &&
-    typeof l.optionKey === "string" &&
+    typeof l.productId === "string" &&
     typeof l.slug === "string" &&
     typeof l.title === "string" &&
     typeof l.optionTitle === "string" &&

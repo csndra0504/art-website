@@ -226,13 +226,14 @@ the actual stock.*
       it. No global JSON parser — the CAS-43 webhook needs the raw body. Graceful
       SIGTERM shutdown. Checked by running it: health 200, unknown 404, reachable
       through the Vite proxy, exits cleanly on SIGTERM.
-- [~] Compose service + nginx `/api/` block. nginx resolves the API **per
+- [x] Compose service + nginx `/api/` block. nginx resolves the API **per
       request** (Docker DNS via a variable) so a down API can't stop nginx
-      starting and take the site with it. `docker compose config` validates.
-      **Untested in containers — Docker wasn't running.** Before merge, run
-      `docker compose up --build` and confirm: site serves; `/api/health` answers
-      through nginx; with `cass-art-api` stopped the site still serves and only
-      `/api/*` fails.
+      starting and take the site with it. **Container-tested 2026-09-21** with
+      `docker compose up --build`: site, a prerendered artwork page and
+      `/api/health` all 200 through nginx; `/events` still 200 with no redirect;
+      API stopped → site 200, `/api` 502; **nginx restarted with the API down →
+      booted, site 200, no `[emerg]`**; API restarted → `/api` back in ~2s with no
+      nginx restart. API container runs as `node`, stops instantly on SIGTERM.
 - [x] Deploy: the site's job joins a `cass-art-net` network; a new `deploy-api`
       job builds `…-api:latest` and runs `cass-art-api` on that network, **on code
       pushes only** — Sanity publishes redeploy the site and must not restart the

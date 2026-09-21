@@ -35,7 +35,7 @@ CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 > **Next agent work — sandbox-first path to a working checkout:** ✅ CAS-40
 > shipping calc → ✅ CAS-39 server (container-tested) → ✅ sandbox catalog mirror
 > → ✅ CAS-41 checkout → ✅ CAS-42 success page. **Next:** CAS-45 shipping copy
-(merge blocker), then Phase 3 webhooks. CAS-37 (link to the *real*
+✅ (merge blocker), then Phase 3 webhooks. CAS-37 (link to the *real*
 > Square catalog, human-reviewed mapping) moves to go-live. CAS-35 and cart
 > reconciliation fit in around them.
 
@@ -329,11 +329,14 @@ the actual stock.*
       rigid flat mailer — each to a near and a far zone, and reset the config.
       `print` is the weakest number: no recorded data at all for that type.
       Also check the 16 oz band threshold still falls in the right place.
-- [ ] ⚠️ **Must land before the branch merges.** The cart drawer now shows
+- [x] ⚠️ **Must land before the branch merges.** The cart drawer now shows
       "Shipping $20" directly above "Free shipping anywhere in the US" — the
       branch contradicts itself. Under the hold-until-checkout-works plan this
       copy change ships *with* the branch, not after it.
-- [ ] **Update `siteContent.ts` shipping copy** — replacement drafted in PRD §9.
+- [x] **Update `siteContent.ts` shipping copy** — replacement drafted in PRD §9
+      **(CAS-45)**. The only free-shipping claim in code; none in Sanity content.
+      Venmo links still charge the item price alone, so Venmo buyers ship free
+      despite the new copy. Settle with Venmo's fate (PRD §17).
 - [ ] Production API env file on the droplet, `/opt/cass-art/api.env`:
       `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
       `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`.

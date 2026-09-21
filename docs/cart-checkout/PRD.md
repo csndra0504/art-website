@@ -284,7 +284,8 @@ but neither figure knows these zones or this discount. Tracked in Phase 4.
 
 **Site copy must change.** `src/lib/siteContent.ts` promises *"Free shipping
 anywhere in the US."* True for Venmo/Square-link orders today, so it must **not**
-change until the new checkout is live. Drafted replacement, to land in Phase 4:
+change until the new checkout is live. Replacement (landed on `cart-phase-1`,
+which is held unmerged until checkout works, so it goes live with checkout):
 
 > Shipping is calculated at checkout based on what's in your cart, or arrange free
 > local pickup in Pittsburgh.

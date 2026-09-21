@@ -8,7 +8,7 @@
 // Each string becomes one bullet. Keep them concrete and reassuring; this is
 // the single biggest lever on whether a stranger trusts buying an original.
 export const SHIPPING_RETURNS: string[] = [
-  "Free shipping anywhere in the US, or arrange local pickup in Pittsburgh.",
+  "Shipping is calculated at checkout based on what's in your cart, or arrange free local pickup in Pittsburgh.",
   "Originals ship within 3–5 business days, packaged flat and rigid to arrive safely.",
   "All sales are final. No refunds on direct purchases. If you'd like refund protection, order through Etsy instead.",
   "Questions before you buy? Email hello@cassandrawilcoxart.com or DM @casswilcoxart.",

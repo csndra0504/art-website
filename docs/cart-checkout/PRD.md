@@ -220,13 +220,20 @@ items being in scope and would have eaten the second framed original's shipping.
 | `postcard` | flat | rigid mailer | 2–4 oz | **$3** |
 | `print` | flat | rigid flat mailer | *no data* | **$5** |
 | `original` | flat | rigid flat or tube | 8–12 oz | **$10** |
-| `framedSmall` | boxed | boxed, fragile | **≤ 16 oz** | **$10** |
-| `framedLarge` | boxed | boxed, insured | **> 16 oz** | **$20** |
+| `framedSmall` | boxed | boxed, fragile | **≤ 20 oz** | **$10** |
+| `framedLarge` | boxed | boxed, insured | **> 20 oz** | **$20** |
 
 **Framed items band by weight, not by what's in the frame.** The old
 `framedPrint` / `framedOriginal` split assumed the contents drove the cost; the
-data says packed weight does. The threshold is **16 oz**, which puts ten of the
-eleven measured framed items in `framedSmall` and one in `framedLarge`.
+data says packed weight does.
+
+**The threshold is 20 oz** (moved from 16 on 2026-09-21). Every package in an
+8x10 frame weighs ~16 oz — the one measured is 458 g, 16.16 oz — so a 16 oz line
+split identical boxes by rounding. 20 sits in the empty gap between the ~16 oz
+8x10 frames and the 40 oz 11x14, so in practice **8x10 frames and smaller ship
+small, 11x14 ships large**. A recorded packed weight is treated as "ships
+boxed", so framed originals band by weight even though they're titled
+"Original".
 
 ⚠️ **These are estimates, not measurements**, and they will be charged to real
 customers. If they're low, the difference comes out of each sale. `print` is the
@@ -324,7 +331,7 @@ plan in [product-model-migration.md](product-model-migration.md).
 - `squareVariationId: string` — the catalog link. Required for anything sellable.
 - `shippingType: "magnet" | "postcard" | "print" | "original" | "framedSmall" |
   "framedLarge"` — drives §9. Required for anything sellable. Framed items band
-  by packed weight (≤16 oz / >16 oz), not by what's in the frame.
+  by packed weight (≤20 oz / >20 oz), not by what's in the frame.
 - `shipWeightOz` + box dimensions — real packed figures, so §9's bands stay
   auditable.
 - `soldOut?: boolean` — mirrored from Square by webhook. Not hand-edited.

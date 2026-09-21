@@ -142,7 +142,7 @@ export const product = defineType({
       title: "Shipping Type",
       type: "string",
       description:
-        "Drives what the buyer is charged. Framed bands by PACKED WEIGHT, not by what is in the frame: Framed (small) up to 16 oz, Framed (large) above it.",
+        "Drives what the buyer is charged. Framed bands by PACKED WEIGHT, not by what is in the frame: Framed (small) up to 20 oz, Framed (large) above it — in practice 8x10 frames and smaller are small, 11x14 is large.",
       fieldset: "fulfillment",
       options: {
         list: [
@@ -150,8 +150,8 @@ export const product = defineType({
           { title: "Postcard", value: "postcard" },
           { title: "Print", value: "print" },
           { title: "Original (unframed)", value: "original" },
-          { title: "Framed (small, ≤16 oz)", value: "framedSmall" },
-          { title: "Framed (large, >16 oz)", value: "framedLarge" },
+          { title: "Framed (small, ≤20 oz)", value: "framedSmall" },
+          { title: "Framed (large, >20 oz)", value: "framedLarge" },
         ],
       },
     }),

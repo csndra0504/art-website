@@ -53,18 +53,30 @@ const client = createClient({
 // unmatched must surface rather than default.
 // ---------------------------------------------------------------------------
 
-// The framed band splits at 16 oz — and 16 is exactly where most of the recorded
-// weights sit, several of them still marked "[confirm]". A packed frame that
-// weighs a shade over rounds down to 16 in the drafts and would ship as
-// framedSmall, undercharging by $10. So anything at the boundary is flagged for
-// a real measurement rather than assigned.
-const FRAMED_BAND_OZ = 16;
+// The framed band splits at 20 oz: small is up to and including 20, large is
+// over. It was 16, but 16 is exactly where every 8x10-framed package sits (the
+// one measured is 458 g = 16.16 oz), so identical boxes landed in different
+// bands depending on rounding. 20 falls in the empty gap between packages — in
+// practice 8x10 frames and smaller ship small, the 11x14 ships large. Anything
+// within an ounce of the line is still flagged rather than assigned. Moved
+// 2026-09-21.
+const FRAMED_BAND_OZ = 20;
 
 // Explicit decisions that beat the title rules. Title and shipping band are
-// independent axes: a 5x7 sleeved with backing ships like a postcard whatever
-// it is called, and calling it "5x7 Print" would otherwise pull it into the
-// print band and charge $2 more. Decided 2026-09-05.
-const SHIPPING_OVERRIDES = new Map([["5x7 Print", "postcard"]]);
+// independent axes.
+const SHIPPING_OVERRIDES = new Map([
+  // A 5x7 sleeved with backing ships like a postcard whatever it is called;
+  // "5x7 Print" would otherwise pull it into the print band at $2 more.
+  // Decided 2026-09-05.
+  ["5x7 Print", "postcard"],
+  // All thirteen are 5x7s in 8x10 frames (Square lists each as "Print, 5x7
+  // (8x10 Frame)") — the same box as the ~16 oz framed originals, so small
+  // band without weighing each one. Decided 2026-09-21.
+  ["Framed 5x7 Print", "framedSmall"],
+]);
+
+const bandFor = (weightOz) => (weightOz <= FRAMED_BAND_OZ ? "framedSmall" : "framedLarge");
+const nearBoundary = (weightOz) => Math.abs(weightOz - FRAMED_BAND_OZ) < 1;
 
 function inferShippingType({ title, kind, weightOz }) {
   const override = SHIPPING_OVERRIDES.get(title);
@@ -76,22 +88,24 @@ function inferShippingType({ title, kind, weightOz }) {
   if (/sticker/.test(t)) return { type: "sticker" };
   if (/post\s*-?\s*card/.test(t)) return { type: "postcard" };
 
+  // A recorded packed weight means it ships boxed, so it bands by weight even
+  // when the title doesn't say "framed" — originals are titled just "Original",
+  // but the Etsy drafts only record weights for framed pieces. Without this the
+  // 40 oz 11x14 Thunderbird original would ship at the unframed-original rate.
+  if (weightOz != null) {
+    if (nearBoundary(weightOz)) {
+      return {
+        type: null,
+        why: `${weightOz} oz packed — within an ounce of the ${FRAMED_BAND_OZ} oz band line, needs weighing`,
+      };
+    }
+    return { type: bandFor(weightOz), why: `boxed, ${weightOz} oz` };
+  }
+
   if (/framed|frame\b/.test(t)) {
-    if (weightOz == null) {
-      return {
-        type: null,
-        why: "framed, but no packed weight — the band can't be chosen without one",
-      };
-    }
-    if (weightOz === FRAMED_BAND_OZ) {
-      return {
-        type: null,
-        why: `framed at exactly ${FRAMED_BAND_OZ} oz — sits on the band boundary, needs weighing`,
-      };
-    }
     return {
-      type: weightOz < FRAMED_BAND_OZ ? "framedSmall" : "framedLarge",
-      why: `framed, ${weightOz} oz`,
+      type: null,
+      why: "framed, but no packed weight — the band can't be chosen without one",
     };
   }
 

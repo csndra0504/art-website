@@ -58,7 +58,7 @@ export type ProductKind =
 
 export type ProductChannel = "local" | "etsy";
 
-/** Framed bands by packed weight (≤16 oz / >16 oz), not by frame contents. */
+/** Framed bands by packed weight (≤20 oz / >20 oz), not by frame contents. */
 export type ShippingType =
   | "magnet"
   | "postcard"

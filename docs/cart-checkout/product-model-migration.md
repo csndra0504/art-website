@@ -74,7 +74,7 @@ product
   squareUrl     url — legacy checkout link, retired in Phase 4
   squareVariationId  string — the catalog link (Phase 2)
   shippingType  magnet | postcard | print | original | framedSmall | framedLarge
-                             (framed bands by packed weight, ≤16 oz / >16 oz)
+                             (framed bands by packed weight, ≤20 oz / >20 oz — moved from 16 on 2026-09-21)
   shipWeightOz  number     ┐ real packed figures, already recorded in the
   shipLengthIn  number     │ Etsy drafts — see §5
   shipWidthIn   number     │

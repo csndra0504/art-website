@@ -7,41 +7,32 @@ Spec: [PRD.md](PRD.md) · Plan: [product-model-migration.md](product-model-migra
 · Linear: [CAS-19](https://linear.app/cassandra-wilcox-art/issue/CAS-19/add-a-cart-and-square-checkout-to-the-website)
 · Due 2026-11-20
 
-**Status:** Phase 0 complete · Phase 1 done through CAS-33 · **Phase 0.5 in
-progress** · **Last touched:** 2026-09-08 · **Platform: Square** (see PRD §5)
+**Status:** Phase 0 ✅ · Phase 0.5 ✅ (bar CAS-53 cleanup) · Phase 1 ✅ through
+CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 
-> ### 👉 Next action — a human's, not an agent's
+> ### 👉 Where things stand
 >
-> **✅ Title rename applied 2026-09-21.** 25 legacy option titles now use five
-> names, and all 12 stale De Fer subtitles carry the new "Hanging at De Fer
-> Coffee…" line (one, on 16th St Bridge, was worded differently and missed by the
-> script's pattern — fixed by hand). This is live on the site.
+> **In Sanity (live data):** titles normalised, De Fer copy fixed, **65 products**
+> migrated with shipping bands (framed band 20 oz — PRD §9).
 >
-> **✅ Migration applied 2026-09-21.** 65 products in Sanity, every one with a
-> shipping band, none dangling. Framed band moved to 20 oz first (see PRD §9).
-> Legacy fields are untouched and the site still reads them — **nothing on the
-> website has changed yet.** Re-running the migration now leaves existing
-> products alone (`--force` to overwrite).
+> **On branch `cart-phase-1` (not merged — the live site is unchanged):** the
+> site reads products (CAS-55), and customers can add to cart (CAS-34).
 >
-> **By hand in the Studio, when convenient (none block agent work):**
+> **⚠️ Merge gate:** Checkout is disabled until CAS-41 (Phase 2), and the rows
+> no longer carry the old Square "Buy with card" links. Merged as-is, it's a
+> cart nobody can pay for. See the 2026-09-21 merge-gate note at the bottom.
+>
+> **By hand in the Studio, when convenient:**
 > - Cathedral of Learning **5x7** subject + Etsy drafts #37 and #38 as two
->   originals against it — the real acceptance test for the restructure.
-> - William Penn Tavern **5x7 Print** and **8x10 Print** (now on hand).
+>   originals — the real acceptance test for the restructure.
+> - William Penn Tavern **5x7 Print** and **8x10 Print**.
 > - Copy the Sphinx's Etsy link (custom option "5×7 Print (Ships via Etsy)",
 >   $15) onto the Sphinx subject's Etsy URL/price, before CAS-53.
+> - Optional: add "Arrange pickup via email or DM" as the subtitle on the ten
+>   8x10 prints — it was hardcoded on the old page and didn't carry over.
 >
-> **Next agent task: CAS-55** — point the website at products.
->
-> **Order matters.** Product ids derive from the legacy title, so a rename after
-> migrating gets rebuilt from the old title and silently reverted.
->
-> Before `--apply` on the migration, decide the two open items in CAS-50: the
-> 13 framed prints with no packed weight, and whether the framed band should
-> move off exactly 16 oz (the one measured value, 458 g, is 16.16 oz — over the
-> line, but recorded as 16, so it lands in the cheap band).
->
-> After that, agent work resumes at **CAS-52** (re-key cart to `productId`),
-> then **CAS-55** (read path). CAS-34 stays blocked until both land.
+> **Next agent work:** decide the merge gate; then CAS-35 (`/cart` route +
+> cart analytics), cart reconciliation against products, or start Phase 2.
 
 > Linear is the source of truth for status. This file is the loop's working
 > memory — keep both ticked.

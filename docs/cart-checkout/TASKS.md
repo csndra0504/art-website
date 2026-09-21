@@ -32,11 +32,11 @@ CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 > - Optional: add "Arrange pickup via email or DM" as the subtitle on the ten
 >   8x10 prints — it was hardcoded on the old page and didn't carry over.
 >
-> **Next agent work — the critical path to a working checkout:** CAS-40
-> (shipping calc, pure) → CAS-39 (server scaffold) → CAS-37 (link products to
-> the existing Square variations; needs a human-reviewed mapping) → CAS-41
-> (checkout) → CAS-42 (success page). CAS-35 and cart reconciliation fit in
-> around them.
+> **Next agent work — sandbox-first path to a working checkout:** ✅ CAS-40
+> shipping calc → ✅ CAS-39 server (container-tested) → ✅ sandbox catalog mirror
+> → **CAS-41 checkout (next)** → CAS-42 success page. CAS-37 (link to the *real*
+> Square catalog, human-reviewed mapping) moves to go-live. CAS-35 and cart
+> reconciliation fit in around them.
 
 > Linear is the source of truth for status. This file is the loop's working
 > memory — keep both ticked.

@@ -18,9 +18,10 @@ CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 > **On branch `cart-phase-1` (not merged — the live site is unchanged):** the
 > site reads products (CAS-55), and customers can add to cart (CAS-34).
 >
-> **⚠️ Merge gate:** Checkout is disabled until CAS-41 (Phase 2), and the rows
-> no longer carry the old Square "Buy with card" links. Merged as-is, it's a
-> cart nobody can pay for. See the 2026-09-21 merge-gate note at the bottom.
+> **Merge gate — decided 2026-09-21: hold.** `cart-phase-1` is not merged until
+> checkout works end to end (CAS-41/42 at minimum). No feature flag. Until then
+> the live site keeps its current purchase paths. Merge `main` into the branch
+> periodically so it doesn't drift.
 >
 > **By hand in the Studio, when convenient:**
 > - Cathedral of Learning **5x7** subject + Etsy drafts #37 and #38 as two
@@ -31,8 +32,11 @@ CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 > - Optional: add "Arrange pickup via email or DM" as the subtitle on the ten
 >   8x10 prints — it was hardcoded on the old page and didn't carry over.
 >
-> **Next agent work:** decide the merge gate; then CAS-35 (`/cart` route +
-> cart analytics), cart reconciliation against products, or start Phase 2.
+> **Next agent work — the critical path to a working checkout:** CAS-40
+> (shipping calc, pure) → CAS-39 (server scaffold) → CAS-37 (link products to
+> the existing Square variations; needs a human-reviewed mapping) → CAS-41
+> (checkout) → CAS-42 (success page). CAS-35 and cart reconciliation fit in
+> around them.
 
 > Linear is the source of truth for status. This file is the loop's working
 > memory — keep both ticked.
@@ -422,3 +426,7 @@ future session reads to avoid re-deriving context.)*
   Options: hold the whole branch until checkout works; or put the cart behind a
   flag (hide cart icon + Add to cart, restore the Square links) so the CAS-55
   read path — which is safe and verified on its own — can ship now.
+- 2026-09-21 — **Merge gate decided: option A, hold the branch** until checkout
+  works. Rejected: a feature flag to ship the CAS-55 read path early. Cost
+  accepted: the read-path improvements wait, and the branch must be kept in step
+  with `main`.

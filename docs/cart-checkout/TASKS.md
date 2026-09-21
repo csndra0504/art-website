@@ -12,16 +12,17 @@ progress** · **Last touched:** 2026-09-08 · **Platform: Square** (see PRD §5)
 
 > ### 👉 Next action — a human's, not an agent's
 >
-> **Nothing has been written to Sanity yet.** The product schema, the Studio desk
-> structure, and both scripts are committed, but every run so far has been a dry
-> run. Two scripts need applying, in this order:
+> **✅ Title rename applied 2026-09-21.** 25 legacy option titles now use five
+> names, and all 12 stale De Fer subtitles carry the new "Hanging at De Fer
+> Coffee…" line (one, on 16th St Bridge, was worded differently and missed by the
+> script's pattern — fixed by hand). This is live on the site.
+>
+> **Still to do — the migration.** No products exist yet:
 >
 > ```bash
-> node studio/scripts/normalize-option-titles.mjs           # review first
-> node studio/scripts/normalize-option-titles.mjs --apply   # 24 edits
 > node studio/scripts/migrate-to-products.mjs --titles      # expect 5 titles
 > node studio/scripts/migrate-to-products.mjs               # full review
-> node studio/scripts/migrate-to-products.mjs --apply       # ~82 products
+> node studio/scripts/migrate-to-products.mjs --apply       # 65 products
 > ```
 >
 > **Order matters.** Product ids derive from the legacy title, so a rename after

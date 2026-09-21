@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "concurrently -n app,studio -c cyan,magenta \"vite\" \"npm run studio:dev\"",
     "dev:app": "vite",
+    "dev:api": "npm --prefix server run dev",
     "build": "tsc -b && vite-react-ssg build && node scripts/generate-sitemap.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "studio:dev": "npm --prefix studio run dev",
     "studio:build": "npm --prefix studio run build",
-    "check:shipping": "node --experimental-strip-types --no-warnings scripts/check-shipping.mts"
+    "check:shipping": "node --experimental-strip-types --no-warnings scripts/check-shipping.mts",
+    "typecheck:api": "npm --prefix server run typecheck"
   },
   "dependencies": {
     "@mantine/core": "^8.3.15",

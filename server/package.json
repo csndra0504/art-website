@@ -1,0 +1,19 @@
+{
+  "name": "cass-art-api",
+  "private": true,
+  "type": "module",
+  "description": "Checkout API for the cart. Runs TypeScript directly via Node's type stripping — no build step.",
+  "scripts": {
+    "dev": "node --experimental-strip-types --no-warnings --watch src/index.ts",
+    "start": "node --experimental-strip-types --no-warnings src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.4",
+    "typescript": "~5.9.3"
+  }
+}

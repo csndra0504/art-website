@@ -220,9 +220,25 @@ the actual stock.*
       - Sandbox first. Only `--apply` against production after a production dry
         run reads correctly.
 - [ ] Set opening stock counts in Square (originals = 1).
-- [ ] `server/` scaffold — TS, Hono or Express, `GET /api/health`, Dockerfile.
-- [ ] Add the service to `docker-compose.yml`; nginx `/api/` proxy block.
-- [ ] Extend the GitHub Actions deploy to build/push/restart the service.
+- [x] `server/` scaffold **(CAS-39)** — Express 5 (chosen 2026-09-21), TypeScript
+      run directly by Node's type stripping (no build step), `GET /api/health`,
+      port 3001 so the dormant Vite `/api` proxy (a March leftover) now reaches
+      it. No global JSON parser — the CAS-43 webhook needs the raw body. Graceful
+      SIGTERM shutdown. Checked by running it: health 200, unknown 404, reachable
+      through the Vite proxy, exits cleanly on SIGTERM.
+- [~] Compose service + nginx `/api/` block. nginx resolves the API **per
+      request** (Docker DNS via a variable) so a down API can't stop nginx
+      starting and take the site with it. `docker compose config` validates.
+      **Untested in containers — Docker wasn't running.** Before merge, run
+      `docker compose up --build` and confirm: site serves; `/api/health` answers
+      through nginx; with `cass-art-api` stopped the site still serves and only
+      `/api/*` fails.
+- [x] Deploy: the site's job joins a `cass-art-net` network; a new `deploy-api`
+      job builds `…-api:latest` and runs `cass-art-api` on that network, **on code
+      pushes only** — Sanity publishes redeploy the site and must not restart the
+      API mid-checkout. Secrets from an optional `/opt/cass-art/api.env` on the
+      droplet (create it in Phase 2). Workflow YAML parses. Takes effect only on
+      merge to `main`.
 - [x] **Done 2026-09-21 (CAS-40).** `shippingCents(lines, "ship" | "pickup")`
       with rates in one cents table. A line with no shipping type **throws**
       (`MissingShippingTypeError`, naming the products) rather than shipping

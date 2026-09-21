@@ -19,6 +19,9 @@ npm run dev:app    # app only
 npm run build      # tsc -b && vite-react-ssg build && sitemap
 npm run lint       # eslint
 npx tsc -b --noEmit  # typecheck alone (fastest feedback)
+npm run dev:api      # checkout API on 3001; the Vite dev server proxies /api to it
+npm run typecheck:api
+npm run check:shipping  # the shipping-rule checks — run after touching shipping
 ```
 
 There is **no test suite**. Verification is typecheck + lint + build + a manual
@@ -26,9 +29,13 @@ browser pass. Do not claim something works because it compiled.
 
 ## Architecture facts that constrain changes
 
-- **The site is fully static.** There is no application server today. Anything
-  needing a secret (Stripe, Sanity write token) must live in a separate service —
-  see [docs/cart-checkout/PRD.md](docs/cart-checkout/PRD.md).
+- **The site is fully static; secrets live in `server/`.** The prerendered site
+  never holds a secret. Anything that does (Square, a Sanity write token) goes in
+  the checkout API in `server/` — Express, TypeScript run directly by Node's type
+  stripping (no build step, so erasable syntax only and explicit `.ts` imports).
+  nginx proxies `/api/` to it, resolved per request so an API outage can't stop
+  nginx starting. It deploys in its own job, on code pushes only — Sanity
+  publishes must not restart it. See [docs/cart-checkout/PRD.md](docs/cart-checkout/PRD.md) §8.
 - Routes live in [src/App.tsx](src/App.tsx). Each page exports `Component` and
   optionally `loader`. Dynamic routes need `getStaticPaths` to be prerendered.
 - Pages seed from build-time loader data, then **refetch on the client** so

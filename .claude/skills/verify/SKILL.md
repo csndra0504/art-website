@@ -19,6 +19,12 @@ npm run lint           # eslint
 npm run build          # tsc + vite-react-ssg prerender + sitemap
 ```
 
+If the change touches `server/`, also run `npm run typecheck:api` — the root
+typecheck doesn't cover it. If it touches `nginx.conf`, the only real test is the
+containers (`docker compose up --build`): check the site serves, `/api/health`
+answers through nginx, and — with the API container stopped — the site still
+serves and only `/api/*` fails.
+
 If the change touches shipping rules or rates (`src/lib/shipping.ts`), also run
 `npm run check:shipping` — it exercises every branch of the one piece of money
 logic the site owns, and there is no other test for it.

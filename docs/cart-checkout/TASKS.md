@@ -34,7 +34,8 @@ CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
 >
 > **Next agent work — sandbox-first path to a working checkout:** ✅ CAS-40
 > shipping calc → ✅ CAS-39 server (container-tested) → ✅ sandbox catalog mirror
-> → **CAS-41 checkout (next)** → CAS-42 success page. CAS-37 (link to the *real*
+> → ✅ CAS-41 checkout → ✅ CAS-42 success page. **Next:** CAS-45 shipping copy
+(merge blocker), then Phase 3 webhooks. CAS-37 (link to the *real*
 > Square catalog, human-reviewed mapping) moves to go-live. CAS-35 and cart
 > reconciliation fit in around them.
 
@@ -289,8 +290,13 @@ the actual stock.*
       until flagged lines are removed. Browser-tested end to end at 375px:
       totals match Square, Checkout lands on Square's sandbox page, a sold item
       is named and blocks checkout until removed.
-- [ ] `/checkout/success` — summary, next steps, clears the cart, fires `purchase`
-      once per order id, offers email signup.
+- [x] `/checkout/success` — summary, next steps, clears the cart, fires `purchase`
+      once per order id, offers email signup **(CAS-42)**. Asks `GET /api/order/:id`
+      whether the order is paid before thanking anyone or clearing the cart;
+      unpaid and missing states keep the cart. Browser-tested in the sandbox:
+      paid $13 order confirmed, cart emptied, one `purchase` event, none on
+      refresh. The pickup wording is untested in the browser (the metadata it
+      reads was checked through the API).
 - [x] ~~`cancel_url` → `/cart` with the cart intact.~~ Square payment links have
       no cancel URL; the buyer uses Back. The cart is only cleared on the
       success page (CAS-42), so it's intact when they return.
@@ -492,3 +498,12 @@ future session reads to avoid re-deriving context.)*
   credentials stay off the machine until they're needed. The API picks its
   variation ids by environment: the sandbox map in sandbox, each product's
   `squareVariationId` in production.
+- 2026-09-21 — **Never update a payment link that has a `shipping_fee`.** Square
+  adds the fee to the order again on *every* link update, even one whose
+  `checkout_options` leave it out. The update that points the redirect at
+  `?orderId=` turned a $13 order into $16 (two "Shipping" charges). The earlier
+  $13/$270/$290 checks predate that update, so they didn't catch it. Fix:
+  shipping is now an order `service_charge` named "Shipping", and the link update
+  only touches the redirect. Sandbox-verified: $13 before and after the update.
+  The Square sandbox panel doesn't redirect on its own; it shows the return URL
+  as a link.

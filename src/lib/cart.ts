@@ -10,6 +10,13 @@ import type { ShippingType } from "../types/artwork";
 
 export const CART_STORAGE_KEY = "cassart.cart";
 
+/** sessionStorage: the order this tab just left for Square to pay. */
+export const PENDING_ORDER_KEY = "cassart.pendingOrder";
+
+/** localStorage: order ids whose purchase has been recorded, so a refresh of
+ *  the success page can't count the same revenue twice. */
+export const TRACKED_ORDERS_KEY = "cassart.trackedOrders";
+
 // Bump when the shape of CartLine changes. A stored cart at any other version is
 // discarded rather than migrated: a stale cart is a minor annoyance, but a
 // half-understood one that crashes the drawer costs a sale.

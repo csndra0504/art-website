@@ -152,36 +152,70 @@ export async function createCheckout(req: Request, res: Response) {
     throw err;
   }
 
+  // Shared by create and update, so the update can't drop an option.
+  const checkoutOptions = (redirectUrl: string) => ({
+    redirect_url: redirectUrl,
+    ask_for_shipping_address: fulfillment === "ship",
+  });
+
   try {
-    const { payment_link } = await square<{ payment_link: { url: string; order_id: string } }>(
-      cfg,
-      "POST",
-      "/v2/online-checkout/payment-links",
-      {
-        idempotency_key: randomUUID(),
-        order: {
-          location_id: cfg.locationId,
-          // Catalog-referenced lines: Square charges its catalog price, and only
-          // catalog lines decrement stock when paid (the Phase 0 spike).
-          line_items: lines.map((l) => ({
-            catalog_object_id: l.variationId,
-            quantity: String(l.qty),
-          })),
-        },
-        checkout_options: {
-          redirect_url: `${cfg.siteUrl}/checkout/success`,
-          ask_for_shipping_address: fulfillment === "ship",
-          ...(fulfillment === "ship" && shipping > 0
-            ? { shipping_fee: { name: "Shipping", charge: { amount: shipping, currency: "USD" } } }
-            : {}),
-        },
-        // Shows on the payment in the Square dashboard, so a pickup order isn't
-        // mistaken for one that needs posting.
-        ...(fulfillment === "pickup"
-          ? { payment_note: "LOCAL PICKUP (Pittsburgh) — arrange with the buyer" }
+    const { payment_link } = await square<{
+      payment_link: { id: string; version: number; url: string; order_id: string };
+    }>(cfg, "POST", "/v2/online-checkout/payment-links", {
+      idempotency_key: randomUUID(),
+      order: {
+        location_id: cfg.locationId,
+        // Catalog-referenced lines: Square charges its catalog price, and only
+        // catalog lines decrement stock when paid (the Phase 0 spike).
+        line_items: lines.map((l) => ({
+          catalog_object_id: l.variationId,
+          quantity: String(l.qty),
+        })),
+        // Shipping is an order charge, not checkout_options.shipping_fee: Square
+        // adds the shipping_fee to the order again on every link update, even
+        // one that leaves it out, so the redirect update below would charge it
+        // twice (confirmed in the sandbox: $10 print → $16).
+        ...(fulfillment === "ship" && shipping > 0
+          ? {
+              service_charges: [
+                {
+                  name: "Shipping",
+                  amount_money: { amount: shipping, currency: "USD" },
+                  calculation_phase: "SUBTOTAL_PHASE",
+                  taxable: false,
+                },
+              ],
+            }
           : {}),
-      }
-    );
+        // Read back by the success page to word its next steps.
+        metadata: { fulfillment },
+      },
+      checkout_options: checkoutOptions(`${cfg.siteUrl}/checkout/success`),
+      // Shows on the payment in the Square dashboard, so a pickup order isn't
+      // mistaken for one that needs posting.
+      ...(fulfillment === "pickup"
+        ? { payment_note: "LOCAL PICKUP (Pittsburgh) — arrange with the buyer" }
+        : {}),
+    });
+
+    // Square returns the buyer to redirect_url exactly as given — it appends
+    // nothing (confirmed in the sandbox) — and the order id only exists once
+    // the link does. So point the link back at a URL naming its own order. If
+    // this fails the checkout still works: the success page falls back to the
+    // id the browser saved before leaving.
+    try {
+      await square(cfg, "PUT", `/v2/online-checkout/payment-links/${payment_link.id}`, {
+        payment_link: {
+          version: payment_link.version,
+          checkout_options: checkoutOptions(
+            `${cfg.siteUrl}/checkout/success?orderId=${encodeURIComponent(payment_link.order_id)}`
+          ),
+        },
+      });
+    } catch (err) {
+      console.error("Couldn't set order-specific redirect:", err instanceof SquareError ? JSON.stringify(err.errors) : err);
+    }
+
     return res.json({ url: payment_link.url, orderId: payment_link.order_id });
   } catch (err) {
     console.error("Payment link failed:", err instanceof SquareError ? JSON.stringify(err.errors) : err);

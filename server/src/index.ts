@@ -1,5 +1,6 @@
 import express from "express";
 import { createCheckout } from "./checkout.ts";
+import { getOrder } from "./order.ts";
 import { SQUARE_ENV } from "./config.ts";
 
 // The checkout API. The website itself stays fully static and prerendered; this
@@ -23,6 +24,7 @@ app.get("/api/health", (_req, res) => {
 // JSON parsed for this route only (see the note above). A cart is small; the
 // limit stops anyone posting megabytes at it.
 app.post("/api/checkout", express.json({ limit: "16kb" }), createCheckout);
+app.get("/api/order/:orderId", getOrder);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Not found" });

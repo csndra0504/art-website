@@ -16,7 +16,7 @@ export class SquareError extends Error {
 
 export async function square<T>(
   cfg: CheckoutConfig,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PUT",
   path: string,
   body?: unknown
 ): Promise<T> {

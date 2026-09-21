@@ -19,6 +19,8 @@ import {
   type FulfillmentMethod,
 } from "../lib/shipping";
 import { ShippingReturns } from "./ShippingReturns";
+import { trackCartCheckout } from "../lib/analytics";
+import { PENDING_ORDER_KEY } from "../lib/cart";
 
 function QtyStepper({
   line,
@@ -174,10 +176,29 @@ export function CartDrawer({
       });
       const body = (await res.json().catch(() => ({}))) as {
         url?: string;
+        orderId?: string;
         error?: string;
         lines?: { productId: string; reason: string }[];
       };
       if (res.ok && body.url) {
+        trackCartCheckout(
+          lines.map((l) => ({
+            item_id: l.slug,
+            item_name: l.title,
+            item_variant: l.optionTitle,
+            price: l.price,
+            quantity: l.qty,
+          })),
+          total + (shipping ?? 0) / 100,
+          fulfillment
+        );
+        // The success page is told its order id in the URL, but remembers it
+        // here too, per tab, in case that ever goes missing on the way back.
+        try {
+          if (body.orderId) sessionStorage.setItem(PENDING_ORDER_KEY, body.orderId);
+        } catch {
+          // Storage blocked; the URL still carries the id.
+        }
         // Hand over to Square's hosted page. The cart stays saved, so backing
         // out of payment returns to it intact.
         window.location.assign(body.url);

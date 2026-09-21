@@ -17,13 +17,20 @@ progress** · **Last touched:** 2026-09-08 · **Platform: Square** (see PRD §5)
 > Coffee…" line (one, on 16th St Bridge, was worded differently and missed by the
 > script's pattern — fixed by hand). This is live on the site.
 >
-> **Still to do — the migration.** No products exist yet:
+> **✅ Migration applied 2026-09-21.** 65 products in Sanity, every one with a
+> shipping band, none dangling. Framed band moved to 20 oz first (see PRD §9).
+> Legacy fields are untouched and the site still reads them — **nothing on the
+> website has changed yet.** Re-running the migration now leaves existing
+> products alone (`--force` to overwrite).
 >
-> ```bash
-> node studio/scripts/migrate-to-products.mjs --titles      # expect 5 titles
-> node studio/scripts/migrate-to-products.mjs               # full review
-> node studio/scripts/migrate-to-products.mjs --apply       # 65 products
-> ```
+> **By hand in the Studio, when convenient (none block agent work):**
+> - Cathedral of Learning **5x7** subject + Etsy drafts #37 and #38 as two
+>   originals against it — the real acceptance test for the restructure.
+> - William Penn Tavern **5x7 Print** and **8x10 Print** (now on hand).
+> - Copy the Sphinx's Etsy link (custom option "5×7 Print (Ships via Etsy)",
+>   $15) onto the Sphinx subject's Etsy URL/price, before CAS-53.
+>
+> **Next agent task: CAS-55** — point the website at products.
 >
 > **Order matters.** Product ids derive from the legacy title, so a rename after
 > migrating gets rebuilt from the old title and silently reverted.
@@ -112,7 +119,11 @@ the actual stock.*
       old fields in the same run. **(CAS-49)** Dry run exercised against real
       data: 82 products / 45 subjects, 0 id collisions, 13 framed prints with no
       packed weight. Findings in Notes and CAS-50.
-- [ ] Run the dry run, review inferred shipping types by hand, then `--apply`.
+- [x] **Applied 2026-09-21 — 65 products.** Rename first, framed band moved to
+      20 oz, then `--apply`; verified in Sanity (0 missing bands, 0 dangling
+      subject refs). The hand-authored remainder is listed in the next-action
+      block above. Original task text below.
+- [ ] ~~Run the dry run, review inferred shipping types by hand, then `--apply`.~~
       **(CAS-50 — yours, not an agent's.)** Normalise the postcard titles first:
       they don't collide, so nothing will stop four spellings becoming four
       Square variations with split stock. Supply the 13 missing framed weights.

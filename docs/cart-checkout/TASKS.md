@@ -171,11 +171,15 @@ the actual stock.*
 - [x] Header cart icon + count badge. Hidden at zero, and also while `ready` is
       false. **(CAS-33)** Inline SVG glyph — the header had no icon dependency and
       CLAUDE.md forbids adding one for a single glyph.
-- [ ] 🛑 **`Add to cart` on `ArtworkDetail` options. BLOCKED on Phase 0.5.** This
-      is the first task that builds a cart line from a purchase option, so it is
-      the first that would bake in the old `artworkId` + `optionKey` identity.
-      Everything above it is identity-agnostic and safe to finish. Venmo stays
-      secondary, Etsy options untouched, suppressed on sold-out items.
+- [x] **`Add to cart` on `ArtworkDetail`. (CAS-34)** Primary action on every
+      unsold product row; "or Venmo" secondary; Etsy block untouched; sold rows
+      have no buttons. Replaces the per-product Square "Buy with card" links,
+      which cart checkout supersedes. Disabled until the stored cart has loaded
+      (an earlier tap would be overwritten), and an original already in the cart
+      reads "In cart". Browser-checked end to end: add, "Added ✓", badge counts,
+      qty 2 on a print, persistence across reload, drawer totals, sold row.
+      ⚠️ **Checkout is still disabled until CAS-41**, so on its own this is a
+      cart that can't be paid for — see Notes before merging.
 - [x] One-of-a-kind items lock to qty 1. `clampQty()` in `cart.ts`; the drawer
       shows "1 only" instead of a stepper that couldn't do anything. Verified
       in-browser 2026-09-05.
@@ -420,3 +424,10 @@ future session reads to avoid re-deriving context.)*
     the site because of minor water damage. Revisit separately.
   - Migration re-runs no longer overwrite existing products (`--force` to opt
     in), so Studio edits to weights, bands and Square ids survive.
+- 2026-09-21 — **Merge gate for `cart-phase-1`.** After CAS-34 the branch has a
+  working cart but a disabled Checkout (CAS-41 is Phase 2), and the rows no
+  longer show the old Square "Buy with card" links. Merged as-is, customers
+  could fill a cart they can't pay for, and card buyers would lose their path.
+  Options: hold the whole branch until checkout works; or put the cart behind a
+  flag (hide cart icon + Add to cart, restore the Square links) so the CAS-55
+  read path — which is safe and verified on its own — can ship now.

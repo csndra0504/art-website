@@ -31,6 +31,7 @@ import { buildArtworkJsonLd } from "../lib/structuredData";
 import { ShippingReturns } from "../components/ShippingReturns";
 import { Testimonials } from "../components/Testimonials";
 import { offersFor } from "../lib/offers";
+import { useCart } from "../lib/cartContext";
 import type { Artwork, SubjectProduct } from "../types/artwork";
 
 // Runs at build time for every slug (see getStaticPaths in App.tsx) so each
@@ -67,64 +68,85 @@ function venmoUrl(amount: number, note: string) {
   return `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
 }
 
-// One-tap card checkout via a Square link when available, with Venmo as a
-// lower-friction fallback. Card-first lowers the barrier for new visitors who
-// don't already use Venmo.
-function BuyButtons({
-  squareUrl,
+// Add to cart is the primary action; Venmo stays as the secondary link during
+// v1 because it's a proven path, and removing it before card checkout is proven
+// would risk sales. The per-product Square links this replaces are superseded
+// by checkout from the cart.
+function CartActions({
+  product: p,
+  artwork,
   venmoHref,
-  onCheckout,
+  onVenmo,
 }: {
-  squareUrl?: string;
+  product: SubjectProduct;
+  artwork: Artwork;
   venmoHref: string;
-  onCheckout?: (method: PaymentType) => void;
+  onVenmo: () => void;
 }) {
-  if (squareUrl) {
-    return (
-      <Group gap="xs" wrap="wrap" justify="flex-end">
-        <Button
-          component="a"
-          href={squareUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onCheckout?.("card")}
-          variant="filled"
-          color="dark"
-          radius={0}
-          size="sm"
-        >
-          Buy with card
-        </Button>
-        <Button
-          component="a"
-          href={venmoHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onCheckout?.("venmo")}
-          variant="subtle"
-          color="dark"
-          radius={0}
-          size="sm"
-        >
-          or Venmo
-        </Button>
-      </Group>
-    );
-  }
+  const { add, lines, ready } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+  const oneOfAKind = p.kind === "original";
+  const inCart = lines.some((l) => l.productId === p._id);
+
+  useEffect(() => {
+    if (!justAdded) return;
+    const t = setTimeout(() => setJustAdded(false), 2000);
+    return () => clearTimeout(t);
+  }, [justAdded]);
+
+  const handleAdd = () => {
+    const image = artwork.images?.[0];
+    add({
+      productId: p._id,
+      qty: 1,
+      oneOfAKind,
+      slug: artwork.slug.current,
+      title: artwork.title,
+      optionTitle: p.title,
+      price: p.price,
+      image: image
+        ? urlFor(image.asset).width(128).height(128).fit("crop").auto("format").url()
+        : undefined,
+    });
+    setJustAdded(true);
+  };
+
+  // An original can only be in the cart once, so a second add would silently do
+  // nothing; say so instead. Disabled until the stored cart has loaded, or an
+  // early tap would be overwritten when it does.
+  const label = justAdded
+    ? "Added ✓"
+    : oneOfAKind && inCart
+      ? "In cart"
+      : "Add to cart";
+
   return (
-    <Button
-      component="a"
-      href={venmoHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => onCheckout?.("venmo")}
-      variant="filled"
-      color="dark"
-      radius={0}
-      size="sm"
-    >
-      Buy via Venmo
-    </Button>
+    <Group gap="xs" wrap="wrap" justify="flex-end">
+      <Button
+        onClick={handleAdd}
+        disabled={!ready || (oneOfAKind && inCart && !justAdded)}
+        variant="filled"
+        color="dark"
+        radius={0}
+        size="sm"
+        aria-live="polite"
+      >
+        {label}
+      </Button>
+      <Button
+        component="a"
+        href={venmoHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onVenmo}
+        variant="subtle"
+        color="dark"
+        radius={0}
+        size="sm"
+      >
+        or Venmo
+      </Button>
+    </Group>
   );
 }
 
@@ -147,7 +169,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
         <ProductRow
           key={p._id}
           product={p}
-          subjectTitle={artwork.title}
+          artwork={artwork}
           onCheckout={(m) => trackBeginCheckout(item(p.title, p.price), m)}
         />
       ))}
@@ -194,11 +216,11 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
 
 function ProductRow({
   product: p,
-  subjectTitle,
+  artwork,
   onCheckout,
 }: {
   product: SubjectProduct;
-  subjectTitle: string;
+  artwork: Artwork;
   onCheckout: (method: PaymentType) => void;
 }) {
   const sold = !!p.soldOut;
@@ -232,10 +254,11 @@ function ProductRow({
           </Group>
         </div>
         {!sold && (
-          <BuyButtons
-            squareUrl={p.squareUrl}
-            venmoHref={venmoUrl(p.price, p.venmoNote ?? `${p.title}: ${subjectTitle}`)}
-            onCheckout={onCheckout}
+          <CartActions
+            product={p}
+            artwork={artwork}
+            venmoHref={venmoUrl(p.price, p.venmoNote ?? `${p.title}: ${artwork.title}`)}
+            onVenmo={() => onCheckout("venmo")}
           />
         )}
       </Group>

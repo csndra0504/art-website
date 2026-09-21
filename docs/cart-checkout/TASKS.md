@@ -368,3 +368,30 @@ future session reads to avoid re-deriving context.)*
     Worth moving the boundary to ~20 oz so rounding can't flip it.
   - Also: **82 products across 45 subjects**, against the plan's estimate of 47
     across 38. Worth confirming that's real and not double-counting.
+- 2026-09-21 — **Decisions from reviewing the dry run against the real Square
+  catalog** (read-only; nothing written to Sanity or Square):
+  - **Square already holds the whole range** — 34 items / 45 variations, built by
+    hand, with Square-generated SKUs, real stock counts and sold-out flags. The
+    CAS-37 design (match on a `CW-…` SKU, create what's missing) would have
+    matched nothing and **duplicated almost everything**, splitting stock and
+    orphaning sales history. **CAS-37 must link each product to its existing
+    Square variation and create only what's genuinely new.** Names don't line up
+    exactly ("Kennywod Dog & Beer", "PGH Skyline"), so the mapping needs review.
+  - **Sync direction is Sanity → Square.** Products and prices are created and
+    edited in the Studio; Square owns stock counts. One place to edit price, or
+    the two drift. First version is a re-runnable sync command; later the
+    Phase 2 server runs it automatically on a Sanity publish webhook.
+  - **Etsy links are not products.** No stock, never in the cart, never in
+    Square. They stay on the subject (`printEtsyUrl`/`printEtsyPrice`) as a
+    fallback for pieces with no print on hand — so CAS-53 keeps those two fields
+    rather than retiring them. Display rule for CAS-55: show the Etsy button only
+    when the subject has no local print for sale. Migration: 82 → 65 products.
+    The Sphinx's Etsy link lives only in a custom option — copy it onto the
+    subject before customOptions is retired, or it's lost.
+  - **The legacy $30 "local pickup" prints are 8x10s**; migrated as "8x10 Print".
+  - **William Penn Tavern** now has 5x7 and 8x10 prints on hand. Not on the site
+    or in Square yet — add by hand in the Studio after the migration.
+  - **Parked: the Sphinx original.** In Square at $150, deliberately absent from
+    the site because of minor water damage. Revisit separately.
+  - Migration re-runs no longer overwrite existing products (`--force` to opt
+    in), so Studio edits to weights, bands and Square ids survive.

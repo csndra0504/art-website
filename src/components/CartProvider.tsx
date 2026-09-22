@@ -3,6 +3,7 @@ import {
   CART_STORAGE_KEY,
   addLine,
   clearLines,
+  lineId,
   emptyCart,
   itemCount,
   parseCart,
@@ -14,6 +15,15 @@ import {
   type CartLine,
 } from "../lib/cart";
 import { CartContext, type CartContextValue } from "../lib/cartContext";
+import { trackAddToCart, trackRemoveFromCart, type AnalyticsItem } from "../lib/analytics";
+
+const asItem = (line: CartLine, quantity: number): AnalyticsItem => ({
+  item_id: line.slug,
+  item_name: line.title,
+  item_variant: line.optionTitle,
+  price: line.price,
+  quantity,
+});
 
 // The cart starts empty on every render path, including the client's first one.
 // Reading localStorage during render would produce markup that doesn't match the
@@ -52,17 +62,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, ready]);
 
-  const add = useCallback((line: CartLine, qty = 1) => {
-    setCart((c) => addLine(c, line, qty));
+  // Analytics compare against the latest cart here, outside the state updater:
+  // React may run an updater twice in development, which would double-count.
+  const latest = useRef(cart);
+  useEffect(() => {
+    latest.current = cart;
+  }, [cart]);
+
+  // Only a real change is tracked. Adding an original that's already in the
+  // cart, or stepping past 1 on one, changes nothing and records nothing.
+  const trackChange = useCallback((before: CartLine | undefined, after: Cart, id: string) => {
+    const now = after.lines.find((l) => lineId(l) === id);
+    const delta = (now?.qty ?? 0) - (before?.qty ?? 0);
+    const line = now ?? before;
+    if (!line || delta === 0) return;
+    if (delta > 0) trackAddToCart(asItem(line, delta));
+    else trackRemoveFromCart(asItem(line, -delta));
   }, []);
 
-  const remove = useCallback((id: string) => {
-    setCart((c) => removeLine(c, id));
-  }, []);
+  const add = useCallback(
+    (line: CartLine, qty = 1) => {
+      const id = lineId(line);
+      const before = latest.current.lines.find((l) => lineId(l) === id);
+      trackChange(before, addLine(latest.current, line, qty), id);
+      setCart((c) => addLine(c, line, qty));
+    },
+    [trackChange],
+  );
 
-  const setLineQty = useCallback((id: string, qty: number) => {
-    setCart((c) => setQty(c, id, qty));
-  }, []);
+  const remove = useCallback(
+    (id: string) => {
+      const before = latest.current.lines.find((l) => lineId(l) === id);
+      trackChange(before, removeLine(latest.current, id), id);
+      setCart((c) => removeLine(c, id));
+    },
+    [trackChange],
+  );
+
+  const setLineQty = useCallback(
+    (id: string, qty: number) => {
+      const before = latest.current.lines.find((l) => lineId(l) === id);
+      trackChange(before, setQty(latest.current, id, qty), id);
+      setCart((c) => setQty(c, id, qty));
+    },
+    [trackChange],
+  );
 
   const clear = useCallback(() => {
     setCart(clearLines);

@@ -14,6 +14,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
 import { useCart } from "../lib/cartContext";
 import { CartDrawer } from "./CartDrawer";
+import { trackViewCart } from "../lib/analytics";
 
 const NAV_LINKS = [
   { label: "Home", to: "/" },
@@ -46,7 +47,24 @@ function CartGlyph() {
 export function Layout() {
   const [opened, { toggle, close }] = useDisclosure();
   const [cartOpened, { open: openCart, close: closeCart }] = useDisclosure();
-  const { count, ready } = useCart();
+  const { count, ready, lines, total } = useCart();
+
+  // Tracked on the click, not on the drawer's open state: one event per time
+  // someone chooses to look, and no effect to keep in sync.
+  const showCart = () => {
+    openCart();
+    trackViewCart(
+      lines.map((l) => ({
+        item_id: l.slug,
+        item_name: l.title,
+        item_variant: l.optionTitle,
+        price: l.price,
+        quantity: l.qty,
+      })),
+      total,
+      "drawer"
+    );
+  };
 
   return (
     <AppShell
@@ -102,7 +120,7 @@ export function Layout() {
                   color="dark"
                   radius={0}
                   size="lg"
-                  onClick={openCart}
+                  onClick={showCart}
                   aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
                 >
                   <CartGlyph />

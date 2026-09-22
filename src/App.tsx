@@ -23,6 +23,8 @@ export const routes: RouteRecord[] = [
       { path: "subscribe", lazy: () => import("./pages/Subscribe") },
       { path: "raffle", lazy: () => import("./pages/Raffle") },
       { path: "free-postcard", lazy: () => import("./pages/FreePostcard") },
+      // The drawer's contents as a page. Static shell; the cart loads client-side.
+      { path: "cart", lazy: () => import("./pages/Cart") },
       // Square returns buyers here after paying. Static shell; the order loads client-side.
       { path: "checkout/success", lazy: () => import("./pages/CheckoutSuccess") },
     ],

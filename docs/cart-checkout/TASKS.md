@@ -179,9 +179,17 @@ the actual stock.*
 - [x] One-of-a-kind items lock to qty 1. `clampQty()` in `cart.ts`; the drawer
       shows "1 only" instead of a stepper that couldn't do anything. Verified
       in-browser 2026-09-05.
-- [ ] `/cart` route as a full-page fallback (`src/App.tsx`).
-- [ ] Analytics: `add_to_cart`, `remove_from_cart`, `view_cart`.
-- [ ] **Verify:** `/verify` clean, drawer usable at 375px, cart survives reload.
+- [x] `/cart` route as a full-page fallback (`src/App.tsx`) **(CAS-35)**. The
+      drawer's contents moved to `CartContents`, which both use, so the two
+      can't drift. Prerendered as an empty shell, noindex, not in the sitemap.
+- [x] Analytics: `add_to_cart`, `remove_from_cart`, `view_cart` **(CAS-35)**.
+      Add/remove fire from `CartProvider`, so every path is counted (button,
+      steppers, Remove) and only real changes count — a second tap on an
+      original already in the cart records nothing. `view_cart` fires on the
+      header button and on `/cart`, tagged `where: drawer | page`.
+- [x] **Verify:** lint/typecheck/build clean; `/cart` at 375px matches the
+      drawer, checkout from it reaches Square; events checked in the browser
+      (2 adds, no-op add ignored, view, decrement, remove — each exactly once).
 
 ## Phase 2 — Catalog & checkout
 

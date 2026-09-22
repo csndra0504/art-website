@@ -160,3 +160,50 @@ export function trackPurchase(order: {
     item_count: order.items.reduce((n, i) => n + (i.quantity ?? 1), 0),
   });
 }
+
+// --- Cart ------------------------------------------------------------------
+// GA4's standard ecommerce events, so its funnel report works unmodified, and
+// PostHog names in the site's existing past-tense style.
+
+/** `line` is what changed: the item, and how many were added or removed. */
+export function trackAddToCart(line: AnalyticsItem) {
+  const item = withDefaults(line);
+  send("add_to_cart", {
+    currency: "USD",
+    value: (item.price ?? 0) * (item.quantity ?? 1),
+    items: [item],
+  });
+  posthog.capture("cart_item_added", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_variant: item.item_variant,
+    price: item.price,
+    quantity: item.quantity,
+  });
+}
+
+export function trackRemoveFromCart(line: AnalyticsItem) {
+  const item = withDefaults(line);
+  send("remove_from_cart", {
+    currency: "USD",
+    value: (item.price ?? 0) * (item.quantity ?? 1),
+    items: [item],
+  });
+  posthog.capture("cart_item_removed", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_variant: item.item_variant,
+    price: item.price,
+    quantity: item.quantity,
+  });
+}
+
+/** `where`: the drawer or the /cart page, to see whether the fallback gets used. */
+export function trackViewCart(items: AnalyticsItem[], value: number, where: "drawer" | "page") {
+  send("view_cart", { currency: "USD", value, items: items.map(withDefaults) });
+  posthog.capture("cart_viewed", {
+    value,
+    where,
+    item_count: items.reduce((n, i) => n + (i.quantity ?? 1), 0),
+  });
+}

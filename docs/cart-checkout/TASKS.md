@@ -224,8 +224,13 @@ the actual stock.*
       variations of one "Single Post Card - 5x7 in" item — and every price
       already agrees. 15 products (ten of them 8x10 prints) have no Square item
       and can't be sold online until they do; 12 unmatched originals are sold,
-      so they don't matter. **Awaiting her review**, then: write the ids into
-      Sanity, and decide whether the script creates the missing 15. Design
+      so they don't matter. **Reviewed and applied the same day** (see
+      square-mapping.md): the 12-design "Single Post Card" item was split into
+      per-design `Print, 5x7, <design>` items with counts carried over and the
+      old item archived, and the 15 missing items were created (prints stock
+      100 as placeholders, originals 1). 51 of 64 products now have a Square
+      item. **Still to do:** write the ids into Sanity (needs the write token,
+      at go-live), then the same script keeps them in step. Design
       already worked out, don't re-derive:
       - **Idempotent, matched by SKU.** Some items are already in Square. Stable
         SKU scheme: `CW-{slug}-{option-title}`, slugified, uppercased, capped at
@@ -253,7 +258,15 @@ the actual stock.*
         existing `studio/scripts/`.
       - Sandbox first. Only `--apply` against production after a production dry
         run reads correctly.
-- [ ] Set opening stock counts in Square (originals = 1).
+- [~] Set opening stock counts in Square (originals = 1). Done for the 27 items
+      created/split on 2026-09-22. The print counts (100) are placeholders
+      copied from the old postcard variations — Cassandra to correct them
+      against real stock before go-live.
+- [ ] ⚠️ **Check tax on a real order before go-live.** Every Square item is
+      marked taxable for the POS. Our payment links don't ask Square to apply
+      taxes, so a website order should carry none and match the cart's total —
+      unverified. One real low-value order settles it (PRD §6 has the wider
+      tax question).
 - [x] `server/` scaffold **(CAS-39)** — Express 5 (chosen 2026-09-21), TypeScript
       run directly by Node's type stripping (no build step), `GET /api/health`,
       port 3001 so the dormant Vite `/api` proxy (a March leftover) now reaches

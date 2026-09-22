@@ -23,6 +23,7 @@ interface OrderSummary {
   fulfillment: "ship" | "pickup";
   items: { name: string; quantity: number; totalCents: number }[];
   discountCents: number;
+  taxCents: number;
   shippingCents: number;
   totalCents: number;
 }
@@ -66,6 +67,7 @@ function trackOnce(order: OrderSummary) {
     transactionId: order.orderId,
     value: order.totalCents / 100,
     shipping: order.shippingCents / 100,
+    tax: order.taxCents / 100,
     fulfillment: order.fulfillment,
     items: order.items.map((i) => ({
       item_id: i.name,
@@ -214,6 +216,12 @@ function Confirmation({ order }: { order: OrderSummary }) {
             <Text size="sm">{pickup ? "Local pickup, Pittsburgh" : "Shipping"}</Text>
             <Text size="sm">{pickup ? "Free" : money(order.shippingCents)}</Text>
           </Group>
+          {order.taxCents > 0 && (
+            <Group justify="space-between">
+              <Text size="sm">Sales tax</Text>
+              <Text size="sm">{money(order.taxCents)}</Text>
+            </Group>
+          )}
           <Group justify="space-between">
             <Text size="sm" fw={600}>
               Total

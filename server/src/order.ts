@@ -17,6 +17,7 @@ interface SquareOrder {
   metadata?: Record<string, string>;
   line_items?: { name?: string; quantity: string; gross_sales_money?: { amount: number } }[];
   total_discount_money?: { amount: number };
+  total_tax_money?: { amount: number };
   service_charges?: { name?: string; total_money?: { amount: number } }[];
   tenders?: unknown[];
   total_money?: { amount: number };
@@ -64,6 +65,7 @@ export async function getOrder(req: Request, res: Response) {
       totalCents: l.gross_sales_money?.amount ?? 0,
     })),
     discountCents: order.total_discount_money?.amount ?? 0,
+    taxCents: order.total_tax_money?.amount ?? 0,
     shippingCents,
     totalCents: order.total_money?.amount ?? 0,
   });

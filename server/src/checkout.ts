@@ -184,6 +184,10 @@ export async function createCheckout(req: Request, res: Response) {
             ? { applied_discounts: [{ discount_uid: "bundle" }] }
             : {}),
         })),
+        // Sales tax comes from the Square catalog (PA Sales Tax, 7%, attached to
+        // every item), so the rate lives in one place and follows whatever she
+        // sets there. Without this, an API order carries no tax at all.
+        pricing_options: { auto_apply_taxes: true },
         // Shipping is an order charge, not checkout_options.shipping_fee: Square
         // adds the shipping_fee to the order again on every link update, even
         // one that leaves it out, so the redirect update below would charge it
@@ -195,7 +199,10 @@ export async function createCheckout(req: Request, res: Response) {
                   name: "Shipping",
                   amount_money: { amount: shipping, currency: "USD" },
                   calculation_phase: "SUBTOTAL_PHASE",
-                  taxable: false,
+                  // PA treats delivery as part of the taxable purchase price
+                  // when the goods are taxable. Flip this to false if her
+                  // accountant says otherwise.
+                  taxable: true,
                 },
               ],
             }

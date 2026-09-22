@@ -142,6 +142,7 @@ export function trackPurchase(order: {
   transactionId: string;
   value: number;
   shipping: number;
+  tax: number;
   fulfillment: "ship" | "pickup";
   items: AnalyticsItem[];
 }) {
@@ -150,6 +151,7 @@ export function trackPurchase(order: {
     currency: "USD",
     value: order.value,
     shipping: order.shipping,
+    tax: order.tax,
     items: order.items.map(withDefaults),
   });
   posthog.capture("order_completed", {

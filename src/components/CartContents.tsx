@@ -342,14 +342,21 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
                 : money(shipping)}
           </Text>
         </Group>
+        {/* Square applies PA sales tax from its own catalog, so the exact amount
+            is only known there. Saying so beats a total that grows at the
+            payment page with no warning. */}
+        <Group justify="space-between">
+          <Text size="sm">Sales tax</Text>
+          <Text size="sm">Calculated at checkout</Text>
+        </Group>
         <Group justify="space-between" align="baseline" mt={4}>
           <Text size="sm" fw={600}>
             Total
           </Text>
           <Text size="lg" fw={600}>
             {shipping == null && fulfillment === "ship"
-              ? `${money(itemsCents)} + shipping`
-              : money(itemsCents + (shipping ?? 0))}
+              ? `${money(itemsCents)} + shipping + tax`
+              : `${money(itemsCents + (shipping ?? 0))} + tax`}
           </Text>
         </Group>
       </Stack>

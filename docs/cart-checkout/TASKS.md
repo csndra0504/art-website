@@ -262,11 +262,20 @@ the actual stock.*
       created/split on 2026-09-22. The print counts (100) are placeholders
       copied from the old postcard variations — Cassandra to correct them
       against real stock before go-live.
-- [ ] ⚠️ **Check tax on a real order before go-live.** Every Square item is
-      marked taxable for the POS. Our payment links don't ask Square to apply
-      taxes, so a website order should carry none and match the cart's total —
-      unverified. One real low-value order settles it (PRD §6 has the wider
-      tax question).
+- [x] **Web checkout charges sales tax (2026-09-22).** Cassandra's call, and it
+      overrides the PRD §6 "tax deferred" decision for the website. The order
+      now sets `pricing_options.auto_apply_taxes`, so Square applies the
+      catalog's **PA Sales Tax, 7%** — one rate, hers to change in Square.
+      Without that flag an API order carries no tax at all (sandbox-verified:
+      $20 of prints → $1.40 tax → $24.40 paid). The cart can't know the rate,
+      so it shows "Sales tax — calculated at checkout" and a total reading
+      "$23 + tax"; the confirmation shows the real amount.
+- [ ] **Shipping taxability, to confirm on the first real order.** PA treats
+      delivery as part of the taxable price, so the shipping charge is sent
+      with `taxable: true` — but the sandbox taxed only the items, not the $3
+      shipping. Whether production does the same depends on the tax's product
+      set. Check the first real shipped order, and tell the accountant either
+      way.
 - [x] `server/` scaffold **(CAS-39)** — Express 5 (chosen 2026-09-21), TypeScript
       run directly by Node's type stripping (no build step), `GET /api/health`,
       port 3001 so the dormant Vite `/api` proxy (a March leftover) now reaches

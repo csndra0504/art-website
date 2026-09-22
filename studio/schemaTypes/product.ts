@@ -154,6 +154,15 @@ export const product = defineType({
           { title: "Framed (large, >20 oz)", value: "framedLarge" },
         ],
       },
+      // An error, not a warning: checkout refuses to ship a product with no band
+      // rather than ship it free, so a local product without one can only be
+      // picked up.
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const channel = (context.document as { channel?: string } | undefined)?.channel;
+          if (channel !== "etsy" && !value) return "Local products need a shipping type, or checkout can't ship them.";
+          return true;
+        }),
     }),
     defineField({
       name: "shipWeightOz",
@@ -193,6 +202,18 @@ export const product = defineType({
       description:
         "Written by the seed script. Without it this product cannot be sold through checkout — Square only tracks stock for line items that reference a catalog object.",
       fieldset: "integration",
+      // A warning, so publishing isn't blocked: until the catalog is linked at
+      // go-live, every product is in this state.
+      validation: (rule) =>
+        rule
+          .custom((value, context) => {
+            const channel = (context.document as { channel?: string } | undefined)?.channel;
+            if (channel !== "etsy" && !value) {
+              return "Not linked to Square yet, so it can't be bought through checkout. The seed script links it.";
+            }
+            return true;
+          })
+          .warning(),
     }),
     defineField({
       name: "squareUrl",

@@ -197,12 +197,16 @@ the actual stock.*
 
 ## Phase 2 — Catalog & checkout
 
-- [ ] Sanity schema: `squareVariationId`, `shippingType`, `soldOut` on **products**
+- [x] Sanity schema: `squareVariationId`, `shippingType`, `soldOut` on **products**
       (the fields themselves land in Phase 0.5; this task is now just the Studio
       validation). Studio warns on a sellable product with no
       variation id. `shippingType` is a required enum for anything sellable:
       `magnet` | `postcard` | `print` | `original` | `framedSmall` |
       `framedLarge` (PRD §9). Framed bands by packed weight, not contents.
+      Done 2026-09-22: missing shipping type on a local product is an **error**
+      (all 65 have one, so nothing breaks); missing Square id is a **warning**
+      (all 65 lack one until CAS-37, so publishing isn't blocked). Etsy
+      products are exempt from both. Typechecked; not yet seen in the Studio UI.
 - [x] **Sandbox catalog mirror** — `scripts/seed-sandbox-catalog.mjs` (added
       2026-09-21, sandbox-first order). Copies all 64 visible products into the
       Square **sandbox** with stock (originals 1, others 10, sold 0), SKU = Sanity

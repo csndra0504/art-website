@@ -38,6 +38,15 @@ export function variationIdFor(product: {
     : product.squareVariationId ?? undefined;
 }
 
+// The reverse, for webhooks: which sandbox product a variation belongs to.
+// Production looks this up in Sanity instead (by squareVariationId).
+export function sandboxProductIdFor(variationId: string): string | undefined {
+  const entry = Object.entries(sandboxCatalog?.variations ?? {}).find(
+    ([, v]) => v === variationId
+  );
+  return entry?.[0];
+}
+
 export interface CheckoutConfig {
   token: string;
   locationId: string;

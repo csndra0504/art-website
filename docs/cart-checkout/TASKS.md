@@ -315,17 +315,30 @@ the actual stock.*
 - [x] Idempotency: a replay is a no-op. Done by making handlers *set* state from
       Square's current count rather than toggle it, plus an in-memory
       recent-event guard. No event store: nothing here is harmful to repeat.
-- [ ] Mirror Square stock → Sanity `soldOut`, so the static site keeps its current
-      data flow.
+- [x] Mirror Square stock → Sanity `soldOut`, so the static site keeps its current
+      data flow **(CAS-44)**. `server/src/stockMirror.ts`, on
+      `inventory.count.updated`. Re-reads Square's current count rather than
+      trusting the event, sets `soldOut` both ways (a restock un-sells), patches
+      an open draft too so publishing it can't undo a sale, and skips Square
+      items the website doesn't sell. **In the sandbox it only logs** ("would
+      mark … SOLD OUT"): the one Sanity dataset is live.
 - [x] ~~Order notification email to Cassandra (items, buyer, address).~~
       **Dropped** — Square's own merchant emails already carry items, buyer and
       address (PRD §4). No code, and they still arrive when our webhook handler is
       the thing that's broken. Only revisit if Square's format proves inadequate.
-- [ ] Loud failure path: Sanity mirror fails → log loudly. **Stock stays correct
+- [x] Loud failure path: Sanity mirror fails → log loudly, answer 500 so Square
+      retries (CAS-44). **Stock stays correct
       regardless** — the spike showed Square decrements on payment without us, so
       a failed mirror makes the website stale, never wrong in Square.
-- [ ] **Verify the headline path:** sell an original on Square POS (sandbox) and
-      watch it go sold on the website with no manual step.
+- [x] **Verify the headline path (sandbox half):** an available original's
+      sandbox stock went 1 → 0 (as a market sale would), a signed event reached
+      the webhook, and the mirror logged "would mark 16th St Bridge — Original
+      SOLD OUT"; back to 1 → "already available". Market-only items and other
+      locations are skipped.
+- [ ] **Verify the headline path (production half), at go-live:** the Sanity
+      write and the lookup by real `squareVariationId` only run in production.
+      Once CAS-37 has linked the catalog, change a spare item's count in the
+      Square dashboard and watch `soldOut` flip in the Studio, then put it back.
 
 ## Phase 4 — Go live
 
@@ -349,6 +362,10 @@ the actual stock.*
       `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
       `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`,
       `SQUARE_WEBHOOK_SIGNATURE_KEY` (and `SANITY_WRITE_TOKEN` for CAS-44).
+- [ ] Sanity write token for the stock mirror: sanity.io/manage → project →
+      API → Tokens → Add API token, name "cass-art-api stock mirror",
+      permission **Editor**. Goes in `api.env` as `SANITY_WRITE_TOKEN`, never in
+      the repo or the site build.
 - [ ] Square Developer Dashboard → Webhooks → add a subscription: URL
       `https://cassandrawilcoxart.com/api/square/webhook`, event
       `inventory.count.updated`. Copy its signature key into the env file, then
@@ -559,3 +576,8 @@ future session reads to avoid re-deriving context.)*
   twice gives the same result. An in-memory set skips obvious repeats, and losing
   it on restart is harmless. If a handler ever does something that isn't safe to
   repeat (an email, say), that's when it needs a real event store.
+- 2026-09-21 — **The stock mirror doesn't write in the sandbox.** There's one
+  Sanity dataset and it's live, so a sandbox test sale writing `soldOut` would
+  mark the real piece sold on the real site. Sandbox mode logs the change it
+  would make instead. A separate test dataset was the alternative; not worth the
+  setup while the log shows the whole chain working.

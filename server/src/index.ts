@@ -1,7 +1,8 @@
 import express from "express";
 import { createCheckout } from "./checkout.ts";
 import { getOrder } from "./order.ts";
-import { handleWebhook } from "./webhook.ts";
+import { handleWebhook, onEvent } from "./webhook.ts";
+import { mirrorInventory } from "./stockMirror.ts";
 import { SQUARE_ENV } from "./config.ts";
 
 // The checkout API. The website itself stays fully static and prerendered; this
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 // limit stops anyone posting megabytes at it.
 app.post("/api/checkout", express.json({ limit: "16kb" }), createCheckout);
 app.get("/api/order/:orderId", getOrder);
+onEvent("inventory.count.updated", mirrorInventory);
 // Raw bytes, any content type: the signature covers the body exactly as sent.
 app.post("/api/square/webhook", express.raw({ type: "*/*", limit: "256kb" }), handleWebhook);
 

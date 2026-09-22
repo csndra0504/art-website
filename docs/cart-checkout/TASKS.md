@@ -651,4 +651,14 @@ future session reads to avoid re-deriving context.)*
   template (Square answers a bare `UNAUTHORIZED`, which reads like a permissions
   problem rather than a stray character), and **`docker restart` keeps the old
   environment** — an env-file change needs the container recreated.
+- 2026-09-22 — **Shipping moved back to `checkout_options.shipping_fee`.** As an
+  order service charge it sat beside Square's own shipping-method picker, which
+  offers a free method when no rates are configured — so the hosted page showed
+  "$3.00" and "Free" together, and Cassandra reasonably read that as free
+  shipping. (The money was right: $13.70 charged.) The catch is the one found on
+  2026-09-21: a link carrying a `shipping_fee` must **never be updated**, or
+  Square adds the fee again. So the order id is no longer baked into the return
+  URL, and the success page relies on the id the browser stored before leaving.
+  That's the same browser session, so it holds up in practice; a buyer opening
+  the payment link fresh later sees "we couldn't confirm a payment yet".
 

@@ -162,11 +162,22 @@ export async function createCheckout(req: Request, res: Response) {
     }))
   );
 
-  // Shared by create and update, so the update can't drop an option.
-  const checkoutOptions = (redirectUrl: string) => ({
-    redirect_url: redirectUrl,
+  // Shipping goes to Square as the link's own shipping fee, so its hosted page
+  // shows one shipping line. As an order service charge it sat *beside* Square's
+  // shipping-method picker, which offers a free method when no rates are
+  // configured — two lines, one saying $3 and one saying free.
+  //
+  // The price of that: a link carrying a shipping_fee must never be updated.
+  // Square re-adds the fee on every update, even one that omits it (sandbox:
+  // $13 → $16), so the order id can't be baked into the redirect URL afterwards.
+  // The success page falls back to the id the browser saved on its way out.
+  const checkoutOptions = {
+    redirect_url: `${cfg.siteUrl}/checkout/success`,
     ask_for_shipping_address: fulfillment === "ship",
-  });
+    ...(fulfillment === "ship" && shipping > 0
+      ? { shipping_fee: { name: "Shipping", charge: { amount: shipping, currency: "USD" } } }
+      : {}),
+  };
 
   try {
     const { payment_link } = await square<{
@@ -188,25 +199,6 @@ export async function createCheckout(req: Request, res: Response) {
         // every item), so the rate lives in one place and follows whatever she
         // sets there. Without this, an API order carries no tax at all.
         pricing_options: { auto_apply_taxes: true },
-        // Shipping is an order charge, not checkout_options.shipping_fee: Square
-        // adds the shipping_fee to the order again on every link update, even
-        // one that leaves it out, so the redirect update below would charge it
-        // twice (confirmed in the sandbox: $10 print → $16).
-        ...(fulfillment === "ship" && shipping > 0
-          ? {
-              service_charges: [
-                {
-                  name: "Shipping",
-                  amount_money: { amount: shipping, currency: "USD" },
-                  calculation_phase: "SUBTOTAL_PHASE",
-                  // PA treats delivery as part of the taxable purchase price
-                  // when the goods are taxable. Flip this to false if her
-                  // accountant says otherwise.
-                  taxable: true,
-                },
-              ],
-            }
-          : {}),
         // Scoped to the 5x7 lines it was earned on. An order-wide discount would
         // be spread over every line, so Square's reports would show an 8x10 in
         // the same cart as discounted (confirmed in the sandbox).
@@ -225,7 +217,7 @@ export async function createCheckout(req: Request, res: Response) {
         // Read back by the success page to word its next steps.
         metadata: { fulfillment },
       },
-      checkout_options: checkoutOptions(`${cfg.siteUrl}/checkout/success`),
+      checkout_options: checkoutOptions,
       // Shows on the payment in the Square dashboard, so a pickup order isn't
       // mistaken for one that needs posting.
       ...(fulfillment === "pickup"
@@ -233,24 +225,9 @@ export async function createCheckout(req: Request, res: Response) {
         : {}),
     });
 
-    // Square returns the buyer to redirect_url exactly as given — it appends
-    // nothing (confirmed in the sandbox) — and the order id only exists once
-    // the link does. So point the link back at a URL naming its own order. If
-    // this fails the checkout still works: the success page falls back to the
-    // id the browser saved before leaving.
-    try {
-      await square(cfg, "PUT", `/v2/online-checkout/payment-links/${payment_link.id}`, {
-        payment_link: {
-          version: payment_link.version,
-          checkout_options: checkoutOptions(
-            `${cfg.siteUrl}/checkout/success?orderId=${encodeURIComponent(payment_link.order_id)}`
-          ),
-        },
-      });
-    } catch (err) {
-      console.error("Couldn't set order-specific redirect:", err instanceof SquareError ? JSON.stringify(err.errors) : err);
-    }
-
+    // Deliberately no follow-up update to bake the order id into the redirect:
+    // Square would re-add the shipping fee (see checkoutOptions above). The id
+    // goes back to the browser instead, which stores it before handing over.
     return res.json({ url: payment_link.url, orderId: payment_link.order_id });
   } catch (err) {
     console.error("Payment link failed:", err instanceof SquareError ? JSON.stringify(err.errors) : err);

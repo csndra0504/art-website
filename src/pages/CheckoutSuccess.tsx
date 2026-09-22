@@ -213,7 +213,7 @@ function Confirmation({ order }: { order: OrderSummary }) {
             </Group>
           )}
           <Group justify="space-between">
-            <Text size="sm">{pickup ? "Local pickup, Pittsburgh" : "Shipping"}</Text>
+            <Text size="sm">{pickup ? "Local pickup, Pittsburgh" : "Flat-rate shipping"}</Text>
             <Text size="sm">{pickup ? "Free" : money(order.shippingCents)}</Text>
           </Group>
           {order.taxCents > 0 && (

@@ -175,7 +175,10 @@ export async function createCheckout(req: Request, res: Response) {
     redirect_url: `${cfg.siteUrl}/checkout/success`,
     ask_for_shipping_address: fulfillment === "ship",
     ...(fulfillment === "ship" && shipping > 0
-      ? { shipping_fee: { name: "Shipping", charge: { amount: shipping, currency: "USD" } } }
+      // "Flat-rate" because Square shows the fee in its summary before the
+      // address step recalculates it; without the label it reads as a figure
+      // still being worked out.
+      ? { shipping_fee: { name: "Flat-rate shipping", charge: { amount: shipping, currency: "USD" } } }
       : {}),
   };
 

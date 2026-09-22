@@ -332,7 +332,7 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
         )}
         <Group justify="space-between">
           <Text size="sm">
-            {fulfillment === "pickup" ? "Local pickup, Pittsburgh" : "Shipping"}
+            {fulfillment === "pickup" ? "Local pickup, Pittsburgh" : "Flat-rate shipping"}
           </Text>
           <Text size="sm">
             {fulfillment === "pickup"

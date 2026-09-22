@@ -47,8 +47,11 @@ export async function getOrder(req: Request, res: Response) {
     return res.status(404).json({ error: "Order not found." });
   }
 
+  // Matched loosely: the fee's name is display copy that has already changed
+  // once ("Shipping" → "Flat-rate shipping"), and orders placed under the old
+  // name must still show their shipping on this page.
   const shippingCents = (order.service_charges ?? [])
-    .filter((c) => c.name === "Shipping")
+    .filter((c) => (c.name ?? "").toLowerCase().includes("shipping"))
     .reduce((sum, c) => sum + (c.total_money?.amount ?? 0), 0);
 
   return res.json({

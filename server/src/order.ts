@@ -15,7 +15,8 @@ interface SquareOrder {
   location_id: string;
   state: string;
   metadata?: Record<string, string>;
-  line_items?: { name?: string; quantity: string; total_money?: { amount: number } }[];
+  line_items?: { name?: string; quantity: string; gross_sales_money?: { amount: number } }[];
+  total_discount_money?: { amount: number };
   service_charges?: { name?: string; total_money?: { amount: number } }[];
   tenders?: unknown[];
   total_money?: { amount: number };
@@ -58,8 +59,11 @@ export async function getOrder(req: Request, res: Response) {
     items: (order.line_items ?? []).map((l) => ({
       name: l.name ?? "Item",
       quantity: Number(l.quantity),
-      totalCents: l.total_money?.amount ?? 0,
+      // Before discounts: the receipt shows the 3-for-$25 deal as its own line,
+      // rather than spreading it across items as $8.33s.
+      totalCents: l.gross_sales_money?.amount ?? 0,
     })),
+    discountCents: order.total_discount_money?.amount ?? 0,
     shippingCents,
     totalCents: order.total_money?.amount ?? 0,
   });

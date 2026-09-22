@@ -6,6 +6,7 @@ import { EmailSignup } from "../components/EmailSignup";
 import { useCart } from "../lib/cartContext";
 import { PENDING_ORDER_KEY, TRACKED_ORDERS_KEY } from "../lib/cart";
 import { trackPurchase } from "../lib/analytics";
+import { BUNDLE } from "../lib/discounts";
 
 // Where Square returns a buyer after paying. Prerendered as an empty shell;
 // everything real happens in the browser, because the order only exists once
@@ -21,6 +22,7 @@ interface OrderSummary {
   paid: boolean;
   fulfillment: "ship" | "pickup";
   items: { name: string; quantity: number; totalCents: number }[];
+  discountCents: number;
   shippingCents: number;
   totalCents: number;
 }
@@ -202,6 +204,12 @@ function Confirmation({ order }: { order: OrderSummary }) {
             </Group>
           ))}
           <Divider color="#e8e8e0" />
+          {order.discountCents > 0 && (
+            <Group justify="space-between">
+              <Text size="sm">{BUNDLE.name}</Text>
+              <Text size="sm">−{money(order.discountCents)}</Text>
+            </Group>
+          )}
           <Group justify="space-between">
             <Text size="sm">{pickup ? "Local pickup, Pittsburgh" : "Shipping"}</Text>
             <Text size="sm">{pickup ? "Free" : money(order.shippingCents)}</Text>

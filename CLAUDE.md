@@ -21,7 +21,7 @@ npm run lint       # eslint
 npx tsc -b --noEmit  # typecheck alone (fastest feedback)
 npm run dev:api      # checkout API on 3001; the Vite dev server proxies /api to it
 npm run typecheck:api
-npm run check:shipping  # the shipping-rule checks — run after touching shipping
+npm run check:shipping  # shipping + 3-for-$25 checks — run after touching either
 ```
 
 There is **no test suite**. Verification is typecheck + lint + build + a manual

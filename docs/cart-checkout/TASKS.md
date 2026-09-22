@@ -345,10 +345,21 @@ the actual stock.*
 - [ ] Retire Notion for product/inventory tracking.
 - [x] Decide Venmo's fate (PRD §17) **(CAS-47)** — removed from product pages,
       and the cart's error fallback now points to email.
-- [ ] ⚠️ **Merge blocker: buyers can't say which design they want.** Two
-      products took the choice in the Venmo note: "5x7 in Prints (various
-      options)" and the Dippy 5x7. The cart has no way to ask. Their
-      `venmoNote` text is kept in Sanity until this is decided.
+- [x] **Buyers can't say which design they want.** Decided: one product per
+      design, which already existed (11 designs each have their own $10 5x7).
+      The catch-all "5x7 in Prints (various options)" page goes away; its
+      "Any 3 postcards" $25 bundle becomes an automatic deal — any 3 5x7s for
+      $25, mixed designs, repeating (`src/lib/discounts.ts`, checked by
+      `check:shipping`). Applied as a Square discount on the 5x7 lines only.
+      Sandbox-verified end to end: 3 5x7s + an 8x10 shipped = $60, deal shown
+      in the drawer and on the confirmation. Dippy's 5x7 was already one
+      design; its "which print" note was stale.
+- [ ] ⚠️ **On merge day, not before** (the live site still sells through the
+      catch-all today): in the Studio, unpublish the "5x7 in Prints (various
+      options)" subject, and set both its products to hidden ("5x7 Print" and
+      "Any 3 postcards"). Hiding the products also matters for money: the $25
+      bundle is in the postcard band, so while buyable it would count toward
+      the deal.
 - [ ] File the tax follow-up issue (PRD §6).
 - [ ] One real low-value purchase end to end, reconciled against Square.
 - [ ] Watch the first 3 real orders before touching anything else.
@@ -520,3 +531,12 @@ future session reads to avoid re-deriving context.)*
   own copy. It also carried something the cart can't yet do: two "pick your
   design" products asked for the choice in the Venmo note. The `venmoNote`
   field and its data stay until that has a replacement.
+- 2026-09-21 — **Square discounts: scope them to lines.** An `ORDER`-scoped
+  fixed discount is spread over every line, so a 3-for-$25 deal showed $2.50 off
+  an 8x10 in the same cart; Square's item reports would call 8x10s discounted.
+  A `LINE_ITEM` discount with `applied_discounts` on the 5x7 lines takes the
+  amount once, split across just those lines. Discounts are order fields, so
+  unlike `shipping_fee` they survive the redirect update.
+- 2026-09-21 — Checked the real Square account for a 3-for-$25 pricing rule to
+  reuse: there isn't one (only WELCOME10). At markets the deal is applied by
+  hand; the website's rule lives in our code, like shipping.

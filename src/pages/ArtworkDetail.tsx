@@ -24,6 +24,7 @@ import {
   trackViewItem,
   type AnalyticsItem,
 } from "../lib/analytics";
+import { inBundle } from "../lib/discounts";
 import { SeoHead } from "../components/SeoHead";
 import { JsonLd } from "../components/JsonLd";
 import { buildArtworkJsonLd } from "../lib/structuredData";
@@ -228,6 +229,13 @@ function ProductRow({
           One-of-a-kind original. Ships nationally, carefully packaged, or
           arrange local pickup in Pittsburgh. Questions? Email
           hello@cassandrawilcoxart.com.
+        </Text>
+      )}
+      {/* The deal used to be its own "Any 3 postcards" product. Now it's
+          applied in the cart, so each 5x7 has to say so or no one finds it. */}
+      {!sold && inBundle(p.shippingType) && (
+        <Text size="xs" c="dimmed" mt="xs">
+          Mix and match: any 3 5x7 prints for $25.
         </Text>
       )}
       {!sold && p.subtitle && (

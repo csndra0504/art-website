@@ -7,6 +7,7 @@ import {
   shippingCents,
   type FulfillmentMethod,
 } from "../../src/lib/shipping.ts";
+import { BUNDLE, bundleDiscountCents, inBundle } from "../../src/lib/discounts.ts";
 import type { ShippingType } from "../../src/types/artwork.ts";
 
 // POST /api/checkout — turn a cart into a Square hosted checkout.
@@ -152,6 +153,15 @@ export async function createCheckout(req: Request, res: Response) {
     throw err;
   }
 
+  // From Sanity's prices, which the seed keeps equal to Square's catalog prices.
+  const discount = bundleDiscountCents(
+    lines.map((l) => ({
+      shippingType: l.product.shippingType as ShippingType | null,
+      qty: l.qty,
+      unitCents: Math.round(l.product.price * 100),
+    }))
+  );
+
   // Shared by create and update, so the update can't drop an option.
   const checkoutOptions = (redirectUrl: string) => ({
     redirect_url: redirectUrl,
@@ -170,6 +180,9 @@ export async function createCheckout(req: Request, res: Response) {
         line_items: lines.map((l) => ({
           catalog_object_id: l.variationId,
           quantity: String(l.qty),
+          ...(discount > 0 && inBundle(l.product.shippingType as ShippingType | null)
+            ? { applied_discounts: [{ discount_uid: "bundle" }] }
+            : {}),
         })),
         // Shipping is an order charge, not checkout_options.shipping_fee: Square
         // adds the shipping_fee to the order again on every link update, even
@@ -183,6 +196,21 @@ export async function createCheckout(req: Request, res: Response) {
                   amount_money: { amount: shipping, currency: "USD" },
                   calculation_phase: "SUBTOTAL_PHASE",
                   taxable: false,
+                },
+              ],
+            }
+          : {}),
+        // Scoped to the 5x7 lines it was earned on. An order-wide discount would
+        // be spread over every line, so Square's reports would show an 8x10 in
+        // the same cart as discounted (confirmed in the sandbox).
+        ...(discount > 0
+          ? {
+              discounts: [
+                {
+                  uid: "bundle",
+                  name: BUNDLE.name,
+                  amount_money: { amount: discount, currency: "USD" },
+                  scope: "LINE_ITEM",
                 },
               ],
             }

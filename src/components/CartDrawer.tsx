@@ -18,6 +18,7 @@ import {
   shippingCents,
   type FulfillmentMethod,
 } from "../lib/shipping";
+import { BUNDLE, bundleDiscountCents } from "../lib/discounts";
 import { ShippingReturns } from "./ShippingReturns";
 import { trackCartCheckout } from "../lib/analytics";
 import { PENDING_ORDER_KEY } from "../lib/cart";
@@ -163,6 +164,20 @@ export function CartDrawer({
     }
   }, [lines, fulfillment]);
 
+  // Preview too; the server applies the same rule to the Square order.
+  const discount = useMemo(
+    () =>
+      bundleDiscountCents(
+        lines.map((l) => ({
+          shippingType: l.shippingType,
+          qty: l.qty,
+          unitCents: Math.round(l.price * 100),
+        }))
+      ),
+    [lines]
+  );
+  const itemsCents = total * 100 - discount;
+
   const startCheckout = async () => {
     setCheckout({ status: "working" });
     try {
@@ -189,7 +204,7 @@ export function CartDrawer({
             price: l.price,
             quantity: l.qty,
           })),
-          total + (shipping ?? 0) / 100,
+          (itemsCents + (shipping ?? 0)) / 100,
           fulfillment
         );
         // The success page is told its order id in the URL, but remembers it
@@ -286,6 +301,12 @@ export function CartDrawer({
               <Text size="sm">Subtotal</Text>
               <Text size="sm">{money(total * 100)}</Text>
             </Group>
+            {discount > 0 && (
+              <Group justify="space-between">
+                <Text size="sm">{BUNDLE.name}</Text>
+                <Text size="sm">−{money(discount)}</Text>
+              </Group>
+            )}
             <Group justify="space-between">
               <Text size="sm">
                 {fulfillment === "pickup" ? "Local pickup, Pittsburgh" : "Shipping"}
@@ -304,8 +325,8 @@ export function CartDrawer({
               </Text>
               <Text size="lg" fw={600}>
                 {shipping == null && fulfillment === "ship"
-                  ? `${money(total * 100)} + shipping`
-                  : money(total * 100 + (shipping ?? 0))}
+                  ? `${money(itemsCents)} + shipping`
+                  : money(itemsCents + (shipping ?? 0))}
               </Text>
             </Group>
           </Stack>

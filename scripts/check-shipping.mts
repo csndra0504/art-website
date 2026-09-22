@@ -1,11 +1,12 @@
-// Exercises every branch of src/lib/shipping.ts — the one piece of money logic
-// the site owns outright. There's no test suite, so this is the regression
-// check: run it after touching shipping rules or rates. No dependencies; Node
+// Exercises every branch of src/lib/shipping.ts and src/lib/discounts.ts — the
+// money logic the site owns outright. There's no test suite, so this is the regression
+// check: run it after touching shipping or discount rules. No dependencies; Node
 // runs it directly via type stripping.
 //
 //   npm run check:shipping
 
 import { shippingCents, MissingShippingTypeError } from "../src/lib/shipping.ts";
+import { bundleDiscountCents } from "../src/lib/discounts.ts";
 const L = (shippingType: any, qty = 1, title?: string) => ({ shippingType, qty, title });
 const cases: [string, any[], "ship" | "pickup", number | "throws"][] = [
   ["PRD: 3 postcards",                       [L("postcard", 3)],                          "ship", 300],
@@ -31,5 +32,25 @@ for (const [name, lines, method, want] of cases) {
   if (!ok) fail++;
   console.log(`${ok ? "✓" : "✗"} ${name.padEnd(40)} got ${got}${ok ? "" : `, want ${want}`}`);
 }
-console.log(fail ? `\n${fail} FAILED` : `\nall ${cases.length} pass`);
+
+// The 3-for-$25 deal (src/lib/discounts.ts) — the other money rule the site owns.
+const D = (shippingType: any, qty: number, unitCents = 1000) => ({ shippingType, qty, unitCents });
+const discountCases: [string, any[], number][] = [
+  ["deal: 2 prints, no deal",                [D("postcard", 2)],                          0],
+  ["deal: 3 prints = $25",                   [D("postcard", 3)],                          500],
+  ["deal: 3 different designs",              [D("postcard", 1), D("postcard", 1), D("postcard", 1)], 500],
+  ["deal: 4 prints = $25 + $10",             [D("postcard", 4)],                          500],
+  ["deal: 6 prints = two deals",             [D("postcard", 6)],                          1000],
+  ["deal: other bands don't count",          [D("postcard", 2), D("print", 1, 3000), D("magnet", 1, 800)], 0],
+  ["deal: never a surcharge",                [D("postcard", 3, 500)],                     0],
+];
+for (const [name, lines, want] of discountCases) {
+  const got = bundleDiscountCents(lines);
+  const ok = got === want;
+  if (!ok) fail++;
+  console.log(`${ok ? "✓" : "✗"} ${name.padEnd(40)} got ${got}${ok ? "" : `, want ${want}`}`);
+}
+
+const total = cases.length + discountCases.length;
+console.log(fail ? `\n${fail} FAILED` : `\nall ${total} pass`);
 process.exit(fail ? 1 : 0);

@@ -10,7 +10,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useMemo, useState } from "react";
-import { lineId, type CartLine } from "../lib/cart";
+import { lineId, type CartLine, type CartNotice } from "../lib/cart";
 import { useCart } from "../lib/cartContext";
 import {
   MissingShippingTypeError,
@@ -119,6 +119,43 @@ function CartLineRow({ line, problem }: { line: CartLine; problem?: string }) {
           Remove
         </Text>
       </Group>
+    </Box>
+  );
+}
+
+const NOTICE_TEXT: Record<CartNotice["change"], (n: CartNotice) => string> = {
+  soldOut: (n) => `${n.title} (${n.optionTitle}) has sold and was removed.`,
+  gone: (n) => `${n.title} (${n.optionTitle}) is no longer available and was removed.`,
+  price: (n) => `${n.title} (${n.optionTitle}) is now ${money((n.price ?? 0) * 100)}.`,
+};
+
+// Changes found by the catalog check, stated plainly. A cart that quietly
+// shrinks or reprices reads as a bug; one that says why reads as care.
+function Notices() {
+  const { notices, dismissNotices } = useCart();
+  if (notices.length === 0) return null;
+  return (
+    <Box p="md" role="status" style={{ border: "1px solid #e8e8e0", background: "#fff" }}>
+      <Stack gap={4}>
+        {notices.map((n, i) => (
+          <Text key={i} size="sm">
+            {NOTICE_TEXT[n.change](n)}
+          </Text>
+        ))}
+        <Text
+          size="xs"
+          c="dimmed"
+          role="button"
+          tabIndex={0}
+          onClick={dismissNotices}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") dismissNotices();
+          }}
+          style={{ cursor: "pointer", textDecoration: "underline", alignSelf: "flex-end" }}
+        >
+          Dismiss
+        </Text>
+      </Stack>
     </Box>
   );
 }
@@ -237,6 +274,7 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
 
   return lines.length === 0 ? (
     <Stack gap="xs">
+      <Notices />
       <Text size="sm" c="dimmed">
         Your cart is empty.
       </Text>
@@ -255,6 +293,7 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
     </Stack>
   ) : (
     <Stack gap="md">
+      <Notices />
       <Stack gap="sm">
         {lines.map((line) => (
           <CartLineRow

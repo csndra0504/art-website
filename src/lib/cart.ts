@@ -150,28 +150,53 @@ export function serializeCart(cart: Cart): string {
 
 // --- reconciliation ----------------------------------------------------------
 
-export type LineStatus = "ok" | "gone" | "soldOut";
+/** What a line looks like now, per the catalog. */
+export type LineCheck =
+  | { status: "ok"; fresh: Pick<CartLine, "title" | "optionTitle" | "price" | "shippingType"> }
+  | { status: "gone" | "soldOut" }
+  /** Not part of this check (added after it started); left exactly as it is. */
+  | { status: "unchecked" };
+
+export interface CartNotice {
+  title: string;
+  optionTitle: string;
+  change: "soldOut" | "gone" | "price";
+  /** For "price": the new unit price. */
+  price?: number;
+}
 
 export interface ReconcileResult {
   cart: Cart;
-  /** Lines dropped, so the UI can name what it removed rather than silently shrinking. */
-  removed: { line: CartLine; status: Exclude<LineStatus, "ok"> }[];
+  /** What changed, so the UI can say so rather than silently shrinking or repricing. */
+  notices: CartNotice[];
 }
 
-// Takes a resolver rather than fetching anything itself: the source of truth for
-// availability moves to Square in Phase 2, and this shouldn't have to change
-// when it does.
+// Takes a resolver rather than fetching anything itself, which keeps this pure:
+// the provider does the fetching, and this decides what the answer means.
 export function reconcileCart(
   cart: Cart,
-  resolve: (line: CartLine) => LineStatus,
+  resolve: (line: CartLine) => LineCheck,
 ): ReconcileResult {
-  const kept: CartLine[] = [];
-  const removed: ReconcileResult["removed"] = [];
-  for (const line of cart.lines) {
-    const status = resolve(line);
-    if (status === "ok") kept.push(line);
-    else removed.push({ line, status });
-  }
-  if (removed.length === 0) return { cart, removed };
-  return { cart: { ...cart, lines: kept }, removed };
+  const notices: CartNotice[] = [];
+  let changed = false;
+  const lines = cart.lines.flatMap((line) => {
+    const check = resolve(line);
+    if (check.status === "unchecked") return [line];
+    if (check.status !== "ok") {
+      changed = true;
+      notices.push({ title: line.title, optionTitle: line.optionTitle, change: check.status });
+      return [];
+    }
+    const next = { ...line, ...check.fresh };
+    if (next.price !== line.price) {
+      notices.push({ title: next.title, optionTitle: next.optionTitle, change: "price", price: next.price });
+    }
+    const same = (Object.keys(check.fresh) as (keyof typeof check.fresh)[]).every(
+      (k) => next[k] === line[k],
+    );
+    if (same) return [line];
+    changed = true;
+    return [next];
+  });
+  return { cart: changed ? { ...cart, lines } : cart, notices };
 }

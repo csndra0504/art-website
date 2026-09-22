@@ -11,7 +11,7 @@ import { trackViewCart } from "../lib/analytics";
 // empty shell, because the cart lives in the visitor's browser.
 export function CartPage() {
   const navigate = useNavigate();
-  const { lines, total, ready } = useCart();
+  const { lines, total, ready, refresh } = useCart();
 
   // Once per visit, after the stored cart has loaded, so the event carries what
   // the visitor actually sees rather than the empty first render.
@@ -19,6 +19,7 @@ export function CartPage() {
   useEffect(() => {
     if (!ready || tracked.current) return;
     tracked.current = true;
+    refresh();
     trackViewCart(
       lines.map((l) => ({
         item_id: l.slug,
@@ -30,7 +31,7 @@ export function CartPage() {
       total,
       "page"
     );
-  }, [ready, lines, total]);
+  }, [ready, lines, total, refresh]);
 
   return (
     <Container size="xs" py="xl">

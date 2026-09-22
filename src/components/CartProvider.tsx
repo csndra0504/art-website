@@ -7,13 +7,17 @@ import {
   emptyCart,
   itemCount,
   parseCart,
+  reconcileCart,
   removeLine,
   serializeCart,
   setQty,
   subtotal,
   type Cart,
   type CartLine,
+  type CartNotice,
+  type LineCheck,
 } from "../lib/cart";
+import { getCartProducts } from "../lib/queries";
 import { CartContext, type CartContextValue } from "../lib/cartContext";
 import { trackAddToCart, trackRemoveFromCart, type AnalyticsItem } from "../lib/analytics";
 
@@ -112,6 +116,52 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(clearLines);
   }, []);
 
+  // A saved cart can outlive what's in it: a piece sells at a market, a price
+  // changes, a page is retired. Check it against the published catalog so the
+  // cart says so before checkout does. If the check can't run (offline, Sanity
+  // down), the cart is left alone — the checkout server re-checks everything.
+  const [notices, setNotices] = useState<CartNotice[]>([]);
+  const lastCheck = useRef(0);
+  const refresh = useCallback(() => {
+    const ids = latest.current.lines.map(lineId);
+    if (ids.length === 0 || Date.now() - lastCheck.current < 60_000) return;
+    lastCheck.current = Date.now();
+    getCartProducts(ids)
+      .then((products) => {
+        const byId = new Map(products.map((p) => [p._id, p]));
+        const resolve = (line: CartLine): LineCheck => {
+          if (!ids.includes(lineId(line))) return { status: "unchecked" };
+          const p = byId.get(lineId(line));
+          if (!p || p.visible === false || !p.subjectTitle) return { status: "gone" };
+          if (p.soldOut) return { status: "soldOut" };
+          return {
+            status: "ok",
+            fresh: {
+              title: p.subjectTitle,
+              optionTitle: p.title,
+              price: p.price,
+              shippingType: p.shippingType ?? line.shippingType,
+            },
+          };
+        };
+        // Notices from the latest cart; the update itself re-runs against
+        // whatever the cart is by then, so a line added meanwhile survives.
+        const found = reconcileCart(latest.current, resolve).notices;
+        setCart((c) => reconcileCart(c, resolve).cart);
+        if (found.length) setNotices((n) => [...n, ...found]);
+      })
+      .catch(() => {
+        // Let the next open try again.
+        lastCheck.current = 0;
+      });
+  }, []);
+
+  useEffect(() => {
+    if (ready) refresh();
+  }, [ready, refresh]);
+
+  const dismissNotices = useCallback(() => setNotices([]), []);
+
   const value = useMemo<CartContextValue>(
     () => ({
       cart,
@@ -124,8 +174,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLineQty,
       clear,
       replace: setCart,
+      notices,
+      dismissNotices,
+      refresh,
     }),
-    [cart, ready, add, remove, setLineQty, clear],
+    [cart, ready, add, remove, setLineQty, clear, notices, dismissNotices, refresh],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

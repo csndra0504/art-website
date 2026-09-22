@@ -156,10 +156,14 @@ the actual stock.*
 - [x] `src/lib/cartContext.ts` + `src/components/CartProvider.tsx` — context and
       hook split from the provider component (eslint forbids exporting both from
       one module). Mounted in `RootLayout`. SSG-safe. **(CAS-32)**
-- [~] Cart reconciliation on load — `reconcileCart()` exists in `cart.ts` as a
-      pure function taking a status resolver. **Not yet wired**: needs real
-      availability data, which arrives with the Square catalog in Phase 2. Wire
-      it in CAS-34 against Sanity, then repoint at Square.
+- [x] Cart reconciliation — `CartProvider.refresh()` checks the saved cart
+      against published Sanity products once it loads and whenever the cart is
+      opened (at most once a minute). Sold → removed, hidden/deleted/subject
+      unpublished → removed, price and names refreshed; each change is stated at
+      the top of the cart until dismissed. Offline → left alone (checkout
+      re-checks). Against Sanity, not Square: the stock mirror keeps `soldOut`
+      current, and checkout's live Square check is the backstop. Browser-tested
+      with a seeded stale cart (sold original, deleted product, $8 → $10).
 - [x] `src/components/CartDrawer.tsx` — Mantine Drawer in the site's square /
       hairline style. Line items, qty steppers, subtotal, empty state. **(CAS-33)**
       Browser pass done at 375px: subtotal arithmetic correct, Shipping & Returns

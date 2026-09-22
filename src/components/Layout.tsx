@@ -47,12 +47,13 @@ function CartGlyph() {
 export function Layout() {
   const [opened, { toggle, close }] = useDisclosure();
   const [cartOpened, { open: openCart, close: closeCart }] = useDisclosure();
-  const { count, ready, lines, total } = useCart();
+  const { count, ready, lines, total, refresh } = useCart();
 
   // Tracked on the click, not on the drawer's open state: one event per time
   // someone chooses to look, and no effect to keep in sync.
   const showCart = () => {
     openCart();
+    refresh();
     trackViewCart(
       lines.map((l) => ({
         item_id: l.slug,

@@ -7,3 +7,5 @@ studio/.sanity
 .env
 studio/.env
 *.log
+server/node_modules
+server/.env

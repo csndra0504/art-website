@@ -8,3 +8,15 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
+
+  # Checkout API. Reached only through the app's nginx at /api/, so no port is
+  # published. The service name is the hostname nginx.conf resolves, and matches
+  # the container name used in production.
+  cass-art-api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    env_file:
+      - path: server/.env
+        required: false
+    restart: unless-stopped

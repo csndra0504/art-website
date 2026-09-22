@@ -1,7 +1,18 @@
 import { client } from "./sanity";
-import type { Artwork, ArtworkSummary } from "../types/artwork";
+import type { Artwork, ArtworkSummary, ShippingType } from "../types/artwork";
 import type { Event } from "../types/event";
 
+
+// What's for sale comes from the subject's product documents, not from fields on
+// the artwork. The Etsy link stays on the subject: it isn't a product, just the
+// fallback shown when nothing local is for sale (see lib/offers.ts).
+const PRODUCTS_JOIN = `
+  "products": *[_type == "product" && subject._ref == ^._id && visible != false]
+    | order(coalesce(sortOrder, 999) asc) {
+      _id, title, kind, price, soldOut, subtitle, squareUrl, venmoNote, shippingType
+    },
+  printEtsyUrl,
+  printEtsyPrice,`;
 
 const ARTWORK_SUMMARY_PROJECTION = `{
   _id,
@@ -15,13 +26,7 @@ const ARTWORK_SUMMARY_PROJECTION = `{
   forSale,
   sortOrder,
   highlightLabel,
-  originalPrice,
-  originalSold,
-  printEtsyPrice,
-  printLocalPrice,
-  printLocalSold,
-  "hasCustomOption": count(customOptions[visible != false]) > 0,
-  "customPrintFrom": math::min(customOptions[visible != false && kind == "print"].price),
+  ${PRODUCTS_JOIN}
 }`;
 
 const ARTWORK_DETAIL_PROJECTION = `{
@@ -37,14 +42,7 @@ const ARTWORK_DETAIL_PROJECTION = `{
   featured,
   forSale,
   highlightLabel,
-  originalPrice,
-  originalSold,
-  originalSquareUrl,
-  printEtsyUrl,
-  printEtsyPrice,
-  printLocalPrice,
-  printLocalSold,
-  customOptions,
+  ${PRODUCTS_JOIN}
 }`;
 
 export async function getArtworks(): Promise<ArtworkSummary[]> {
@@ -91,5 +89,29 @@ export async function getUpcomingEvents(): Promise<Event[]> {
       date,
       link,
     }`
+  );
+}
+
+export interface CartProductState {
+  _id: string;
+  title: string;
+  price: number;
+  soldOut?: boolean | null;
+  visible?: boolean | null;
+  shippingType?: ShippingType | null;
+  /** Null when the subject is unpublished — the piece's page is gone. */
+  subjectTitle: string | null;
+}
+
+// The products in a visitor's saved cart, as they are now. Published only;
+// a product missing from the result has been deleted.
+export async function getCartProducts(ids: string[]): Promise<CartProductState[]> {
+  return client.fetch(
+    `*[_type == "product" && _id in $ids]{
+      _id, title, price, soldOut, visible, shippingType,
+      "subjectTitle": subject->title
+    }`,
+    { ids },
+    { perspective: "published" }
   );
 }

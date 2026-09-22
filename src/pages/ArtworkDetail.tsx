@@ -23,14 +23,16 @@ import {
   trackRequestPrint,
   trackViewItem,
   type AnalyticsItem,
-  type PaymentType,
 } from "../lib/analytics";
+import { inBundle } from "../lib/discounts";
 import { SeoHead } from "../components/SeoHead";
 import { JsonLd } from "../components/JsonLd";
 import { buildArtworkJsonLd } from "../lib/structuredData";
 import { ShippingReturns } from "../components/ShippingReturns";
 import { Testimonials } from "../components/Testimonials";
-import type { Artwork } from "../types/artwork";
+import { offersFor } from "../lib/offers";
+import { useCart } from "../lib/cartContext";
+import type { Artwork, SubjectProduct } from "../types/artwork";
 
 // Runs at build time for every slug (see getStaticPaths in App.tsx) so each
 // artwork page ships as static HTML with its own content and meta.
@@ -60,83 +62,73 @@ function descriptionExcerpt(
   return text.slice(0, max - 1).trimEnd() + "…";
 }
 
-const VENMO_HANDLE = "cassandrawilcox";
-
-function venmoUrl(amount: number, note: string) {
-  return `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
-}
-
-// One-tap card checkout via a Square link when available, with Venmo as a
-// lower-friction fallback. Card-first lowers the barrier for new visitors who
-// don't already use Venmo.
-function BuyButtons({
-  squareUrl,
-  venmoHref,
-  onCheckout,
+// The cart is the only way to buy locally. It replaced both the per-product
+// Square links and Venmo, which charged the item price with no shipping.
+function CartActions({
+  product: p,
+  artwork,
 }: {
-  squareUrl?: string;
-  venmoHref: string;
-  onCheckout?: (method: PaymentType) => void;
+  product: SubjectProduct;
+  artwork: Artwork;
 }) {
-  if (squareUrl) {
-    return (
-      <Group gap="xs" wrap="wrap" justify="flex-end">
-        <Button
-          component="a"
-          href={squareUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onCheckout?.("card")}
-          variant="filled"
-          color="dark"
-          radius={0}
-          size="sm"
-        >
-          Buy with card
-        </Button>
-        <Button
-          component="a"
-          href={venmoHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onCheckout?.("venmo")}
-          variant="subtle"
-          color="dark"
-          radius={0}
-          size="sm"
-        >
-          or Venmo
-        </Button>
-      </Group>
-    );
-  }
+  const { add, lines, ready } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+  const oneOfAKind = p.kind === "original";
+  const inCart = lines.some((l) => l.productId === p._id);
+
+  useEffect(() => {
+    if (!justAdded) return;
+    const t = setTimeout(() => setJustAdded(false), 2000);
+    return () => clearTimeout(t);
+  }, [justAdded]);
+
+  const handleAdd = () => {
+    const image = artwork.images?.[0];
+    add({
+      productId: p._id,
+      qty: 1,
+      oneOfAKind,
+      slug: artwork.slug.current,
+      title: artwork.title,
+      optionTitle: p.title,
+      price: p.price,
+      shippingType: p.shippingType,
+      image: image
+        ? urlFor(image.asset).width(128).height(128).fit("crop").auto("format").url()
+        : undefined,
+    });
+    setJustAdded(true);
+  };
+
+  // An original can only be in the cart once, so a second add would silently do
+  // nothing; say so instead. Disabled until the stored cart has loaded, or an
+  // early tap would be overwritten when it does.
+  const label = justAdded
+    ? "Added ✓"
+    : oneOfAKind && inCart
+      ? "In cart"
+      : "Add to cart";
+
   return (
     <Button
-      component="a"
-      href={venmoHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => onCheckout?.("venmo")}
+      onClick={handleAdd}
+      disabled={!ready || (oneOfAKind && inCart && !justAdded)}
       variant="filled"
       color="dark"
       radius={0}
       size="sm"
+      aria-live="polite"
     >
-      Buy via Venmo
+      {label}
     </Button>
   );
 }
 
+// One row per product. The Etsy block only appears when nothing local can be
+// bought — Etsy is the fallback for pieces with no print on hand (lib/offers).
 function PurchaseOptions({ artwork }: { artwork: Artwork }) {
-  const hasOriginal = artwork.originalPrice != null;
-  const hasEtsy = !!artwork.printEtsyUrl;
-  const hasLocalPrint = artwork.printLocalPrice != null;
-  const customOptions = (artwork.customOptions ?? []).filter(
-    (opt) => opt.visible !== false
-  );
-
-  if (!hasOriginal && !hasEtsy && !hasLocalPrint && customOptions.length === 0)
-    return null;
+  const o = offersFor(artwork);
+  if (o.products.length === 0 && !o.showEtsy) return null;
 
   const item = (variant: string, price?: number): AnalyticsItem => ({
     item_id: artwork.slug.current,
@@ -147,59 +139,11 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
 
   return (
     <Stack gap="sm">
-      {hasOriginal && (
-        <Box
-          p="md"
-          style={{
-            border: "1px solid #e8e8e0",
-            background: artwork.originalSold ? "#fafaf8" : "#fff",
-          }}
-        >
-          <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-            <div>
-              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                Original
-              </Text>
-              <Group gap="xs" align="center">
-                <Text
-                  fw={600}
-                  size="lg"
-                  td={artwork.originalSold ? "line-through" : undefined}
-                  c={artwork.originalSold ? "dimmed" : undefined}
-                >
-                  ${artwork.originalPrice!.toLocaleString()}
-                </Text>
-                {artwork.originalSold && (
-                  <Badge color="red" variant="filled" size="sm" radius={0}>
-                    Sold
-                  </Badge>
-                )}
-              </Group>
-            </div>
-            {!artwork.originalSold && (
-              <BuyButtons
-                squareUrl={artwork.originalSquareUrl}
-                venmoHref={venmoUrl(
-                  artwork.originalPrice!,
-                  `Original: ${artwork.title}`
-                )}
-                onCheckout={(m) =>
-                  trackBeginCheckout(item("Original", artwork.originalPrice), m)
-                }
-              />
-            )}
-          </Group>
-          {!artwork.originalSold && (
-            <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
-              One-of-a-kind original. Ships nationally, carefully packaged, or
-              arrange local pickup in Pittsburgh. Questions? Email
-              hello@cassandrawilcoxart.com.
-            </Text>
-          )}
-        </Box>
-      )}
+      {o.products.map((p) => (
+        <ProductRow key={p._id} product={p} artwork={artwork} />
+      ))}
 
-      {hasEtsy && (
+      {o.showEtsy && (
         <Box p="md" style={{ border: "1px solid #e8e8e0" }}>
           <Group justify="space-between" align="center" wrap="wrap" gap="xs">
             <div>
@@ -235,116 +179,71 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           </Text>
         </Box>
       )}
-
-      {hasLocalPrint && (
-        <Box
-          p="md"
-          style={{
-            border: "1px solid #e8e8e0",
-            background: artwork.printLocalSold ? "#fafaf8" : "#fff",
-          }}
-        >
-          <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-            <div>
-              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                8×10 Print (Local Pickup)
-              </Text>
-              <Group gap="xs" align="center">
-                <Text
-                  fw={600}
-                  size="lg"
-                  td={artwork.printLocalSold ? "line-through" : undefined}
-                  c={artwork.printLocalSold ? "dimmed" : undefined}
-                >
-                  ${artwork.printLocalPrice!.toLocaleString()}
-                </Text>
-                {artwork.printLocalSold && (
-                  <Badge color="red" variant="filled" size="sm" radius={0}>
-                    Sold
-                  </Badge>
-                )}
-              </Group>
-            </div>
-            {!artwork.printLocalSold && (
-              <Button
-                component="a"
-                href={venmoUrl(
-                  artwork.printLocalPrice!,
-                  `Print: ${artwork.title}`
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackBeginCheckout(
-                    item("Print — Local Pickup", artwork.printLocalPrice),
-                    "venmo"
-                  )
-                }
-                variant="filled"
-                color="dark"
-                radius={0}
-                size="sm"
-              >
-                Buy via Venmo
-              </Button>
-            )}
-          </Group>
-          {!artwork.printLocalSold && (
-            <Text size="xs" c="dimmed" mt="xs">
-              Arrange pickup via email or DM
-            </Text>
-          )}
-        </Box>
-      )}
-
-      {customOptions.map((opt) => (
-        <Box key={opt._key} p="md" style={{ border: "1px solid #e8e8e0" }}>
-          <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-            <div>
-              <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                {opt.title}
-              </Text>
-              <Text fw={600} size="lg">
-                ${opt.price.toLocaleString()}
-              </Text>
-            </div>
-            {opt.etsyUrl ? (
-              <Button
-                component="a"
-                href={opt.etsyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackBeginCheckout(item(opt.title, opt.price), "etsy")
-                }
-                variant="outline"
-                color="dark"
-                radius={0}
-                size="sm"
-              >
-                Order Print
-              </Button>
-            ) : (
-              <BuyButtons
-                squareUrl={opt.squareUrl}
-                venmoHref={venmoUrl(
-                  opt.price,
-                  opt.venmoNote ?? `${opt.title}: ${artwork.title}`
-                )}
-                onCheckout={(m) =>
-                  trackBeginCheckout(item(opt.title, opt.price), m)
-                }
-              />
-            )}
-          </Group>
-          {opt.subtitle && (
-            <Text size="xs" c="dimmed" mt="xs">
-              {opt.subtitle}
-            </Text>
-          )}
-        </Box>
-      ))}
     </Stack>
+  );
+}
+
+function ProductRow({
+  product: p,
+  artwork,
+}: {
+  product: SubjectProduct;
+  artwork: Artwork;
+}) {
+  const sold = !!p.soldOut;
+  return (
+    <Box
+      p="md"
+      style={{
+        border: "1px solid #e8e8e0",
+        background: sold ? "#fafaf8" : "#fff",
+      }}
+    >
+      <Group justify="space-between" align="center" wrap="wrap" gap="xs">
+        <div>
+          <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
+            {p.title}
+          </Text>
+          <Group gap="xs" align="center">
+            <Text
+              fw={600}
+              size="lg"
+              td={sold ? "line-through" : undefined}
+              c={sold ? "dimmed" : undefined}
+            >
+              ${p.price.toLocaleString()}
+            </Text>
+            {sold && (
+              <Badge color="red" variant="filled" size="sm" radius={0}>
+                Sold
+              </Badge>
+            )}
+          </Group>
+        </div>
+        {!sold && (
+          <CartActions product={p} artwork={artwork} />
+        )}
+      </Group>
+      {!sold && p.kind === "original" && (
+        <Text size="xs" c="dimmed" mt="xs" style={{ lineHeight: 1.6 }}>
+          One-of-a-kind original. Ships nationally, carefully packaged, or
+          arrange local pickup in Pittsburgh. Questions? Email
+          hello@cassandrawilcoxart.com.
+        </Text>
+      )}
+      {/* The deal used to be its own "Any 3 postcards" product. Now it's
+          applied in the cart, so each 5x7 has to say so or no one finds it. */}
+      {!sold && inBundle(p.shippingType) && (
+        <Text size="xs" c="dimmed" mt="xs">
+          Mix and match: any 3 5x7 prints for $25.
+        </Text>
+      )}
+      {!sold && p.subtitle && (
+        <Text size="xs" c="dimmed" mt="xs">
+          {p.subtitle}
+        </Text>
+      )}
+    </Box>
   );
 }
 
@@ -354,13 +253,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
 function RequestPrintPrompt({ artwork }: { artwork: Artwork }) {
   const [done, setDone] = useState(false);
 
-  const hasPrint =
-    !!artwork.printEtsyUrl ||
-    artwork.printLocalPrice != null ||
-    (artwork.customOptions ?? []).some(
-      (opt) => opt.visible !== false && opt.kind === "print"
-    );
-  if (hasPrint) return null;
+  if (offersFor(artwork).hasPrint) return null;
 
   const handleRequest = () => {
     trackRequestPrint({
@@ -444,19 +337,15 @@ export function ArtworkDetail() {
   }, [slug]);
 
   // Fire the GA4 view_item once per piece. Headline value = available original,
-  // else cheapest print.
+  // else the cheapest thing that is for sale.
   const viewedSlug = artwork?.slug.current;
   useEffect(() => {
     if (!artwork) return;
-    const prints = [artwork.printEtsyPrice, artwork.printLocalPrice].filter(
-      (n): n is number => n != null
-    );
+    const o = offersFor(artwork);
     const value =
-      artwork.originalPrice != null && !artwork.originalSold
-        ? artwork.originalPrice
-        : prints.length
-          ? Math.min(...prints)
-          : artwork.originalPrice;
+      (!o.originalSold ? o.original?.price : undefined) ??
+      o.fromPrice ??
+      o.original?.price;
     trackViewItem({
       item_id: artwork.slug.current,
       item_name: artwork.title,
@@ -469,17 +358,12 @@ export function ArtworkDetail() {
   // are part of the static HTML.
   const seo = useMemo(() => {
     if (!artwork) return null;
+    const o = offersFor(artwork);
     const priceBits = [
-      artwork.originalPrice != null && !artwork.originalSold
-        ? `Original $${artwork.originalPrice.toLocaleString()}`
+      o.original && !o.originalSold
+        ? `Original $${o.original.price.toLocaleString()}`
         : null,
-      artwork.printEtsyPrice != null || artwork.printLocalPrice != null
-        ? `prints from $${Math.min(
-            ...[artwork.printEtsyPrice, artwork.printLocalPrice].filter(
-              (n): n is number => n != null
-            )
-          ).toLocaleString()}`
-        : null,
+      o.fromPrice != null ? `from $${o.fromPrice.toLocaleString()}` : null,
     ].filter(Boolean);
     const excerpt = descriptionExcerpt(artwork.description);
     const description =

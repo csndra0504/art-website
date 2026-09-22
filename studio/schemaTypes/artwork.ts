@@ -1,15 +1,26 @@
 import { defineField, defineType } from "sanity";
 import { ImageIcon } from "@sanity/icons";
 
+// The subject of the work: images, description, story, SEO. What is actually
+// sold against it lives in `product`.
+//
+// The type name stays `artwork` on purpose. Sanity can't rename a document type
+// in place — every doc would have to be recreated — and the `artwork-…` ids are
+// referenced from the Etsy drafts. So: "Subject" everywhere a human looks,
+// `artwork` everywhere code looks.
+//
+// The purchase fields below are legacy. They are migrated into `product`
+// documents and removed once the site reads entirely from products.
+// See docs/cart-checkout/product-model-migration.md.
 export const artwork = defineType({
   name: "artwork",
-  title: "Artwork",
+  title: "Subject",
   type: "document",
   icon: ImageIcon,
   fieldsets: [
     {
       name: "purchase",
-      title: "Purchase Options",
+      title: "Purchase Options (legacy — moving to Products)",
       options: { collapsible: true, collapsed: false },
     },
   ],

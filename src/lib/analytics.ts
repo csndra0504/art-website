@@ -1,9 +1,10 @@
 // Thin wrapper around GA4 (gtag.js). Every call safely no-ops when gtag isn't
 // available (e.g. ad blockers, local dev, SSR) so callers never need to guard.
 //
-// Note on this site's funnel: checkout completes off-domain (Square, Venmo,
-// Etsy), so GA cannot observe a real `purchase`. We treat the click on a buy
-// button as the conversion via `begin_checkout`; true revenue lives in Square.
+// Note on this site's funnel: cart orders return to /checkout/success after
+// paying on Square, so they fire a real `purchase` with the order value. Etsy
+// still completes off-domain with no return trip, so for it the click on the
+// buy button (`begin_checkout`) is the conversion we can see.
 import posthog from "posthog-js";
 
 export interface AnalyticsItem {
@@ -16,7 +17,7 @@ export interface AnalyticsItem {
   quantity?: number;
 }
 
-export type PaymentType = "card" | "venmo" | "etsy";
+export type PaymentType = "card" | "etsy" | "square";
 
 function send(event: string, params: Record<string, unknown> = {}) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
@@ -109,5 +110,102 @@ export function trackRequestPrint(item: AnalyticsItem) {
   posthog.capture("print_requested", {
     item_id: item.item_id,
     item_name: item.item_name,
+  });
+}
+
+/** Checkout started from the cart — the whole cart, not one item. */
+export function trackCartCheckout(
+  items: AnalyticsItem[],
+  value: number,
+  fulfillment: "ship" | "pickup"
+) {
+  send("begin_checkout", {
+    currency: "USD",
+    value,
+    payment_type: "square",
+    items: items.map(withDefaults),
+  });
+  posthog.capture("checkout_started", {
+    value,
+    payment_method: "square",
+    fulfillment,
+    item_count: items.reduce((n, i) => n + (i.quantity ?? 1), 0),
+  });
+}
+
+/**
+ * A paid cart order. The caller guarantees this fires once per order: the
+ * success page can be refreshed or revisited, and each visit must not count
+ * the revenue again.
+ */
+export function trackPurchase(order: {
+  transactionId: string;
+  value: number;
+  shipping: number;
+  tax: number;
+  fulfillment: "ship" | "pickup";
+  items: AnalyticsItem[];
+}) {
+  send("purchase", {
+    transaction_id: order.transactionId,
+    currency: "USD",
+    value: order.value,
+    shipping: order.shipping,
+    tax: order.tax,
+    items: order.items.map(withDefaults),
+  });
+  posthog.capture("order_completed", {
+    order_id: order.transactionId,
+    value: order.value,
+    shipping: order.shipping,
+    fulfillment: order.fulfillment,
+    item_count: order.items.reduce((n, i) => n + (i.quantity ?? 1), 0),
+  });
+}
+
+// --- Cart ------------------------------------------------------------------
+// GA4's standard ecommerce events, so its funnel report works unmodified, and
+// PostHog names in the site's existing past-tense style.
+
+/** `line` is what changed: the item, and how many were added or removed. */
+export function trackAddToCart(line: AnalyticsItem) {
+  const item = withDefaults(line);
+  send("add_to_cart", {
+    currency: "USD",
+    value: (item.price ?? 0) * (item.quantity ?? 1),
+    items: [item],
+  });
+  posthog.capture("cart_item_added", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_variant: item.item_variant,
+    price: item.price,
+    quantity: item.quantity,
+  });
+}
+
+export function trackRemoveFromCart(line: AnalyticsItem) {
+  const item = withDefaults(line);
+  send("remove_from_cart", {
+    currency: "USD",
+    value: (item.price ?? 0) * (item.quantity ?? 1),
+    items: [item],
+  });
+  posthog.capture("cart_item_removed", {
+    item_id: item.item_id,
+    item_name: item.item_name,
+    item_variant: item.item_variant,
+    price: item.price,
+    quantity: item.quantity,
+  });
+}
+
+/** `where`: the drawer or the /cart page, to see whether the fallback gets used. */
+export function trackViewCart(items: AnalyticsItem[], value: number, where: "drawer" | "page") {
+  send("view_cart", { currency: "USD", value, items: items.map(withDefaults) });
+  posthog.capture("cart_viewed", {
+    value,
+    where,
+    item_count: items.reduce((n, i) => n + (i.quantity ?? 1), 0),
   });
 }

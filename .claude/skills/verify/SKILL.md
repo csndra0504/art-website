@@ -19,6 +19,17 @@ npm run lint           # eslint
 npm run build          # tsc + vite-react-ssg prerender + sitemap
 ```
 
+If the change touches `server/`, also run `npm run typecheck:api` — the root
+typecheck doesn't cover it. If it touches `nginx.conf`, the only real test is the
+containers (`docker compose up --build`): check the site serves, `/api/health`
+answers through nginx, and — with the API container stopped — the site still
+serves and only `/api/*` fails.
+
+If the change touches shipping rules or rates (`src/lib/shipping.ts`) or the
+3-for-$25 deal (`src/lib/discounts.ts`), also run `npm run check:shipping` — it
+exercises every branch of the money logic the site owns, and there is no other
+test for it.
+
 The build is not redundant with the typecheck: `vite-react-ssg` renders every
 route to static HTML, so it catches code that touches `window`, `localStorage`,
 or `document` at module scope or during render. That class of bug **only** shows

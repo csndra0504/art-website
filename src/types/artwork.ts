@@ -18,19 +18,94 @@ export interface ArtworkSummary {
   featured?: boolean;
   forSale?: boolean;
   highlightLabel?: string;
-  // Pricing carried on the summary so cards can show "from $X" without a fetch.
-  originalPrice?: number;
-  originalSold?: boolean;
+  // Visible products, joined in so cards can show prices without a fetch.
+  // Interpret them through lib/offers.ts rather than reading them directly.
+  products?: SubjectProduct[] | null;
+  // The Etsy link stays on the subject: a fallback, not a product.
+  printEtsyUrl?: string;
   printEtsyPrice?: number;
-  printLocalPrice?: number;
-  printLocalSold?: boolean;
-  // True when the piece has at least one visible custom purchase option, so the
-  // gallery's "For Sale" filter counts options-only pieces (e.g. postcards).
-  hasCustomOption?: boolean;
-  // Cheapest visible custom option of kind "print", so the card's "Prints from"
-  // line reflects print-type custom options (e.g. postcards).
-  customPrintFrom?: number;
 }
+
+// --- products ---------------------------------------------------------------
+// A product is one sellable thing, referencing an artwork ("Subject") for its
+// images and story. One subject can back several products — three separate
+// originals of the same scene, say — which the legacy fields below cannot
+// represent. Maps 1:1 to a Square catalog variation.
+// See docs/cart-checkout/product-model-migration.md.
+
+/**
+ * What a product physically is. Only "print" and "postcard" suppress the
+ * "want this as a print?" prompt; anything added here defaults to not
+ * suppressing it, so a new format can't silently kill the demand signal.
+ *
+ * The gallery card shows the cheapest visible non-original product as
+ * "From $X" regardless of format — there is deliberately no per-format
+ * pricing rule to keep in sync.
+ */
+export type ProductKind =
+  | "original"
+  | "print"
+  | "postcard"
+  | "magnet"
+  | "sticker"
+  | "other";
+
+export type ProductChannel = "local" | "etsy";
+
+/** Framed bands by packed weight (≤20 oz / >20 oz), not by frame contents. */
+export type ShippingType =
+  | "magnet"
+  | "postcard"
+  | "print"
+  | "original"
+  | "framedSmall"
+  | "framedLarge";
+
+export interface Product {
+  _id: string;
+  title: string;
+  kind: ProductKind;
+  price: number;
+  quantity?: number;
+  /** Mirrored from Square by webhook — never hand-edited. */
+  soldOut?: boolean;
+  channel: ProductChannel;
+  /** Set when channel is "etsy". Those products link out and never enter the cart. */
+  etsyUrl?: string;
+  subtitle?: string;
+  visible?: boolean;
+  sortOrder?: number;
+  shippingType?: ShippingType;
+  shipWeightOz?: number;
+  shipLengthIn?: number;
+  shipWidthIn?: number;
+  shipHeightIn?: number;
+  /** Without this the product can't be sold — Square only tracks stock for catalog line items. */
+  squareVariationId?: string;
+  /** Legacy one-off checkout link, retired once the cart is live. */
+  squareUrl?: string;
+  venmoNote?: string;
+}
+
+/** The product fields the site reads, joined onto each subject by the queries. */
+export type SubjectProduct = Pick<
+  Product,
+  "_id" | "title" | "kind" | "price" | "soldOut" | "subtitle" | "squareUrl" | "venmoNote" | "shippingType"
+>;
+
+/** A product joined with the subject fields the cart and detail page need. */
+export interface ProductWithSubject extends Product {
+  subject: {
+    _id: string;
+    title: string;
+    slug: { current: string };
+    images?: ArtworkImage[];
+  };
+}
+
+// --- legacy purchase model --------------------------------------------------
+// Everything below is superseded by Product and removed once the read path is
+// proven. Do not build anything new on it.
 
 export type CustomPurchaseKind = "original" | "print";
 

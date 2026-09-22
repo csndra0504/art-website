@@ -50,13 +50,70 @@ jobs:
           script: |
             echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            # Shared with the checkout API so nginx can reach it at /api/.
+            # Idempotent; the API needn't exist yet — nginx resolves it per
+            # request, so the site starts and serves either way.
+            docker network create cass-art-net 2>/dev/null || true
             docker stop cass-art || true
             docker rm cass-art || true
             docker run -d \
               --name cass-art \
+              --network cass-art-net \
               --restart unless-stopped \
               -p 8080:8080 \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker image prune -f
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    # Code changes only. Every Sanity publish redeploys the static site, and that
+    # must not restart the checkout server under a customer mid-checkout.
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          # Root context: the API shares src/lib/shipping.ts with the site.
+          context: .
+          file: server/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
+
+      - name: Deploy API to droplet
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker network create cass-art-net 2>/dev/null || true
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
+            docker stop cass-art-api || true
+            docker rm cass-art-api || true
+            # Secrets (Square, Sanity write token) live in an env file on the
+            # droplet, never in the image or this workflow. Optional until the
+            # checkout routes need them.
+            API_ENV=/opt/cass-art/api.env
+            docker run -d \
+              --name cass-art-api \
+              --network cass-art-net \
+              --restart unless-stopped \
+              $( [ -f "$API_ENV" ] && echo --env-file "$API_ENV" ) \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api:latest
             docker image prune -f
 
   deploy-studio:

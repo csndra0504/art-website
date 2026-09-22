@@ -305,8 +305,16 @@ the actual stock.*
 
 ## Phase 3 — Webhooks & fulfillment
 
-- [ ] `POST /api/square/webhook` — raw body, signature verify, ignore unknown events.
-- [ ] Idempotency: record processed event ids; a replay is a no-op.
+- [x] `POST /api/square/webhook` — raw body, signature verify, ignore unknown events
+      **(CAS-43)**. `server/src/webhook.ts`; handlers register by event type
+      (`onEvent`), and only `inventory.count.updated` is needed. Unconfigured →
+      503 so Square retries; bad signature → 403; handler failure → 500 so
+      Square retries. Tested locally with signed requests (9 cases). **Not yet
+      tested against a real Square delivery** — that needs a public URL, so it
+      happens at deploy.
+- [x] Idempotency: a replay is a no-op. Done by making handlers *set* state from
+      Square's current count rather than toggle it, plus an in-memory
+      recent-event guard. No event store: nothing here is harmful to repeat.
 - [ ] Mirror Square stock → Sanity `soldOut`, so the static site keeps its current
       data flow.
 - [x] ~~Order notification email to Cassandra (items, buyer, address).~~
@@ -339,7 +347,12 @@ the actual stock.*
       despite the new copy. Resolved by removing Venmo (CAS-47).
 - [ ] Production API env file on the droplet, `/opt/cass-art/api.env`:
       `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
-      `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`.
+      `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`,
+      `SQUARE_WEBHOOK_SIGNATURE_KEY` (and `SANITY_WRITE_TOKEN` for CAS-44).
+- [ ] Square Developer Dashboard → Webhooks → add a subscription: URL
+      `https://cassandrawilcoxart.com/api/square/webhook`, event
+      `inventory.count.updated`. Copy its signature key into the env file, then
+      use "Send test event" to confirm a real delivery gets 200.
       Without it checkout answers "unavailable" (by design, not a crash).
       Not before this point: the free-shipping promise is true until checkout is live.
 - [ ] Retire Notion for product/inventory tracking.
@@ -540,3 +553,9 @@ future session reads to avoid re-deriving context.)*
 - 2026-09-21 — Checked the real Square account for a 3-for-$25 pricing rule to
   reuse: there isn't one (only WELCOME10). At markets the deal is applied by
   hand; the website's rule lives in our code, like shipping.
+- 2026-09-21 — **Webhook idempotency without a database.** CAS-43 asked to record
+  processed event ids. The API has no storage, and the only handler (the stock
+  mirror) writes Sanity's `soldOut` from Square's *current* count, so running it
+  twice gives the same result. An in-memory set skips obvious repeats, and losing
+  it on restart is harmless. If a handler ever does something that isn't safe to
+  repeat (an email, say), that's when it needs a real event store.

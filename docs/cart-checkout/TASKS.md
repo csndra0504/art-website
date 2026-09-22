@@ -661,4 +661,14 @@ future session reads to avoid re-deriving context.)*
   URL, and the success page relies on the id the browser stored before leaving.
   That's the same browser session, so it holds up in practice; a buyer opening
   the payment link fresh later sees "we couldn't confirm a payment yet".
+- 2026-09-22 — **First real order, paid by card, verified end to end.**
+  `0O4CaCJymAvKMMWR3fMUc1z3EDHZY`: $10 print + $3 flat-rate shipping + $0.70 PA
+  tax = **$13.70**, VISA captured, shipping address captured in full. Stock went
+  10 → 9 on payment, the webhook reached the mirror, and PostHog recorded
+  `order_completed` with value 13.7 / shipping 3 / fulfillment ship — which also
+  proves the success page confirmed the payment without the order id in the URL.
+  **Settled: Square taxes the items only, not shipping** ($0.70 on $10, with $3
+  shipping untaxed), whatever the charge's `taxable` flag says. Worth telling the
+  accountant, since PA generally treats delivery on taxable goods as taxable.
+  Still untested: whether a refund returns the stock.
 

@@ -23,8 +23,10 @@ Spec: [PRD.md](PRD.md) · Plan: [product-model-migration.md](product-model-migra
 > 2. **Real stock counts for the ten new 8x10 prints** — all sitting at 100.
 > 3. **CAS-30 shipping rates** are estimates charged to real customers.
 > 4. **Watch the first three orders** before changing anything.
-> 5. CAS-61's second half: the catch-all "5x7 in Prints" products are hidden,
->    but the subject page can't be unpublished while they reference it.
+> 5. ~~CAS-61: retire the catch-all page.~~ Done 2026-09-22 — unpublished with
+>    `studio/scripts/unpublish-subject.mjs`; the page now reads "Artwork not
+>    found" and is out of the gallery and sitemap. Drafts of all three documents
+>    remain in the Studio.
 >
 > **By hand in the Studio, when convenient:**
 > - Cathedral of Learning **5x7** subject + Etsy drafts #37 and #38 as two
@@ -671,4 +673,7 @@ future session reads to avoid re-deriving context.)*
   shipping untaxed), whatever the charge's `taxable` flag says. Worth telling the
   accountant, since PA generally treats delivery on taxable goods as taxable.
   Still untested: whether a refund returns the stock.
+- 2026-09-22 — **Unknown artwork URLs answer 200, not 404.** nginx falls back to
+  the app shell, which renders "Artwork not found". Fine for a person, a soft 404
+  for search engines — worth fixing if retired pages become common.
 

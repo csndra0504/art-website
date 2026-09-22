@@ -215,9 +215,18 @@ the actual stock.*
       checkout API reads in sandbox mode. **Sandbox ids never go into Sanity** —
       one dataset, and it's live. Verified: idempotent re-run creates nothing;
       stock read back from Square matches. Hardcoded sandbox URL, no override.
-- [ ] **`studio/scripts/seed-square-catalog.mjs`** — seed the Square catalog from
-      Sanity and link the two. Blocked on the schema task above and the Phase 0
-      spike. Design already worked out, don't re-derive:
+- [~] **`studio/scripts/seed-square-catalog.mjs`** — seed the Square catalog from
+      Sanity and link the two. **Dry run done 2026-09-22** (read-only, via the
+      Square connector; no production token on this machine):
+      [square-mapping.md](square-mapping.md) for review,
+      `square-mapping.json` for the apply step. 36 of 64 products match items
+      Cassandra already built by hand — including the twelve designs held as
+      variations of one "Single Post Card - 5x7 in" item — and every price
+      already agrees. 15 products (ten of them 8x10 prints) have no Square item
+      and can't be sold online until they do; 12 unmatched originals are sold,
+      so they don't matter. **Awaiting her review**, then: write the ids into
+      Sanity, and decide whether the script creates the missing 15. Design
+      already worked out, don't re-derive:
       - **Idempotent, matched by SKU.** Some items are already in Square. Stable
         SKU scheme: `CW-{slug}-{option-title}`, slugified, uppercased, capped at
         60 chars. Re-running must never duplicate.

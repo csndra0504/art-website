@@ -9,7 +9,7 @@ import type { Event } from "../types/event";
 const PRODUCTS_JOIN = `
   "products": *[_type == "product" && subject._ref == ^._id && visible != false]
     | order(coalesce(sortOrder, 999) asc) {
-      _id, title, kind, price, soldOut, subtitle, squareUrl, venmoNote, shippingType
+      _id, title, kind, price, soldOut, subtitle, shippingType
     },
   printEtsyUrl,
   printEtsyPrice,`;

@@ -388,15 +388,17 @@ the actual stock.*
       the webhook, and the mirror logged "would mark 16th St Bridge — Original
       SOLD OUT"; back to 1 → "already available". Market-only items and other
       locations are skipped.
-- [ ] **Verify the headline path (production half), at go-live:** the Sanity
-      write and the lookup by real `squareVariationId` only run in production.
-      Once CAS-37 has linked the catalog, change a spare item's count in the
-      Square dashboard and watch `soldOut` flip in the Studio, then put it back.
+- [x] **Verify the headline path (production half) — done 2026-09-22, live.**
+      Set "Print, 5x7, Bananas" to 0 in Square → webhook delivered, signature
+      verified, log "marked Bananas — 5x7 Print SOLD OUT", `soldOut: true` in
+      Sanity. Back to 100 → "available again", `soldOut: false`. No manual step
+      anywhere. **This is the outcome the whole project was for.**
 
 ## Phase 4 — Go live
 
-- [ ] Production Square credentials in droplet env + GitHub secrets. Confirm no
-      token in the bundle.
+- [x] Production Square credentials in the droplet env file (not GitHub secrets
+      — the API reads them at container start, so the workflow never sees them).
+      No token in the bundle: the site build only gets `VITE_*` values.
 - [ ] **Replace the estimated shipping rates with measured ones.** The Phase 0
       figures were estimates, never label-verified (PRD §9). Price three parcels
       — 7 oz framed at 9×7×1.5, 40 oz framed at 16×13×2, one weighed print in its
@@ -411,23 +413,25 @@ the actual stock.*
       **(CAS-45)**. The only free-shipping claim in code; none in Sanity content.
       Venmo links charged the item price alone, so Venmo buyers shipped free
       despite the new copy. Resolved by removing Venmo (CAS-47).
-- [ ] Production API env file on the droplet, `/opt/cass-art/api.env`:
-      `SQUARE_ENVIRONMENT=production`, `SQUARE_ACCESS_TOKEN`,
-      `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SITE_URL`,
-      `SQUARE_WEBHOOK_SIGNATURE_KEY` (and `SANITY_WRITE_TOKEN` for CAS-44).
-- [ ] Sanity write token for the stock mirror: sanity.io/manage → project →
+- [x] Production API env file on the droplet, `/opt/cass-art/api.env` (written
+      2026-09-22, `chmod 600`): `SQUARE_ENVIRONMENT=production`,
+      `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`, `SANITY_PROJECT_ID`,
+      `SANITY_DATASET`, `SITE_URL`, `SQUARE_WEBHOOK_SIGNATURE_KEY`,
+      `SANITY_API_TOKEN`. **`docker restart` does not re-read `--env-file`** —
+      the container must be recreated (`stop` + `rm` + `run`), which cost ten
+      confused minutes here.
+- [x] Sanity write token for the stock mirror: sanity.io/manage → project →
       API → Tokens → Add API token, name "cass-art-api stock mirror",
       permission **Editor**. Goes in `api.env` as `SANITY_WRITE_TOKEN` (or
       `SANITY_API_TOKEN` — the server takes either, matching her other
       projects' naming). Verified 2026-09-22 against project p96btff4: reads,
       and a dry-run mutation is permitted. Never in
       the repo or the site build.
-- [ ] Square Developer Dashboard → Webhooks → add a subscription: URL
-      `https://cassandrawilcoxart.com/api/square/webhook`, event
-      `inventory.count.updated`. Copy its signature key into the env file, then
-      use "Send test event" to confirm a real delivery gets 200.
-      Without it checkout answers "unavailable" (by design, not a crash).
-      Not before this point: the free-shipping promise is true until checkout is live.
+- [x] Square Developer Dashboard → Webhooks → subscription for
+      `inventory.count.updated` at
+      `https://cassandrawilcoxart.com/api/square/webhook`. Cassandra created it;
+      confirmed working by a real delivery (see the headline-path check above),
+      which beats "Send test event".
 - [ ] Retire Notion for product/inventory tracking.
 - [x] Decide Venmo's fate (PRD §17) **(CAS-47)** — removed from product pages,
       and the cart's error fallback now points to email.
@@ -637,3 +641,11 @@ future session reads to avoid re-deriving context.)*
   mark the real piece sold on the real site. Sandbox mode logs the change it
   would make instead. A separate test dataset was the alternative; not worth the
   setup while the log shows the whole chain working.
+- 2026-09-22 — **Live.** Branch merged, deployed, `api.env` written, and the
+  whole chain verified in production: a $10 pickup order priced $10 + $0.70 PA
+  tax, and a stock change in Square flipped `soldOut` on the website with no
+  manual step. Two traps on the way: a pasted credential kept its `<` from the
+  template (Square answers a bare `UNAUTHORIZED`, which reads like a permissions
+  problem rather than a stray character), and **`docker restart` keeps the old
+  environment** — an env-file change needs the container recreated.
+

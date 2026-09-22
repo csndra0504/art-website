@@ -2,8 +2,8 @@
 
 Dry run read 2026-09-22 from the live catalog (location `LX5Q5JNT4SBBF`) and the
 published Sanity products. **The catalog work was applied the same day**, after
-Cassandra approved it. The links themselves are not written into Sanity yet —
-that needs the write token, at go-live. Machine-readable list:
+Cassandra approved it, and the links were written into Sanity by
+`studio/scripts/link-square-catalog.mjs`. Machine-readable list:
 [square-mapping.json](square-mapping.json).
 
 **51 of the site's 64 sellable products now have a Square item.** Every price

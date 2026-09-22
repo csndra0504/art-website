@@ -229,8 +229,12 @@ the actual stock.*
       per-design `Print, 5x7, <design>` items with counts carried over and the
       old item archived, and the 15 missing items were created (prints stock
       100 as placeholders, originals 1). 51 of 64 products now have a Square
-      item. **Still to do:** write the ids into Sanity (needs the write token,
-      at go-live), then the same script keeps them in step. Design
+      item. **Ids written into Sanity 2026-09-22** by
+      `studio/scripts/link-square-catalog.mjs` (dry run by default, `--apply` to
+      write, patches drafts too, refuses to overwrite a different id without
+      `--force`). 51 products linked; the 13 without one are the 12 sold-out
+      originals and the catch-all retiring in CAS-61. The field is inert until
+      checkout goes live — only the API reads it. Design
       already worked out, don't re-derive:
       - **Idempotent, matched by SKU.** Some items are already in Square. Stable
         SKU scheme: `CW-{slug}-{option-title}`, slugified, uppercased, capped at

@@ -417,7 +417,10 @@ the actual stock.*
       `SQUARE_WEBHOOK_SIGNATURE_KEY` (and `SANITY_WRITE_TOKEN` for CAS-44).
 - [ ] Sanity write token for the stock mirror: sanity.io/manage → project →
       API → Tokens → Add API token, name "cass-art-api stock mirror",
-      permission **Editor**. Goes in `api.env` as `SANITY_WRITE_TOKEN`, never in
+      permission **Editor**. Goes in `api.env` as `SANITY_WRITE_TOKEN` (or
+      `SANITY_API_TOKEN` — the server takes either, matching her other
+      projects' naming). Verified 2026-09-22 against project p96btff4: reads,
+      and a dry-run mutation is permitted. Never in
       the repo or the site build.
 - [ ] Square Developer Dashboard → Webhooks → add a subscription: URL
       `https://cassandrawilcoxart.com/api/square/webhook`, event

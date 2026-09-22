@@ -1,4 +1,10 @@
-import { checkoutConfig, sandboxProductIdFor, SQUARE_ENV, type CheckoutConfig } from "./config.ts";
+import {
+  checkoutConfig,
+  sandboxProductIdFor,
+  sanityWriteToken,
+  SQUARE_ENV,
+  type CheckoutConfig,
+} from "./config.ts";
 import { square } from "./clients.ts";
 import type { SquareEvent } from "./webhook.ts";
 
@@ -99,7 +105,7 @@ async function findProduct(cfg: CheckoutConfig, variationId: string): Promise<Pr
   url.searchParams.set("$variationId", JSON.stringify(sandboxId ? "" : variationId));
   // Drafts are only visible with a token; without one hasDraft reads false,
   // which is fine in the sandbox where nothing is written.
-  const token = process.env.SANITY_WRITE_TOKEN;
+  const token = sanityWriteToken();
   const res = await fetch(url, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
   if (!res.ok) throw new Error(`Sanity query → ${res.status}`);
   const { result } = (await res.json()) as { result: ProductState | null };
@@ -107,8 +113,8 @@ async function findProduct(cfg: CheckoutConfig, variationId: string): Promise<Pr
 }
 
 async function setSoldOut(cfg: CheckoutConfig, product: ProductState, soldOut: boolean) {
-  const token = process.env.SANITY_WRITE_TOKEN;
-  if (!token) throw new Error("SANITY_WRITE_TOKEN missing; can't mirror stock");
+  const token = sanityWriteToken();
+  if (!token) throw new Error("SANITY_WRITE_TOKEN / SANITY_API_TOKEN missing; can't mirror stock");
 
   // An open draft gets the same value. Otherwise publishing it later would
   // quietly put back the old soldOut and un-sell a piece that's gone.

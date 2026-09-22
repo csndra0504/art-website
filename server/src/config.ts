@@ -47,6 +47,14 @@ export function sandboxProductIdFor(variationId: string): string | undefined {
   return entry?.[0];
 }
 
+// The stock mirror's Sanity credentials. Two names accepted: SANITY_WRITE_TOKEN
+// says what it's for, SANITY_API_TOKEN is what Cassandra's other projects call
+// it, and having the env file rejected over a name is a silly way to lose a
+// sale's worth of accuracy.
+export function sanityWriteToken(): string | undefined {
+  return process.env.SANITY_WRITE_TOKEN ?? process.env.SANITY_API_TOKEN;
+}
+
 export interface CheckoutConfig {
   token: string;
   locationId: string;

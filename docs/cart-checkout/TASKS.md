@@ -312,8 +312,10 @@ the actual stock.*
 - [x] ~~`cancel_url` → `/cart` with the cart intact.~~ Square payment links have
       no cancel URL; the buyer uses Back. The cart is only cleared on the
       success page (CAS-42), so it's intact when they return.
-- [ ] **Verify:** sandbox purchase of two different items, and a 3-postcard order
-      charged one postcard shipping rate.
+- [x] **Verify:** sandbox purchase of two different items, and a 3-postcard order
+      charged one postcard shipping rate. Paid 2026-09-22: three 5x7s (two
+      designs) = $30 − $5 deal + one $3 postcard rate = **$28**, exactly as the
+      cart showed. Earlier: 3 5x7s + an 8x10 = $60 (one $5 print-band rate).
 
 ## Phase 3 — Webhooks & fulfillment
 

@@ -7,21 +7,24 @@ Spec: [PRD.md](PRD.md) · Plan: [product-model-migration.md](product-model-migra
 · Linear: [CAS-19](https://linear.app/cassandra-wilcox-art/issue/CAS-19/add-a-cart-and-square-checkout-to-the-website)
 · Due 2026-11-20
 
-**Status:** Phase 0 ✅ · Phase 0.5 ✅ (bar CAS-53 cleanup) · Phase 1 ✅ through
-CAS-34 · **Last touched:** 2026-09-21 · **Platform: Square** (see PRD §5)
+**Status:** Phases 0–3 ✅ · **LIVE since 2026-09-22** · **Platform: Square**
+(see PRD §5)
 
 > ### 👉 Where things stand
 >
-> **In Sanity (live data):** titles normalised, De Fer copy fixed, **65 products**
-> migrated with shipping bands (framed band 20 oz — PRD §9).
+> **The cart is live.** `cart-phase-1` merged to `main` and deployed 2026-09-22.
+> Buyers add to cart, pay by card on Square's hosted page ($10 print → $10 +
+> $0.70 PA tax, verified on production), and a stock change in Square flips
+> `soldOut` on the website by itself — market and web sell from one count.
 >
-> **On branch `cart-phase-1` (not merged — the live site is unchanged):** the
-> site reads products (CAS-55), and customers can add to cart (CAS-34).
->
-> **Merge gate — decided 2026-09-21: hold.** `cart-phase-1` is not merged until
-> checkout works end to end (CAS-41/42 at minimum). No feature flag. Until then
-> the live site keeps its current purchase paths. Merge `main` into the branch
-> periodically so it doesn't drift.
+> **Still open, in rough priority:**
+> 1. **One real low-value purchase**, paid by card, reconciled against Square.
+>    Nobody has paid through this yet; check whether tax lands on shipping too.
+> 2. **Real stock counts for the ten new 8x10 prints** — all sitting at 100.
+> 3. **CAS-30 shipping rates** are estimates charged to real customers.
+> 4. **Watch the first three orders** before changing anything.
+> 5. CAS-61's second half: the catch-all "5x7 in Prints" products are hidden,
+>    but the subject page can't be unpublished while they reference it.
 >
 > **By hand in the Studio, when convenient:**
 > - Cathedral of Learning **5x7** subject + Etsy drafts #37 and #38 as two

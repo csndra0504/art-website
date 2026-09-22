@@ -7,7 +7,28 @@
       "mcp__claude_ai_Square__get_workflow_info",
       "mcp__claude_ai_Square__get_service_info",
       "mcp__claude_ai_Square__make_api_request",
-      "mcp__claude_ai_Square__get_type_info"
+      "mcp__claude_ai_Square__get_type_info",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__resize_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "Read(//var/folders/54/9_568wb91pb75p7pf2rf1xyr0000gn/T/chrome-devtools-mcp-7SYOff/**)",
+      "Read(//private/var/folders/54/9_568wb91pb75p7pf2rf1xyr0000gn/T/chrome-devtools-mcp-7SYOff/**)",
+      "mcp__linear-server__save_issue",
+      "Bash(npx --prefix studio tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git commit:*)",
+      "Bash(git mv:*)",
+      "mcp__linear-server__list_issues",
+      "mcp__linear-server__get_issue",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__linear-server__save_comment",
+      "Bash(python3 -)"
+    ],
+    "additionalDirectories": [
+      "/Users/cassandrawilcox/Development/artbizhq/projects/etsy/drafts"
     ]
   },
   "enableAllProjectMcpServers": true,

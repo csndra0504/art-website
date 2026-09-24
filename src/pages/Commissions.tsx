@@ -18,7 +18,7 @@ const COMMISSIONS: CommissionExample[] = [
 		width: 1400,
 		height: 1000,
 		alt: 'Hand-drawn ink and colored pen illustration of the red brick storefront of the William Penn Tavern in Lawrenceville',
-		caption: 'William Penn Tavern. A gift from one sister to another. Their old stopping grounds.',
+		caption: 'William Penn Tavern. A gift from one sister to another. Their old stomping grounds.',
 	},
 	{
 		src: '/images/commissions/nanas-hotdog-shop.jpg',

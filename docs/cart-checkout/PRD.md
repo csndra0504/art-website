@@ -216,7 +216,7 @@ items being in scope and would have eaten the second framed original's shipping.
 
 | Type | Class | Packaging | Real weight | Charge |
 |---|---|---|---|---|
-| `magnet` | flat | letter / small mailer | ~1 oz | **$2** |
+| `magnet` | flat | rigid mailer (2×3 in, heavier than a postcard) | — | **$5** |
 | `postcard` | flat | rigid mailer | 2–4 oz | **$3** |
 | `print` | flat | rigid flat mailer | *no data* | **$5** |
 | `original` | flat | rigid flat or tube | 8–12 oz | **$10** |

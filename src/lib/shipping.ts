@@ -13,7 +13,7 @@ import type { ShippingType } from "../types/artwork.ts";
  * and it gates go-live. In cents, because money in floats drifts.
  */
 export const SHIPPING_RATES_CENTS: Record<ShippingType, number> = {
-  magnet: 200,
+  magnet: 500,
   postcard: 300,
   print: 500,
   original: 1000,

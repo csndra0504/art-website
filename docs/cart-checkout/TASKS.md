@@ -677,3 +677,8 @@ future session reads to avoid re-deriving context.)*
   the app shell, which renders "Artwork not found". Fine for a person, a soft 404
   for search engines — worth fixing if retired pages become common.
 
+- 2026-10-08 — **15 magnets added** (Square items named "Magnet, …", $8, 2x3 in) as
+  `kind: magnet` products via `studio/scripts/add-magnets.mjs`, stock left to
+  Square. **Magnet shipping raised $2 → $5** (weight); a magnet with a print was
+  already $5, so only magnet-only orders change. The 3-for-$20 magnet deal is
+  deliberately market-only — the site has no discount for it and charges $8 each.

@@ -148,7 +148,7 @@ function PurchaseOptions({ artwork }: { artwork: Artwork }) {
           <Group justify="space-between" align="center" wrap="wrap" gap="xs">
             <div>
               <Text size="xs" tt="uppercase" fw={600} c="dimmed" mb={2}>
-                8×10 Print
+                Prints
               </Text>
               {artwork.printEtsyPrice != null ? (
                 <Text fw={600} size="lg">

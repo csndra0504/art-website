@@ -59,26 +59,26 @@ export function Events() {
 
   const eventsJsonLd = useMemo(() => buildEventsJsonLd(events), [events]);
 
-  const filtered = useMemo(() => {
-    if (filter === "upcoming") {
-      return events
+  // Soonest first for upcoming, most recent first for past.
+  const upcoming = useMemo(
+    () =>
+      events
         .filter((e) => e.date >= now)
-        .sort((a, b) => a.date.localeCompare(b.date));
-    }
-    if (filter === "past") {
-      return events
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    [events, now],
+  );
+  const past = useMemo(
+    () =>
+      events
         .filter((e) => e.date < now)
-        .sort((a, b) => b.date.localeCompare(a.date));
-    }
-    // "all": upcoming first (asc), then past (desc)
-    const upcoming = events
-      .filter((e) => e.date >= now)
-      .sort((a, b) => a.date.localeCompare(b.date));
-    const past = events
-      .filter((e) => e.date < now)
-      .sort((a, b) => b.date.localeCompare(a.date));
-    return [...upcoming, ...past];
-  }, [events, filter, now]);
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    [events, now],
+  );
+
+  const sections = [
+    { key: "upcoming", label: "Upcoming", items: upcoming },
+    { key: "past", label: "Past", items: past },
+  ].filter((s) => (filter === "all" || filter === s.key) && s.items.length > 0);
 
   return (
     <Container size="lg" py="xl">
@@ -111,12 +111,32 @@ export function Events() {
           ))}
         </Group>
 
-        {filtered.length === 0 ? (
+        {sections.length === 0 ? (
           <Text c="dimmed">No {filter === "all" ? "" : filter + " "}events.</Text>
         ) : (
-          <Stack gap="xl">
-            {filtered.map((event) => (
-              <EventCard key={event._id} event={event} />
+          <Stack gap={48}>
+            {sections.map((section) => (
+              <Stack key={section.key} gap="lg">
+                {/* Headings only when both groups are on screen; a filtered
+                    view is already labelled by the active chip. */}
+                {filter === "all" && (
+                  <Group gap="sm" align="baseline">
+                    <Title order={2} size="h4" fw={700} tt="uppercase" style={{ letterSpacing: "0.08em" }}>
+                      {section.label}
+                    </Title>
+                    <Text size="sm" c="dimmed">
+                      {section.items.length}
+                    </Text>
+                  </Group>
+                )}
+                {section.items.map((event) => (
+                  <EventCard
+                    key={event._id}
+                    event={event}
+                    isPast={section.key === "past"}
+                  />
+                ))}
+              </Stack>
             ))}
           </Stack>
         )}
@@ -125,7 +145,7 @@ export function Events() {
   );
 }
 
-function EventCard({ event }: { event: Event }) {
+function EventCard({ event, isPast }: { event: Event; isPast: boolean }) {
   const posthog = usePostHog();
   const photos = event.photos ?? [];
   const hasPhotos = photos.length > 0;
@@ -154,18 +174,39 @@ function EventCard({ event }: { event: Event }) {
       withBorder
       radius={0}
       shadow="sm"
-      style={{ borderColor: "#e8e8e0" }}
+      style={{
+        borderColor: "#e8e8e0",
+        // Upcoming gets a dark accent edge; past cards sit flat on the muted fill.
+        borderLeft: isPast ? "1px solid #e8e8e0" : "4px solid var(--mantine-color-dark-9)",
+        background: isPast ? "#fafaf8" : undefined,
+      }}
       p="xl"
     >
       <Stack gap="md">
         <Group justify="space-between" align="flex-start" wrap="wrap">
-          <Stack gap={4}>
-            <Title order={3} fw={600}>
+          <Stack gap={6}>
+            <Group gap="sm" align="center">
+              <Text
+                fw={700}
+                size="lg"
+                tt="uppercase"
+                c={isPast ? "dimmed" : "dark"}
+                style={{ letterSpacing: "0.04em" }}
+              >
+                {formatDate(event.date)}
+              </Text>
+              <Badge
+                variant={isPast ? "light" : "filled"}
+                color={isPast ? "gray" : "dark"}
+                radius={0}
+                size="sm"
+              >
+                {isPast ? "Past" : "Upcoming"}
+              </Badge>
+            </Group>
+            <Title order={3} fw={600} c={isPast ? "dimmed" : undefined}>
               {event.title}
             </Title>
-            <Text size="sm" c="dimmed">
-              {formatDate(event.date)}
-            </Text>
           </Stack>
           {event.link && (
             <Anchor

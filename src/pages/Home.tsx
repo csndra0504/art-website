@@ -16,8 +16,6 @@ import {
 import { useLoaderData } from 'react-router-dom';
 import { getArtworks } from '../lib/queries';
 import { ArtworkCard } from '../components/ArtworkCard';
-import { EventBanner } from '../components/EventBanner';
-import { EmailSignupBanner } from '../components/EmailSignupBanner';
 import { SeoHead } from '../components/SeoHead';
 import { JsonLd } from '../components/JsonLd';
 import { buildHomeJsonLd } from '../lib/structuredData';
@@ -143,8 +141,6 @@ export function Home() {
 	return (
 		<>
 			{seo}
-			<EmailSignupBanner />
-			<EventBanner />
 			<Container size="lg">
 				{/* Hero — lead with the work and a clear path to buy. */}
 				<Stack align="center" py={{ base: 28, sm: 48 }} gap="md">

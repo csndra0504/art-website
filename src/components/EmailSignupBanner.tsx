@@ -3,10 +3,9 @@ import type { FormEvent } from 'react';
 import { Button, CloseButton, Container, Group, Text, TextInput } from '@mantine/core';
 import { isValidEmail, submitEmail } from '../lib/brevo';
 import { trackLead } from '../lib/analytics';
+import { dismissForAWeek, isDismissed, SIGNUP_BANNER_KEY } from '../lib/bannerDismissal';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
-
-const DISMISSED_KEY = 'email-signup-banner-dismissed';
 
 const HONEYPOT_STYLE: React.CSSProperties = {
 	position: 'absolute',
@@ -17,9 +16,12 @@ const HONEYPOT_STYLE: React.CSSProperties = {
 };
 
 export function EmailSignupBanner() {
-	// Start visible on the server and first client render (sessionStorage is
+	// Render nothing on the server and first client render (sessionStorage is
 	// browser-only), then reconcile from storage after mount to avoid a hydration
-	// mismatch.
+	// mismatch. Hidden until mounted, not visible-by-default: the banner lives in
+	// the fixed header, whose height is measured client-side, so prerendering it
+	// would draw it over the top of the page until hydration.
+	const [mounted, setMounted] = useState(false);
 	const [dismissed, setDismissed] = useState(false);
 	const [email, setEmail] = useState('');
 	const [honeypot, setHoneypot] = useState('');
@@ -27,17 +29,18 @@ export function EmailSignupBanner() {
 
 	useEffect(() => {
 		// Reconcile dismissal from storage after mount (SSR-safe). The one extra
-		// render is intentional and cheap — it only hides an already-dismissed banner.
-		if (sessionStorage.getItem(DISMISSED_KEY) === 'true') {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
+		// render is intentional and cheap.
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setMounted(true);
+		if (isDismissed(SIGNUP_BANNER_KEY)) {
 			setDismissed(true);
 		}
 	}, []);
 
-	if (dismissed) return null;
+	if (!mounted || dismissed) return null;
 
 	const handleDismiss = () => {
-		sessionStorage.setItem(DISMISSED_KEY, 'true');
+		dismissForAWeek(SIGNUP_BANNER_KEY);
 		setDismissed(true);
 	};
 
@@ -63,8 +66,6 @@ export function EmailSignupBanner() {
 			style={{
 				backgroundColor: '#FAFAF8',
 				borderBottom: '1px solid #e8e8e0',
-				margin: 'calc(var(--mantine-spacing-md) * -1)',
-				marginBottom: 0,
 			}}
 		>
 			<Container size="lg" py={10}>

@@ -1,3 +1,5 @@
+import { dismissForever, SIGNUP_BANNER_KEY } from "./bannerDismissal";
+
 const BREVO_FORM_URL =
   "https://73785543.sibforms.com/serve/MUIFAH8XNHYtbuIv7pPtCI1U6pWMqtx5eTxQxLWX6XnDgS-ZQHMqMJ-BI6AbG2PQrkR7YY836YMfE9YtqoSO2RZF0osLk7zSJHaAYRi7EASwyGDNgBY7LliZpQMBbNHfR0WWYU663xgKFozBJ6Tk1Ji0fFv1aTl4lCLZfTB5vYYXLjpN5vnRxr3JnDyBurKZjWoLu3hWtv7qP92_jA==";
 
@@ -29,6 +31,9 @@ export async function submitEmail(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
   });
+
+  // Subscribed from either form, so stop showing the signup banner for good.
+  dismissForever(SIGNUP_BANNER_KEY);
 
   console.log({
     event: "email_signup",

@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Anchor, CloseButton, Container, Group, Text } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { getUpcomingEvents } from "../lib/queries";
+import { dismissForAWeek, EVENT_BANNER_KEY, isDismissed } from "../lib/bannerDismissal";
 import type { Event } from "../types/event";
 
-const DISMISSED_KEY = "event-banner-dismissed";
 const SHOW_WITHIN_DAYS = 30;
 
 function isWithinWindow(event: Event): boolean {
@@ -25,7 +25,7 @@ export function EventBanner() {
   useEffect(() => {
     // Reconcile dismissal from storage after mount (SSR-safe). The one extra
     // render is intentional and cheap — it only hides an already-dismissed banner.
-    if (sessionStorage.getItem(DISMISSED_KEY) === "true") {
+    if (isDismissed(EVENT_BANNER_KEY)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDismissed(true);
     }
@@ -44,7 +44,7 @@ export function EventBanner() {
   if (dismissed || !event) return null;
 
   const handleDismiss = () => {
-    sessionStorage.setItem(DISMISSED_KEY, "true");
+    dismissForAWeek(EVENT_BANNER_KEY);
     setDismissed(true);
   };
 
@@ -53,8 +53,6 @@ export function EventBanner() {
       style={{
         backgroundColor: "#f5f0e8",
         borderBottom: "1px solid #e8e0d0",
-        margin: "calc(var(--mantine-spacing-md) * -1)",
-        marginBottom: 0,
       }}
     >
       <Container size="lg" py={10}>

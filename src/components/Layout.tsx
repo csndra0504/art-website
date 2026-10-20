@@ -10,11 +10,15 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useElementSize } from "@mantine/hooks";
 import { Link, Outlet } from "react-router-dom";
 import { useCart } from "../lib/cartContext";
 import { CartDrawer } from "./CartDrawer";
+import { EventBanner } from "./EventBanner";
+import { EmailSignupBanner } from "./EmailSignupBanner";
 import { trackViewCart } from "../lib/analytics";
+
+const HEADER_HEIGHT = 60;
 
 const NAV_LINKS = [
   { label: "Home", to: "/" },
@@ -48,6 +52,11 @@ export function Layout() {
   const [opened, { toggle, close }] = useDisclosure();
   const [cartOpened, { open: openCart, close: closeCart }] = useDisclosure();
   const { count, ready, lines, total, refresh } = useCart();
+  // The banners sit inside the fixed header, above the nav row. Its height
+  // varies (text wraps on mobile) and it is 0 until a banner loads or after
+  // dismissal, so the header height — which also offsets <main> and the mobile
+  // navbar — is measured rather than hardcoded.
+  const { ref: bannerRef, height: bannerHeight } = useElementSize();
 
   // Tracked on the click, not on the drawer's open state: one event per time
   // someone chooses to look, and no effect to keep in sync.
@@ -69,7 +78,7 @@ export function Layout() {
 
   return (
     <AppShell
-      header={{ height: 60 }}
+      header={{ height: HEADER_HEIGHT + bannerHeight }}
       navbar={{
         width: 200,
         breakpoint: "sm",
@@ -83,7 +92,11 @@ export function Layout() {
       <AppShell.Header
         style={{ backgroundColor: "#FAFAF8", borderBottom: "1px solid #e8e8e0" }}
       >
-        <Container size="lg" h="100%">
+        <div ref={bannerRef}>
+          <EventBanner />
+          <EmailSignupBanner />
+        </div>
+        <Container size="lg" h={HEADER_HEIGHT}>
           <Group h="100%" justify="space-between">
             <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
               <Title order={3}>Cassandra Wilcox Art</Title>

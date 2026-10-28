@@ -30,6 +30,10 @@ const PRINTS: Print[] = [
 	{ name: 'Mr. Smalls', slug: 'mr-smalls' },
 	{ name: 'Row House Cinema', slug: 'row-house-cinema' },
 	{ name: 'Starlight Lounge', slug: 'starlight-lounge' },
+	{ name: 'Cathedral of Learning', slug: 'cathedral-of-learning' },
+	{ name: 'PNC Park Watercolor', slug: 'pnc-park-watercolor' },
+	{ name: 'Rialto Street', slug: 'rialto-street' },
+	{ name: 'William Penn Tavern', slug: 'william-penn-tavern' },
 ];
 
 export function Raffle() {

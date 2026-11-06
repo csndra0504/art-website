@@ -17,7 +17,7 @@ const DIST_DIR = path.resolve(process.cwd(), "dist");
 
 // Static, non-dynamic routes. `/subscribe` is intentionally omitted (thin,
 // utility page); add it here if that changes.
-const STATIC_PATHS = ["/", "/events", "/commissions"];
+const STATIC_PATHS = ["/", "/events", "/commissions", "/wholesale"];
 
 // Load VITE_* vars from .env if they aren't already in the environment.
 function loadEnv() {

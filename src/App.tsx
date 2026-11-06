@@ -20,6 +20,7 @@ export const routes: RouteRecord[] = [
       },
       { path: "events", lazy: () => import("./pages/Events") },
       { path: "commissions", lazy: () => import("./pages/Commissions") },
+      { path: "wholesale", lazy: () => import("./pages/Wholesale") },
       { path: "subscribe", lazy: () => import("./pages/Subscribe") },
       { path: "raffle", lazy: () => import("./pages/Raffle") },
       { path: "free-postcard", lazy: () => import("./pages/FreePostcard") },

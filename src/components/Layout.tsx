@@ -25,6 +25,7 @@ const NAV_LINKS = [
   { label: "Home", to: "/" },
   { label: "Events", to: "/events" },
   { label: "Commissions", to: "/commissions" },
+  { label: "Wholesale", to: "/wholesale" },
   { label: "Email list", to: "/subscribe" },
 ];
 

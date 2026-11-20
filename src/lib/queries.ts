@@ -141,6 +141,7 @@ export interface CartProductState {
   soldOut?: boolean | null;
   visible?: boolean | null;
   shippingType?: ShippingType | null;
+  kind?: ProductKind | null;
   /** Null when the subject is unpublished — the piece's page is gone. */
   subjectTitle: string | null;
 }
@@ -150,7 +151,7 @@ export interface CartProductState {
 export async function getCartProducts(ids: string[]): Promise<CartProductState[]> {
   return client.fetch(
     `*[_type == "product" && _id in $ids]{
-      _id, title, price, soldOut, visible, shippingType,
+      _id, title, price, soldOut, visible, shippingType, kind,
       "subjectTitle": subject->title
     }`,
     { ids },

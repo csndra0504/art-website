@@ -46,6 +46,8 @@ export interface CartLine {
    * line saved before this existed just shows "calculated at checkout".
    */
   shippingType?: ShippingType | null;
+  /** Product format, so the cart can preview the sticker deal. Display-only; the server re-reads it. */
+  kind?: string | null;
 }
 
 export interface Cart {
@@ -152,7 +154,7 @@ export function serializeCart(cart: Cart): string {
 
 /** What a line looks like now, per the catalog. */
 export type LineCheck =
-  | { status: "ok"; fresh: Pick<CartLine, "title" | "optionTitle" | "price" | "shippingType"> }
+  | { status: "ok"; fresh: Pick<CartLine, "title" | "optionTitle" | "price" | "shippingType" | "kind"> }
   | { status: "gone" | "soldOut" }
   /** Not part of this check (added after it started); left exactly as it is. */
   | { status: "unchecked" };

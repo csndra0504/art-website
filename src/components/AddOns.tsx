@@ -74,6 +74,7 @@ export function AddOns({ fulfillment }: { fulfillment: FulfillmentMethod }) {
       optionTitle: i.title,
       price: i.price,
       shippingType: i.shippingType,
+      kind: i.kind,
       image: i.subject.image
         ? urlFor(i.subject.image.asset).width(128).height(128).fit("crop").auto("format").url()
         : undefined,

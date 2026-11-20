@@ -141,6 +141,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               optionTitle: p.title,
               price: p.price,
               shippingType: p.shippingType ?? line.shippingType,
+              kind: p.kind ?? line.kind,
             },
           };
         };

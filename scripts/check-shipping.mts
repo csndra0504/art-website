@@ -6,7 +6,7 @@
 //   npm run check:shipping
 
 import { shippingCents, MissingShippingTypeError } from "../src/lib/shipping.ts";
-import { bundleDiscountCents } from "../src/lib/discounts.ts";
+import { bundleDiscountCents, stickerDiscountCents } from "../src/lib/discounts.ts";
 const L = (shippingType: any, qty = 1, title?: string) => ({ shippingType, qty, title });
 const cases: [string, any[], "ship" | "pickup", number | "throws"][] = [
   ["PRD: 3 postcards",                       [L("postcard", 3)],                          "ship", 300],
@@ -51,6 +51,24 @@ for (const [name, lines, want] of discountCases) {
   console.log(`${ok ? "✓" : "✗"} ${name.padEnd(40)} got ${got}${ok ? "" : `, want ${want}`}`);
 }
 
-const total = cases.length + discountCases.length;
+// The 2-for-$5 sticker deal. Stickers ship in the magnet band, so eligibility is
+// the product's format, not its band.
+const S = (kind: any, qty: number, unitCents = 300, shippingType: any = "magnet") => ({ kind, shippingType, qty, unitCents });
+const stickerCases: [string, any[], number][] = [
+  ["stickers: 1, no deal",                   [S("sticker", 1)],                           0],
+  ["stickers: 2 = $5",                       [S("sticker", 2)],                           100],
+  ["stickers: 2 different designs",          [S("sticker", 1), S("sticker", 1)],          100],
+  ["stickers: 3 = $5 + $3",                  [S("sticker", 3)],                           100],
+  ["stickers: 4 = two deals",                [S("sticker", 4)],                           200],
+  ["stickers: magnets don't count",          [S("sticker", 1), S("magnet", 1, 800)],      0],
+  ["stickers: not counted as prints",        [S("sticker", 2), D("postcard", 2)],         100],
+];
+for (const [name, lines, want] of stickerCases) {
+  const got = stickerDiscountCents(lines);
+  const ok = got === want;
+  if (!ok) fail++;
+  console.log(`${ok ? "✓" : "✗"} ${name.padEnd(40)} got ${got}${ok ? "" : `, want ${want}`}`);
+}
+const total = cases.length + discountCases.length + stickerCases.length;
 console.log(fail ? `\n${fail} FAILED` : `\nall ${total} pass`);
 process.exit(fail ? 1 : 0);

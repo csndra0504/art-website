@@ -24,7 +24,7 @@ import {
   trackViewItem,
   type AnalyticsItem,
 } from "../lib/analytics";
-import { inBundle } from "../lib/discounts";
+import { STICKER_DEAL, inBundle, isSticker } from "../lib/discounts";
 import { SeoHead } from "../components/SeoHead";
 import { JsonLd } from "../components/JsonLd";
 import { buildArtworkJsonLd } from "../lib/structuredData";
@@ -93,6 +93,7 @@ function CartActions({
       optionTitle: p.title,
       price: p.price,
       shippingType: p.shippingType,
+      kind: p.kind,
       image: image
         ? urlFor(image.asset).width(128).height(128).fit("crop").auto("format").url()
         : undefined,
@@ -236,6 +237,11 @@ function ProductRow({
       {!sold && inBundle(p.shippingType) && (
         <Text size="xs" c="dimmed" mt="xs">
           Mix and match: any 3 5x7 prints for $25.
+        </Text>
+      )}
+      {!sold && isSticker(p.kind) && (
+        <Text size="xs" c="dimmed" mt="xs">
+          Mix and match: {STICKER_DEAL.name.toLowerCase()}.
         </Text>
       )}
       {/* A magnet rides in the same mailer as a print or original, so it adds

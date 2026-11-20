@@ -17,7 +17,14 @@ import {
   shippingCents,
   type FulfillmentMethod,
 } from "../lib/shipping";
-import { BUNDLE, bundleDiscountCents, inBundle } from "../lib/discounts";
+import {
+  BUNDLE,
+  STICKER_DEAL,
+  bundleDiscountCents,
+  inBundle,
+  isSticker,
+  stickerDiscountCents,
+} from "../lib/discounts";
 import { joinDates, useHolidayShipping } from "../lib/holiday";
 import { AddOns } from "./AddOns";
 import { ShippingReturns } from "./ShippingReturns";
@@ -201,18 +208,16 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
   }, [lines, fulfillment]);
 
   // Preview too; the server applies the same rule to the Square order.
-  const discount = useMemo(
-    () =>
-      bundleDiscountCents(
-        lines.map((l) => ({
-          shippingType: l.shippingType,
-          qty: l.qty,
-          unitCents: Math.round(l.price * 100),
-        }))
-      ),
-    [lines]
-  );
-  const itemsCents = total * 100 - discount;
+  const { discount, stickerDiscount } = useMemo(() => {
+    const dl = lines.map((l) => ({
+      shippingType: l.shippingType,
+      kind: l.kind,
+      qty: l.qty,
+      unitCents: Math.round(l.price * 100),
+    }));
+    return { discount: bundleDiscountCents(dl), stickerDiscount: stickerDiscountCents(dl) };
+  }, [lines]);
+  const itemsCents = total * 100 - discount - stickerDiscount;
 
   // The deal is applied silently at the cart, so a buyer one print short of it
   // has to be told. Nothing to say at 0 (no 5x7 in the cart) or at a full group.
@@ -220,6 +225,10 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
     .filter((l) => inBundle(l.shippingType))
     .reduce((n, l) => n + l.qty, 0);
   const bundleShort = bundleUnits > 0 ? (BUNDLE.size - (bundleUnits % BUNDLE.size)) % BUNDLE.size : 0;
+
+  // A single sticker is one short of its deal; a full pair or more has it.
+  const stickerUnits = lines.filter((l) => isSticker(l.kind)).reduce((n, l) => n + l.qty, 0);
+  const stickerShort = stickerUnits > 0 ? (STICKER_DEAL.size - (stickerUnits % STICKER_DEAL.size)) % STICKER_DEAL.size : 0;
 
   const holiday = useHolidayShipping();
 
@@ -322,6 +331,13 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
         </Text>
       )}
 
+      {stickerShort > 0 && (
+        <Text size="sm" fw={500}>
+          Add {stickerShort} more sticker{stickerShort > 1 ? "s" : ""} and any 2 are $
+          {STICKER_DEAL.priceCents / 100}.
+        </Text>
+      )}
+
       <AddOns fulfillment={fulfillment} />
 
       <Divider color="#e8e8e0" />
@@ -354,6 +370,12 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
           <Group justify="space-between">
             <Text size="sm">{BUNDLE.name}</Text>
             <Text size="sm">−{money(discount)}</Text>
+          </Group>
+        )}
+        {stickerDiscount > 0 && (
+          <Group justify="space-between">
+            <Text size="sm">{STICKER_DEAL.name}</Text>
+            <Text size="sm">−{money(stickerDiscount)}</Text>
           </Group>
         )}
         <Group justify="space-between">

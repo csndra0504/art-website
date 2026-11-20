@@ -7,7 +7,14 @@ import {
   shippingCents,
   type FulfillmentMethod,
 } from "../../src/lib/shipping.ts";
-import { BUNDLE, bundleDiscountCents, inBundle } from "../../src/lib/discounts.ts";
+import {
+  BUNDLE,
+  STICKER_DEAL,
+  bundleDiscountCents,
+  inBundle,
+  isSticker,
+  stickerDiscountCents,
+} from "../../src/lib/discounts.ts";
 import type { ShippingType } from "../../src/types/artwork.ts";
 
 // POST /api/checkout — turn a cart into a Square hosted checkout.
@@ -154,13 +161,14 @@ export async function createCheckout(req: Request, res: Response) {
   }
 
   // From Sanity's prices, which the seed keeps equal to Square's catalog prices.
-  const discount = bundleDiscountCents(
-    lines.map((l) => ({
-      shippingType: l.product.shippingType as ShippingType | null,
-      qty: l.qty,
-      unitCents: Math.round(l.product.price * 100),
-    }))
-  );
+  const discountLines = lines.map((l) => ({
+    shippingType: l.product.shippingType as ShippingType | null,
+    kind: l.product.kind,
+    qty: l.qty,
+    unitCents: Math.round(l.product.price * 100),
+  }));
+  const discount = bundleDiscountCents(discountLines);
+  const stickerDiscount = stickerDiscountCents(discountLines);
 
   // Shipping goes to Square as the link's own shipping fee, so its hosted page
   // shows one shipping line. As an order service charge it sat *beside* Square's
@@ -197,6 +205,9 @@ export async function createCheckout(req: Request, res: Response) {
           ...(discount > 0 && inBundle(l.product.shippingType as ShippingType | null)
             ? { applied_discounts: [{ discount_uid: "bundle" }] }
             : {}),
+          ...(stickerDiscount > 0 && isSticker(l.product.kind)
+            ? { applied_discounts: [{ discount_uid: "stickers" }] }
+            : {}),
         })),
         // Sales tax comes from the Square catalog (PA Sales Tax, 7%, attached to
         // every item), so the rate lives in one place and follows whatever she
@@ -205,15 +216,26 @@ export async function createCheckout(req: Request, res: Response) {
         // Scoped to the 5x7 lines it was earned on. An order-wide discount would
         // be spread over every line, so Square's reports would show an 8x10 in
         // the same cart as discounted (confirmed in the sandbox).
-        ...(discount > 0
+        ...(discount > 0 || stickerDiscount > 0
           ? {
               discounts: [
-                {
-                  uid: "bundle",
-                  name: BUNDLE.name,
-                  amount_money: { amount: discount, currency: "USD" },
-                  scope: "LINE_ITEM",
-                },
+                ...(discount > 0
+                  ? [{
+                      uid: "bundle",
+                      name: BUNDLE.name,
+                      amount_money: { amount: discount, currency: "USD" },
+                      scope: "LINE_ITEM",
+                    }]
+                  : []),
+                // Same scoping as above: only the sticker lines carry it.
+                ...(stickerDiscount > 0
+                  ? [{
+                      uid: "stickers",
+                      name: STICKER_DEAL.name,
+                      amount_money: { amount: stickerDiscount, currency: "USD" },
+                      scope: "LINE_ITEM",
+                    }]
+                  : []),
               ],
             }
           : {}),

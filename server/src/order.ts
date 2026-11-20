@@ -17,6 +17,7 @@ interface SquareOrder {
   metadata?: Record<string, string>;
   line_items?: { name?: string; quantity: string; gross_sales_money?: { amount: number } }[];
   total_discount_money?: { amount: number };
+  discounts?: { name?: string; applied_money?: { amount: number } }[];
   total_tax_money?: { amount: number };
   service_charges?: { name?: string; total_money?: { amount: number } }[];
   tenders?: unknown[];
@@ -68,6 +69,11 @@ export async function getOrder(req: Request, res: Response) {
       totalCents: l.gross_sales_money?.amount ?? 0,
     })),
     discountCents: order.total_discount_money?.amount ?? 0,
+    // One line per deal, named as Square recorded it.
+    discounts: (order.discounts ?? []).map((d) => ({
+      name: d.name ?? "Discount",
+      cents: d.applied_money?.amount ?? 0,
+    })),
     taxCents: order.total_tax_money?.amount ?? 0,
     shippingCents,
     totalCents: order.total_money?.amount ?? 0,

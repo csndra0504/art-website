@@ -5,7 +5,7 @@ const BREVO_FORM_URL =
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type SignupSource = "inline" | "banner";
+export type SignupSource = "inline" | "banner" | "popup";
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email.trim());
@@ -32,7 +32,7 @@ export async function submitEmail(
     body: body.toString(),
   });
 
-  // Subscribed from either form, so stop showing the signup banner for good.
+  // Subscribed from any form, so stop showing the signup popup for good.
   dismissForever(SIGNUP_BANNER_KEY);
 
   console.log({

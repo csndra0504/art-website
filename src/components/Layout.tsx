@@ -15,7 +15,8 @@ import { Link, Outlet } from "react-router-dom";
 import { useCart } from "../lib/cartContext";
 import { CartDrawer } from "./CartDrawer";
 import { EventBanner } from "./EventBanner";
-import { EmailSignupBanner } from "./EmailSignupBanner";
+import { HolidayBanner } from "./HolidayBanner";
+import { EmailSignupPopup } from "./EmailSignupPopup";
 import { trackViewCart } from "../lib/analytics";
 
 const HEADER_HEIGHT = 60;
@@ -24,6 +25,14 @@ const NAV_LINKS = [
   { label: "Home", to: "/" },
   { label: "Events", to: "/events" },
   { label: "Commissions", to: "/commissions" },
+  { label: "Email list", to: "/subscribe" },
+];
+
+// Same links the footer carries. They live in the header too because the footer
+// is the bottom of a long gallery page; nobody scrolls there to find them.
+const EXTERNAL_LINKS = [
+  { label: "Instagram", href: "https://instagram.com/casswilcoxart" },
+  { label: "Etsy", href: "https://www.etsy.com/shop/CassWilcoxArt" },
 ];
 
 // Inline rather than from an icon package — the site has no icon dependency and
@@ -93,8 +102,8 @@ export function Layout() {
         style={{ backgroundColor: "#FAFAF8", borderBottom: "1px solid #e8e8e0" }}
       >
         <div ref={bannerRef}>
+          <HolidayBanner />
           <EventBanner />
-          <EmailSignupBanner />
         </div>
         <Container size="lg" h={HEADER_HEIGHT}>
           <Group h="100%" justify="space-between">
@@ -102,12 +111,25 @@ export function Layout() {
               <Title order={3}>Cassandra Wilcox Art</Title>
             </Link>
 
-            <Group gap="lg" visibleFrom="sm">
+            <Group gap="md" visibleFrom="sm" wrap="nowrap">
               {NAV_LINKS.map((link) => (
                 <Anchor
                   key={link.to}
                   component={Link}
                   to={link.to}
+                  size="sm"
+                  c="dark"
+                  underline="never"
+                >
+                  {link.label}
+                </Anchor>
+              ))}
+              {EXTERNAL_LINKS.map((link) => (
+                <Anchor
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   size="sm"
                   c="dark"
                   underline="never"
@@ -152,6 +174,8 @@ export function Layout() {
       </AppShell.Header>
 
       <CartDrawer opened={cartOpened} onClose={closeCart} />
+      {/* Held back while the cart drawer is open, so the two never stack. */}
+      <EmailSignupPopup suppress={cartOpened} />
 
       <AppShell.Navbar py="md" px="md">
         <Stack gap="sm">
@@ -160,6 +184,20 @@ export function Layout() {
               key={link.to}
               component={Link}
               to={link.to}
+              size="sm"
+              c="dark"
+              underline="never"
+              onClick={close}
+            >
+              {link.label}
+            </Anchor>
+          ))}
+          {EXTERNAL_LINKS.map((link) => (
+            <Anchor
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
               size="sm"
               c="dark"
               underline="never"
@@ -189,6 +227,9 @@ export function Layout() {
               &copy; {new Date().getFullYear()} Cassandra Wilcox Art
             </Text>
             <Group gap="md">
+              <Anchor component={Link} to="/subscribe" size="sm" c="dark" underline="never">
+                Email list
+              </Anchor>
               <Anchor
                 href="https://instagram.com/casswilcoxart"
                 target="_blank"

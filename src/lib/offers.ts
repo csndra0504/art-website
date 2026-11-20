@@ -61,6 +61,31 @@ export function offersFor(s: OfferSource) {
   };
 }
 
+// "Shop by" shelves on the home page. Each is a rule over a subject's products
+// that can still be bought, so a shelf never lists something sold out.
+export type Shelf = "magnets" | "prints" | "originals" | "under25";
+
+export const UNDER_PRICE = 25;
+
+const SHELF_RULES: Record<Shelf, (p: SubjectProduct) => boolean> = {
+  magnets: (p) => p.kind === "magnet" || p.kind === "sticker",
+  prints: (p) => PRINT_LIKE.has(p.kind),
+  originals: (p) => p.kind === "original",
+  under25: (p) => p.price < UNDER_PRICE,
+};
+
+/**
+ * The cheapest purchasable product that puts a subject on a shelf, or undefined
+ * if it isn't on it. The card shows this product's price, so a "Magnets" view
+ * reads "2x3 Magnet $8" rather than the original's price.
+ */
+export function shelfProduct(s: OfferSource, shelf: Shelf): SubjectProduct | undefined {
+  if (!s.forSale) return undefined;
+  return cheapest(
+    (s.products ?? []).filter((p) => !p.soldOut && SHELF_RULES[shelf](p))
+  );
+}
+
 /** For the home page's "For Sale" filter. */
 export function isAvailable(s: OfferSource): boolean {
   return !!s.forSale && offersFor(s).anyAvailable;

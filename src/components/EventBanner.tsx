@@ -3,6 +3,7 @@ import { Anchor, CloseButton, Container, Group, Text } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { getUpcomingEvents } from "../lib/queries";
 import { dismissForAWeek, EVENT_BANNER_KEY, isDismissed } from "../lib/bannerDismissal";
+import { useHolidayShipping } from "../lib/holiday";
 import type { Event } from "../types/event";
 
 const SHOW_WITHIN_DAYS = 30;
@@ -16,6 +17,9 @@ function isWithinWindow(event: Event): boolean {
 }
 
 export function EventBanner() {
+  // During the holiday window the HolidayBanner carries the next market, so this
+  // one stays out of the way rather than stacking a second bar.
+  const holiday = useHolidayShipping();
   const [event, setEvent] = useState<Event | null>(null);
   // Start undismissed on the server and first client render (sessionStorage is
   // browser-only), then reconcile from storage after mount to avoid a hydration
@@ -41,7 +45,7 @@ export function EventBanner() {
       .catch(() => {});
   }, [dismissed]);
 
-  if (dismissed || !event) return null;
+  if (holiday || dismissed || !event) return null;
 
   const handleDismiss = () => {
     dismissForAWeek(EVENT_BANNER_KEY);

@@ -1,5 +1,11 @@
 import { client } from "./sanity";
-import type { Artwork, ArtworkSummary, ShippingType } from "../types/artwork";
+import type {
+  Artwork,
+  ArtworkImage,
+  ArtworkSummary,
+  ProductKind,
+  ShippingType,
+} from "../types/artwork";
 import type { Event } from "../types/event";
 
 
@@ -16,6 +22,7 @@ const PRODUCTS_JOIN = `
 
 const ARTWORK_SUMMARY_PROJECTION = `{
   _id,
+  _createdAt,
   title,
   slug,
   images,
@@ -88,6 +95,41 @@ export async function getUpcomingEvents(): Promise<Event[]> {
       title,
       date,
       link,
+    }`
+  );
+}
+
+/** A small flat item (magnet, sticker) offered as an add-on in the cart. */
+export interface AddOnProduct {
+  _id: string;
+  title: string;
+  kind: ProductKind;
+  price: number;
+  shippingType: ShippingType;
+  subject: {
+    title: string;
+    slug: string;
+    image?: ArtworkImage;
+  };
+}
+
+// Only what checkout can actually sell: linked to Square, with a shipping band
+// (checkout refuses a product without one), in stock, and on a subject that is
+// itself for sale. Newest first, so fresh merch leads.
+export async function getAddOns(): Promise<AddOnProduct[]> {
+  return client.fetch(
+    `*[_type == "product"
+        && kind in ["magnet", "sticker"]
+        && visible != false
+        && soldOut != true
+        && channel != "etsy"
+        && defined(squareVariationId)
+        && defined(shippingType)
+        && subject->forSale == true
+        && defined(subject->slug.current)
+      ] | order(_createdAt desc) {
+      _id, title, kind, price, shippingType,
+      "subject": subject->{ title, "slug": slug.current, "image": images[0] }
     }`
   );
 }

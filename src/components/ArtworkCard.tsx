@@ -2,11 +2,19 @@ import { Badge, Box, Button, Card, Image, Text, Stack } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { offersFor } from "../lib/offers";
 import { urlFor } from "../lib/sanity";
-import type { ArtworkSummary } from "../types/artwork";
+import type { ArtworkSummary, SubjectProduct } from "../types/artwork";
 import classes from "./ArtworkCard.module.css";
 
 interface ArtworkCardProps {
   artwork: ArtworkSummary;
+  /**
+   * When a "Shop by" shelf is active, the product that put this piece on it.
+   * The card shows that product's price instead of the original's, so the
+   * "Magnets" view doesn't lead with a $200 original.
+   */
+  focus?: SubjectProduct;
+  /** Marks the piece "New" unless it already carries an editorial label. */
+  isNew?: boolean;
 }
 
 // Break pricing into the original (one-of-a-kind, higher) and the entry-level
@@ -27,7 +35,7 @@ function money(n: number) {
   return `$${n.toLocaleString()}`;
 }
 
-export function ArtworkCard({ artwork }: ArtworkCardProps) {
+export function ArtworkCard({ artwork, focus, isNew }: ArtworkCardProps) {
   const primaryImage = artwork.images?.[0];
   const imageUrl = primaryImage
     ? urlFor(primaryImage.asset).width(600).auto("format").url()
@@ -36,6 +44,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
   const to = `/artwork/${artwork.slug.current}`;
   const p = artwork.forSale ? pricing(artwork) : null;
   const meta = [artwork.medium, artwork.year].filter(Boolean).join(" · ");
+  const badgeLabel = artwork.highlightLabel ?? (isNew ? "New" : undefined);
 
   return (
     <Card
@@ -51,7 +60,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
             alt={primaryImage?.alt ?? artwork.title}
             style={{ aspectRatio: "3 / 4", objectFit: "cover" }}
           />
-          {artwork.highlightLabel && (
+          {badgeLabel && (
             <Badge
               size="sm"
               variant="filled"
@@ -59,10 +68,10 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
               radius={0}
               style={{ position: "absolute", top: 8, left: 8 }}
             >
-              {artwork.highlightLabel}
+              {badgeLabel}
             </Badge>
           )}
-          {p?.soldOut && (
+          {p?.soldOut && !focus && (
             <Badge
               size="sm"
               variant="filled"
@@ -91,10 +100,18 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
 
       {/* Price + buy row sits outside the card link so the button is its own
           tap target (no nested links). */}
-      {p && (p.originalListed || p.fromPrice != null) && (
+      {p && (focus || p.originalListed || p.fromPrice != null) && (
         <Box className={classes.buyRow} px="sm" pt={6} pb="sm">
           <Stack gap={0} style={{ minWidth: 0 }}>
-            {p.originalListed && (
+            {focus && (
+              <Text size="sm" fw={600}>
+                <Text span size="xs" fw={500} c="dimmed">
+                  {focus.title}{" "}
+                </Text>
+                {money(focus.price)}
+              </Text>
+            )}
+            {!focus && p.originalListed && (
               <Text size="sm" fw={600}>
                 <Text span size="xs" fw={500} c="dimmed">
                   Original{" "}
@@ -114,7 +131,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
                 )}
               </Text>
             )}
-            {p.fromPrice != null && (
+            {!focus && p.fromPrice != null && (
               <Text size="sm" fw={600}>
                 {/* "From", not "Prints from": the cheapest non-original may be a
                     magnet or a postcard, and the card doesn't discriminate. */}
@@ -126,7 +143,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
             )}
           </Stack>
 
-          {p.anyAvailable ? (
+          {focus || p.anyAvailable ? (
             <Button
               component={Link}
               to={to}

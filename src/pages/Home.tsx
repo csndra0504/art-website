@@ -19,7 +19,7 @@ import { ArtworkCard } from '../components/ArtworkCard';
 import { SeoHead } from '../components/SeoHead';
 import { JsonLd } from '../components/JsonLd';
 import { buildHomeJsonLd } from '../lib/structuredData';
-import { isAvailable } from '../lib/offers';
+import { isAvailable, shelfProduct, type Shelf } from '../lib/offers';
 import type { ArtworkSummary } from '../types/artwork';
 
 // Runs at build time (and on client navigation) so the gallery is present in the
@@ -30,6 +30,10 @@ export async function loader() {
 
 // "Available" — for sale with at least one purchase path open — is decided in
 // lib/offers so the filter and the cards can't disagree about it.
+
+const NEW_COUNT = 6;
+// Fewer than this and a "Just added" strip looks like a mistake, not a feature.
+const NEW_MIN = 3;
 
 function scrollToGallery() {
 	document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
@@ -71,6 +75,7 @@ export function Home() {
 	);
 	const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
 	const [availableOnly, setAvailableOnly] = useState(false);
+	const [shelf, setShelf] = useState<Shelf | null>(null);
 
 	useEffect(() => {
 		getArtworks()
@@ -95,6 +100,32 @@ export function Home() {
 
 	const availableCount = useMemo(() => artworks.filter(isAvailable).length, [artworks]);
 
+	// "Shop by" chips. A chip only appears when something is on its shelf, so
+	// "Magnets" can't lead to an empty page. Stickers join the magnets shelf
+	// (and its label) as soon as a sticker product is published.
+	const shelves = useMemo(() => {
+		const hasStickers = artworks.some((a) => a.products?.some((p) => p.kind === 'sticker'));
+		const all: { key: Shelf; label: string }[] = [
+			{ key: 'under25', label: 'Under $25' },
+			{ key: 'magnets', label: hasStickers ? 'Magnets & Stickers' : 'Magnets' },
+			{ key: 'prints', label: 'Prints' },
+			{ key: 'originals', label: 'Originals' },
+		];
+		return all.filter((s) => artworks.some((a) => shelfProduct(a, s.key)));
+	}, [artworks]);
+
+	// Newest pieces still for sale. By creation date rather than a time window:
+	// the prerendered HTML and the client would disagree about "last 30 days"
+	// whenever a build is old, and a small shop's newest work is its news anyway.
+	const justAdded = useMemo(
+		() =>
+			artworks
+				.filter(isAvailable)
+				.sort((a, b) => (b._createdAt ?? '').localeCompare(a._createdAt ?? ''))
+				.slice(0, NEW_COUNT),
+		[artworks],
+	);
+
 	// activeTags holds lowercased tag keys for case-insensitive matching.
 	const toggleTag = (tag: string) => {
 		const key = tag.toLowerCase();
@@ -113,6 +144,7 @@ export function Home() {
 
 	const filtered = artworks.filter((a) => {
 		if (availableOnly && !isAvailable(a)) return false;
+		if (shelf && !shelfProduct(a, shelf)) return false;
 		if (activeTags.size === 0) return true;
 		const tags = a.tags?.map((t) => t.toLowerCase()) ?? [];
 		return [...activeTags].every((t) => tags.includes(t));
@@ -166,7 +198,7 @@ export function Home() {
 							size="md"
 							px="xl"
 						>
-							Shop Originals &amp; Prints
+							Shop Originals, Prints &amp; Magnets
 						</Button>
 						<Button
 							component="a"
@@ -185,10 +217,40 @@ export function Home() {
 
 				<Divider id="gallery" mb="lg" />
 
-				{/* Filters: All, then For Sale, then tags. */}
+				{/* Newest work first. Always shown (not hidden by filters) so the
+				    page doesn't jump when a chip is tapped. Scrolls sideways on
+				    phones rather than adding a screen of extra grid. */}
+				{justAdded.length >= NEW_MIN && (
+					<Box mb="xl">
+						<Title order={3} fw={600} size="h4" mb="sm">
+							Just added
+						</Title>
+						<Box
+							style={{
+								display: 'flex',
+								gap: 12,
+								overflowX: 'auto',
+								scrollSnapType: 'x proximity',
+								paddingBottom: 8,
+							}}
+						>
+							{justAdded.map((artwork) => (
+								<Box
+									key={artwork._id}
+									w={{ base: 160, sm: 200 }}
+									style={{ flex: '0 0 auto', scrollSnapAlign: 'start' }}
+								>
+									<ArtworkCard artwork={artwork} isNew />
+								</Box>
+							))}
+						</Box>
+					</Box>
+				)}
+
+				{/* Filters: All, then For Sale, then shop-by shelves, then tags. */}
 				<Group gap="xs" mb="lg">
 					<Badge
-						variant={activeTags.size === 0 && !availableOnly ? 'filled' : 'outline'}
+						variant={activeTags.size === 0 && !availableOnly && !shelf ? 'filled' : 'outline'}
 						color="dark"
 						radius={0}
 						size="md"
@@ -196,6 +258,7 @@ export function Home() {
 						onClick={() => {
 							setActiveTags(new Set());
 							setAvailableOnly(false);
+							setShelf(null);
 						}}
 					>
 						All
@@ -217,6 +280,27 @@ export function Home() {
 							For Sale
 						</Badge>
 					)}
+					{shelves.map((s) => (
+						<Badge
+							key={s.key}
+							variant={shelf === s.key ? 'filled' : 'outline'}
+							color="brick.6"
+							radius={0}
+							size="md"
+							style={{ cursor: 'pointer' }}
+							onClick={() => {
+								const next = shelf === s.key ? null : s.key;
+								setShelf(next);
+								posthog?.capture('gallery_filter_applied', {
+									filter_type: 'shelf',
+									filter_value: s.key,
+									applied: next !== null,
+								});
+							}}
+						>
+							{s.label}
+						</Badge>
+					))}
 					{allTags.length > 0 && (
 						<>
 							{allTags.map((tag) => (
@@ -249,7 +333,11 @@ export function Home() {
 						verticalSpacing={{ base: 'md', sm: 'lg' }}
 					>
 						{filtered.map((artwork) => (
-							<ArtworkCard key={artwork._id} artwork={artwork} />
+							<ArtworkCard
+								key={artwork._id}
+								artwork={artwork}
+								focus={shelf ? shelfProduct(artwork, shelf) : undefined}
+							/>
 						))}
 					</SimpleGrid>
 				)}
@@ -265,7 +353,7 @@ export function Home() {
 						the corner storefronts, the neon signs, the row houses climbing the hillsides
 						of Polish Hill and the South Side Slopes. Neighborhood by neighborhood, she draws the
 						landmarks and everyday details locals recognize in their bones. She sells original
-						artwork and prints here, takes custom commissions, and shows her work at markets
+						artwork, prints, and magnets here, takes custom commissions, and shows her work at markets
 						around Pittsburgh. Follow along on Instagram at{' '}
 						<Anchor
 							href="https://instagram.com/casswilcoxart"

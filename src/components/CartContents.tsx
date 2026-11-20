@@ -17,7 +17,9 @@ import {
   shippingCents,
   type FulfillmentMethod,
 } from "../lib/shipping";
-import { BUNDLE, bundleDiscountCents } from "../lib/discounts";
+import { BUNDLE, bundleDiscountCents, inBundle } from "../lib/discounts";
+import { joinDates, useHolidayShipping } from "../lib/holiday";
+import { AddOns } from "./AddOns";
 import { ShippingReturns } from "./ShippingReturns";
 import { trackCartCheckout } from "../lib/analytics";
 import { PENDING_ORDER_KEY } from "../lib/cart";
@@ -212,6 +214,15 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
   );
   const itemsCents = total * 100 - discount;
 
+  // The deal is applied silently at the cart, so a buyer one print short of it
+  // has to be told. Nothing to say at 0 (no 5x7 in the cart) or at a full group.
+  const bundleUnits = lines
+    .filter((l) => inBundle(l.shippingType))
+    .reduce((n, l) => n + l.qty, 0);
+  const bundleShort = bundleUnits > 0 ? (BUNDLE.size - (bundleUnits % BUNDLE.size)) % BUNDLE.size : 0;
+
+  const holiday = useHolidayShipping();
+
   const startCheckout = async () => {
     setCheckout({ status: "working" });
     try {
@@ -304,6 +315,15 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
         ))}
       </Stack>
 
+      {bundleShort > 0 && (
+        <Text size="sm" fw={500}>
+          Add {bundleShort} more 5x7 print{bundleShort > 1 ? "s" : ""} and any 3 are $
+          {BUNDLE.priceCents / 100}.
+        </Text>
+      )}
+
+      <AddOns fulfillment={fulfillment} />
+
       <Divider color="#e8e8e0" />
 
       {/* Square's hosted page takes one shipping fee and can't offer a
@@ -318,6 +338,12 @@ export function CartContents({ onBrowse }: { onBrowse: () => void }) {
         radius={0}
         fullWidth
       />
+
+      {fulfillment === "pickup" && holiday && holiday.pickup.length > 0 && (
+        <Text size="xs" c="dimmed">
+          Pickup is arranged by email. Upcoming markets: {joinDates(holiday.pickup)}.
+        </Text>
+      )}
 
       <Stack gap={4}>
         <Group justify="space-between">

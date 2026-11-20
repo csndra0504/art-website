@@ -9,6 +9,8 @@ export interface ArtworkImage {
 
 export interface ArtworkSummary {
   _id: string;
+  /** ISO timestamp; drives the home page's "Just added" strip. */
+  _createdAt?: string;
   title: string;
   slug: { current: string };
   images: ArtworkImage[];

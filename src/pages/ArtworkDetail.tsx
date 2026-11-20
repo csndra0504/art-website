@@ -238,6 +238,14 @@ function ProductRow({
           Mix and match: any 3 5x7 prints for $25.
         </Text>
       )}
+      {/* A magnet rides in the same mailer as a print or original, so it adds
+          little or no postage to one (shipping.ts charges the highest flat
+          rate once). Worth saying: $5 postage on its own is the objection. */}
+      {!sold && (p.kind === "magnet" || p.kind === "sticker") && (
+        <Text size="xs" c="dimmed" mt="xs">
+          Adds little or no postage when ordered with a print or original.
+        </Text>
+      )}
       {!sold && p.subtitle && (
         <Text size="xs" c="dimmed" mt="xs">
           {p.subtitle}
